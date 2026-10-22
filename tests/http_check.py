@@ -40,7 +40,8 @@ assert 'Email me this code' in page and 'It is not stored.' in page
 assert 'Start new session' in page and 'Leave session' in page and 'Clear session' in page
 assert 'Download .txt' in page and 'Download .docx' in page
 assert 'Negative behaviours to reframe' in page and 'id="reframe"' in page and 'never named in the comment' in page
-assert 'Dictation sends the recording to the same provider and this app does not store the audio.' in page
+assert 'Dictation sends that recording to the same provider and does not include the name.' in page and 'This app does not store the audio.' in page
+assert 'Student names are never sent to the AI. Please avoid typing other identifying details.' in page
 mic_buttons = re.findall(r'<button type="button" class="dictate-mic" hidden[^>]*>', page)
 assert len(mic_buttons) == 5, len(mic_buttons)
 for label in ('Dictate teacher observations', 'Dictate negative behaviours to reframe', 'Dictate other specific adjustments', 'Dictate clubs or activities', 'Dictate the change you want'):

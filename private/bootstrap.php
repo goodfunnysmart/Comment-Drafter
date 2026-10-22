@@ -232,6 +232,35 @@ function commentCanonicalName(string $text, string $name): string {
     $replaced = preg_replace($pattern, $name, $text);
     return is_string($replaced) ? $replaced : $text;
 }
+function commentStudentNamePattern(string $name): string {
+    $name = commentNormaliseName($name);
+    $parts = preg_split("/([\\s'’\\-])/u", $name, -1, PREG_SPLIT_DELIM_CAPTURE);
+    $pattern = '(?<![\p{L}\p{M}-])';
+    foreach (is_array($parts) ? $parts : [$name] as $part) {
+        if ($part === "'" || $part === '’') $pattern .= "['’]";
+        else $pattern .= preg_quote($part, '/');
+    }
+    return $pattern . '(?![\p{L}\p{M}-])';
+}
+function commentRedactStudentName(string $text, string $name): string {
+    $name = commentNormaliseName($name);
+    if ($name === '' || $text === '') return $text;
+    $replaced = preg_replace_callback('/' . commentStudentNamePattern($name) . "([\'’]s)?/ui", fn(array $match): string => '[NAME]' . ($match[1] ?? ''), $text);
+    return is_string($replaced) ? $replaced : $text;
+}
+function commentRestoreStudentName(string $text, string $name): string {
+    $name = commentNormaliseName($name);
+    if ($name === '' || $text === '') return $text;
+    $replaced = preg_replace('/[\[{]\s*name\s*[\]}]/ui', $name, $text);
+    return is_string($replaced) ? $replaced : $text;
+}
+function commentProviderPayload(string $instructions, string $userText, string $name): array {
+    return [
+        'systemInstruction' => ['parts' => [['text' => commentRedactStudentName($instructions, $name)]]],
+        'contents' => [['role' => 'user', 'parts' => [['text' => commentRedactStudentName($userText, $name)]]]],
+        'generationConfig' => ['maxOutputTokens' => 2048],
+    ];
+}
 function commentSupportPhrase(string $label): string {
     $label = trim($label);
     if (preg_match('/\A([A-Z])(.*)\z/s', $label, $parts) === 1) return strtolower($parts[1]) . $parts[2];

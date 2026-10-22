@@ -120,6 +120,7 @@ function dictateControl(string $id, string $label): void {
       <p class="help">A starting point in your teacher voice. Edit it to make it your own.</p>
       <div id="contradictions" class="notice" role="status" hidden></div>
       <button id="generate" type="submit" form="builder" class="primary">Generate comment <span aria-hidden="true">↗</span></button>
+      <p class="help name-privacy">Student names are never sent to the AI. Please avoid typing other identifying details.</p>
       <p id="generation-status" role="status" aria-live="polite"></p>
       <p id="stale" class="notice" hidden>Inputs have changed. This comment was generated from earlier details.</p>
       <label class="sr-only" for="comment">Editable report comment</label>
@@ -139,7 +140,7 @@ function dictateControl(string $id, string $label): void {
       <p id="action-status" class="help" role="status" aria-live="polite"></p>
       <div class="editor-footer"><span>Ready for a fresh start?</span><button id="new-student" type="button" class="text-button">New student <span aria-hidden="true">↻</span></button></div>
     </section>
-    <p class="privacy"><span aria-hidden="true">◇</span> Student details stay in this page until you clear or close it. When you generate or tweak, the supplied details are sent to the configured AI provider. A tweak also sends the current comment and the change you asked for. Dictation sends the recording to the same provider and this app does not store the audio. Provider retention policies apply. Use only information your school permits you to share.</p>
+    <p class="privacy"><span aria-hidden="true">◇</span> Student details stay in this page until you clear or close it. When you generate or tweak, the supplied details are sent to the configured AI provider. The student’s name is replaced before that request and is not sent. A tweak also sends the current comment and the change you asked for, with the name replaced in the same way. Dictation sends that recording to the same provider and does not include the name. This app does not store the audio. Provider retention policies apply. Use only information your school permits you to share.</p>
   </aside>
   </div>
   <footer>Thoughtful comments start with what you know about your student.</footer>

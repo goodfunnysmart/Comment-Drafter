@@ -17,7 +17,7 @@ function e(string $value): string { return htmlspecialchars($value, ENT_QUOTES |
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="<?= e($token) ?>">
   <title>Report Comment Builder</title>
-  <link rel="stylesheet" href="app.css?v=6">
+  <link rel="stylesheet" href="app.css?v=7">
   <link rel="stylesheet" href="dark.css?v=4">
   <script src="skin.js?v=3" defer></script>
   <script src="app.js?v=4" defer></script>

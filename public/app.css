@@ -29,7 +29,7 @@ main{max-width:var(--page)}
 .skin-switch button{border:0;border-radius:24px;background:transparent;color:#4f6156;padding:0 14px;font-size:12px;line-height:1.2;min-height:44px;min-width:44px}
 .skin-switch button:hover{background:transparent}
 .skin-switch button[aria-pressed="true"],.skin-switch button[aria-pressed="true"]:hover{background:var(--teal);color:#fff;box-shadow:0 2px 5px #193a2220}
-.logo{display:block;width:auto;max-width:min(240px,100%);height:auto;max-height:52px}
+.logo{display:block;width:auto;max-width:min(288px,100%);height:auto;max-height:62.4px}
 .logo-dark{display:none}
 html[data-skin="dark"] .logo-classic{display:none}
 html[data-skin="dark"] .logo-dark{display:block}
@@ -40,5 +40,5 @@ html[data-skin="classic"] h1,html[data-skin="classic"] h2,html[data-skin="classi
 @media(max-width:480px){
   .masthead-bar{flex-wrap:wrap;row-gap:8px}
   .masthead-tools{margin-left:auto}
-  .logo{max-width:min(168px,46vw);max-height:44px}
+  .logo{max-width:min(201.6px,55.2vw);max-height:52.8px}
 }

@@ -1,6 +1,6 @@
 # Appearance and descriptions
 
-The header shows the Better Schools logo and offers **Classic** and **Dark**. Classic is the default and uses the full-colour logo. Dark uses the reversed logo and the same navy, #042e5e, for the header band, primary button and selected chips. Text on dark surfaces uses a lighter tint of that navy. Strengths use a green column, areas for growth an orange column, and challenges a red column. The colours are light tints in Classic and darker tints in Dark, with readable text and a clear selected state. On a narrow screen the three columns stack, with strengths first.
+The header shows the Better Schools logo and offers **Classic** and **Dark**. Classic is the default and uses the full-colour logo. Dark uses the reversed logo and the same navy, #042e5e, for the header band, primary button and selected chips. Text on dark surfaces uses a lighter tint of that navy. Positives use a green column, challenges a red column, and items for development an orange column. The colours are light tints in Classic and darker tints in Dark, with readable text and a clear selected state. On a narrow screen the three columns stack, with positives first.
 
 Switching changes appearance in page memory without reloading, calling the API or touching student inputs and drafts. The choice is not stored. Direct links `?skin=classic` and `?skin=dark` select an initial appearance. Any other value, including an old `?skin=studio` link, uses Classic. Opening a link reloads the page, so copy any existing draft first.
 

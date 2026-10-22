@@ -49,7 +49,7 @@ try {
     $data['length'] = $ranges[$data['length']] . '; the whole comment must be 5–7 sentences';
     $payload = [
         'systemInstruction' => ['parts' => [['text' => $instructions]]],
-        'contents' => [['role' => 'user', 'parts' => [['text' => json_encode($data, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)]]]],
+        'contents' => [['role' => 'user', 'parts' => [['text' => commentRequestText($data)]]]],
         'generationConfig' => ['maxOutputTokens' => 2048],
     ];
     $stage = 'CURL_SETUP';

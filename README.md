@@ -9,7 +9,7 @@ Comment Drafter/
 ├── .cpanel.yml                   ← cPanel "Deploy HEAD Commit" tasks
 ├── deploy/
 │   └── cpanel-deploy.sh          # Copies site files; keeps config.php and Directory Privacy
-├── public/                       ← Deployed to public_html/comments
+├── public/                       ← Deployed to $HOME/greache.com/comments
 │   ├── index.php                 # Page, bank rendering, CSRF token
 │   ├── generate.php              # Validated server-side Gemini endpoint
 │   ├── private_path.php          # Finds the private bootstrap outside the document root
@@ -47,33 +47,33 @@ Comment Drafter/
 
 ## Deploy on cPanel
 
-cPanel clones this private repository **outside** the website. **Deploy HEAD Commit** runs `.cpanel.yml`, which runs `deploy/cpanel-deploy.sh`. The script uses `$HOME`, so the account name is not stored in Git. It copies the files in `public/` into `$HOME/public_html/comments` and the private application files into `$HOME/comments-private`. The live address is `https://greache.com/comments`, with no `/public` on the end.
+cPanel clones this private repository **outside** the website. **Deploy HEAD Commit** runs `.cpanel.yml`, which runs `deploy/cpanel-deploy.sh`. The script uses `$HOME`, so the account name is not stored in Git. The document root for greache.com is `$HOME/greache.com`, not `$HOME/public_html`. The script copies the files in `public/` into `$HOME/greache.com/comments` and the private application files into `$HOME/comments-private`. `SITE_ROOT` at the top of `deploy/cpanel-deploy.sh` defaults to `$HOME/greache.com`; export `SITE_ROOT` to use another directory inside `$HOME`. Site files then go to `$SITE_ROOT/comments`. The live address is `https://greache.com/comments`, with no `/public` on the end.
 
-Do not upload the project into `public_html`. Do not point the domain’s document root at the clone or at `comments-private`.
+Do not upload the project into `greache.com` or `public_html`. Do not point the domain’s document root at the clone or at `comments-private`.
 
-The deploy copies named application files only. It does not create, copy, or delete `config.php`. It does not delete Directory Privacy rules in `public_html/comments/.htaccess`. cPanel keeps those rules in a block marked `cp:ppd`. Each deploy writes `public/.htaccess` and then puts that block back unchanged. Lines outside the block are replaced by the copy in Git. If deploy finds authentication directives that are not inside a `cp:ppd` block, it stops and leaves `.htaccess` as it is.
+The deploy copies named application files only. It does not create, copy, or delete `config.php`. It does not delete Directory Privacy rules in `greache.com/comments/.htaccess`. cPanel keeps those rules in a block marked `cp:ppd`. Each deploy writes `public/.htaccess` and then puts that block back unchanged. Lines outside the block are replaced by the copy in Git. If deploy finds authentication directives that are not inside a `cp:ppd` block, it stops and leaves `.htaccess` as it is.
 
 `index.php` and `generate.php` load the private bootstrap only after this search:
 
 1. `COMMENT_DRAFTER_PRIVATE`, when that environment variable names a directory outside the document root.
 2. `private-path.php`, which deploy writes next to `index.php`. Opening that address in a browser does not print the path.
 3. A sibling `private/` directory. This is what `php -S 127.0.0.1:8765 -t public` uses.
-4. `$HOME/comments-private`, when the site files are in `$HOME/public_html/comments`.
+4. `$HOME/comments-private`, when the site files are in `$HOME/greache.com/comments`.
 
-A result inside the front-controller directory, or anywhere under a `public_html` directory, is ignored. The loaded bootstrap reads `bank.json`, `instructions.txt` and `config.php` from its own directory.
+A result inside the front-controller directory, or anywhere under a `public_html` or `greache.com` directory, is ignored. The loaded bootstrap reads `bank.json`, `instructions.txt` and `config.php` from its own directory.
 
 ### One-time cPanel setup
 
 Use the cPanel account that serves `greache.com`. File Manager shows the home directory as `/home/<account>/`. Nothing below puts that account name into Git.
 
-**1. Password-protect the current upload**
+**1. Password-protect the live comments directory**
 
-`public_html/comments` was uploaded by hand, so `private/bank.json`, `private/instructions.txt` and `README.md` can be downloaded. `private/config.php` runs as PHP.
+The live document root is `$HOME/greache.com`. The site directory is `$HOME/greache.com/comments`. An earlier upload can leave `private/bank.json`, `private/instructions.txt` and `README.md` downloadable there. `private/config.php` runs as PHP. An earlier deploy also created `$HOME/public_html/comments`; that path is not the live site.
 
 1. Open **cPanel → Files → Directory Privacy**.
-2. Open `public_html`, then `comments`, then **Edit**.
+2. Open `greache.com`, then `comments`, then **Edit**.
 3. Select **Password protect this directory**. Enter a name such as `Comments`. Click **Save**.
-4. Create a username and a strong password. cPanel stores the password file under `.htpasswds`, outside `public_html`.
+4. Create a username and a strong password. cPanel stores the password file under `.htpasswds`, outside the document root.
 5. In a private browser window, open `https://greache.com/comments/private/bank.json`. It must ask for a password or return **401** before you continue.
 
 **2. Give cPanel read access to the private GitHub repository**
@@ -128,14 +128,14 @@ mkdir -p "$HOME/repositories"
 git clone https://github.com/goodfunnysmart/Comment-Drafter.git "$HOME/repositories/Comment-Drafter"
 ```
 
-When Git asks, the username is the GitHub user and the password is the token. Do not put the token in the URL, in `.cpanel.yml`, or in `public_html`. Then in **Git Version Control → Create**, turn **Clone a Repository** off, set Repository Path to `repositories/Comment-Drafter`, name it `Comment Drafter`, and click **Create**. Skip step 3.
+When Git asks, the username is the GitHub user and the password is the token. Do not put the token in the URL, in `.cpanel.yml`, or in the document root. Then in **Git Version Control → Create**, turn **Clone a Repository** off, set Repository Path to `repositories/Comment-Drafter`, name it `Comment Drafter`, and click **Create**. Skip step 3.
 
 **3. Clone outside the website**
 
 1. Open **cPanel → Files → Git Version Control → Create**.
 2. Leave **Clone a Repository** on.
 3. Clone URL: `git@github.com:goodfunnysmart/Comment-Drafter.git`. If cPanel asks to save GitHub’s host key, accept it only when the SHA-256 fingerprint matches one of the values above.
-4. Repository Path: `repositories/Comment-Drafter`. cPanel creates `/home/<account>/repositories/Comment-Drafter`. Do not use any path inside `public_html`.
+4. Repository Path: `repositories/Comment-Drafter`. cPanel creates `/home/<account>/repositories/Comment-Drafter`. Do not use any path inside `greache.com` or `public_html`.
 5. Repository Name: `Comment Drafter`.
 6. Click **Create** and wait until the clone finishes.
 
@@ -149,7 +149,7 @@ When Git asks, the username is the GitHub user and the password is the token. Do
 Deployment must succeed, and **Last Deployed SHA** must match `main` on GitHub. This creates:
 
 ```text
-/home/<account>/public_html/comments/     site files only
+/home/<account>/greache.com/comments/     site files only
 /home/<account>/comments-private/         bootstrap, bank, instructions, example config
 ```
 
@@ -157,14 +157,14 @@ Deployment must succeed, and **Last Deployed SHA** must match `main` on GitHub. 
 
 **5. Move the existing key**
 
-1. Open **File Manager** and confirm `comments-private/bootstrap.php`, `bank.json` and `instructions.txt` exist, and that this folder is not inside `public_html`.
-2. **Move** `public_html/comments/private/config.php` to `comments-private/config.php`. Do not leave a second copy, and do not replace it with `config.example.php`.
-3. Confirm the old path is gone and `comments-private/config.php` is present.
+1. Open **File Manager** and confirm `comments-private/bootstrap.php`, `bank.json` and `instructions.txt` exist, and that this folder is not inside `greache.com` or `public_html`.
+2. **Move** the real `config.php` to `comments-private/config.php`. Check `greache.com/comments/private/config.php` and, if the earlier deploy left one, `public_html/comments/private/config.php`. Move the one real key. Do not leave a second copy, and do not replace it with `config.example.php`.
+3. Confirm those old paths are gone and `comments-private/config.php` is present.
 4. **Deploy HEAD Commit** again. That sets private-file permissions and rewrites `.htaccess` while keeping the Directory Privacy block. It does not change `config.php`.
 
 **6. Delete the old upload**
 
-In File Manager, open `public_html/comments`. Delete uploaded project files that are not the site. Delete these if they are present:
+In File Manager, open `greache.com/comments`. Delete uploaded project files that are not the site. Delete these if they are present:
 
 - `private/`
 - `public/`
@@ -176,6 +176,8 @@ In File Manager, open `public_html/comments`. Delete uploaded project files that
 - `.gitignore`, `.gitattributes`, `.editorconfig`
 
 Keep `.htaccess`, `index.php`, `generate.php`, `private_path.php`, `private-path.php`, `app.css`, `app.js`, `studio.css`, `dark.css` and `skin.js`. Do not delete `comments-private` or `repositories/Comment-Drafter`. If a site file is removed by mistake, click **Deploy HEAD Commit** again. Do not copy `.htaccess` from Git over the server file by hand.
+
+`$HOME/public_html/comments` is not the live site. After `config.php` exists only in `comments-private`, delete `$HOME/public_html/comments` if that tree is still there.
 
 **7. Check the lock and the private files**
 
@@ -231,7 +233,7 @@ The server follows Google’s [generateContent REST reference](https://ai.google
 
 CSRF tokens and same-origin checks **are not authentication**. Do not deploy an anonymously accessible paid-generation endpoint.
 
-For this site, Directory Privacy on `public_html/comments` is step 1 of the setup above. It covers the page, `generate.php`, static files, and any subdirectory still left from the old upload. The password file stays in `.htpasswds`. Redeploys keep the `cp:ppd` block. Do not replace that `.htaccess` with a raw copy from Git. If `Options -Indexes` causes a 500 error, ask the provider to turn directory listing off, remove that one line from `public/.htaccess` in Git, and deploy again. Do not remove the `cp:ppd` block.
+For this site, Directory Privacy on `greache.com/comments` is step 1 of the setup above. It covers the page, `generate.php`, static files, and any subdirectory still left from the old upload. The password file stays in `.htpasswds`. Redeploys keep the `cp:ppd` block. Do not replace that `.htaccess` with a raw copy from Git. If `Options -Indexes` causes a 500 error, ask the provider to turn directory listing off, remove that one line from `public/.htaccess` in Git, and deploy again. Do not remove the `cp:ppd` block.
 
 Without the Directory Privacy password, `https://greache.com/comments` and `https://greache.com/comments/generate.php` must return **401**, including a direct POST, before PHP runs. Use HTTPS. HTTP Basic authentication needs TLS. Then complete the manual checks in `VERIFICATION.md`.
 
@@ -282,4 +284,4 @@ Old distribution ZIPs and pre-change backups are preserved under `.local/archive
 
 Use `git status` to review source changes and `git check-ignore private/config.php` to confirm the key file is excluded. Avoid force-adding ignored configuration files. Before any push, review the staged file list. Create the GitHub repository with **Private** visibility; local Git initialisation does not create a GitHub repository or set remote visibility.
 
-The interface supports Studio, Classic and Dark appearances without reloading or discarding the current draft. Read [SKINS.md](SKINS.md) for styling and description controls. Deploy with the cPanel steps above. Do not upload `private/`, tests, or this README into `public_html`.
+The interface supports Studio, Classic and Dark appearances without reloading or discarding the current draft. Read [SKINS.md](SKINS.md) for styling and description controls. Deploy with the cPanel steps above. Do not upload `private/`, tests, or this README into `greache.com` or `public_html`.

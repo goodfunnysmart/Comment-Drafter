@@ -256,6 +256,230 @@ window.addEventListener('beforeunload', event => { if (hasStudentData()) { event
 window.addEventListener('pageshow', event => { if (event.persisted) window.location.reload(); });
 form.reset(); editor.value = ''; updateEditor();
 
+const DICTATE_LIMIT_MS = 90000;
+const DICTATE_MAX_BYTES = 5000000;
+const DICTATE_ICON = '<svg class="dictate-mic-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6.5 11a5.5 5.5 0 0 0 11 0M12 16.5v3M9 19.5h6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><svg class="dictate-stop-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" hidden><rect x="7" y="7" width="10" height="10" rx="1.5" fill="currentColor"/></svg><span class="dictate-pulse" hidden></span><span class="dictate-spinner" hidden></span><span class="dictate-timer" aria-hidden="true"></span>';
+const AUDIO_TYPES = new Set(['audio/webm', 'audio/mp4', 'audio/ogg', 'audio/wav', 'audio/wave', 'audio/x-wav', 'audio/mpeg', 'audio/mp3', 'audio/mpga', 'audio/m4a', 'audio/x-m4a', 'audio/aac', 'audio/x-aac', 'audio/flac']);
+let activeDictation = null;
+let dictationStarting = false;
+
+function canDictate() {
+  return window.isSecureContext === true && typeof MediaRecorder === 'function' && typeof navigator.mediaDevices?.getUserMedia === 'function';
+}
+function formatElapsed(ms) {
+  const total = Math.max(0, Math.min(90, Math.floor(ms / 1000)));
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+}
+function insertTranscript(textarea, transcript) {
+  let insert = String(transcript ?? '').trim();
+  if (!insert) return 'empty';
+  const value = String(textarea.value ?? '');
+  const start = Number.isInteger(textarea.selectionStart) ? textarea.selectionStart : value.length;
+  const end = Number.isInteger(textarea.selectionEnd) ? Math.max(textarea.selectionEnd, start) : start;
+  const before = value.slice(0, start);
+  const after = value.slice(end);
+  if (before && !/\s$/u.test(before)) insert = ` ${insert}`;
+  if (after && !/^\s/u.test(after)) insert = `${insert} `;
+  const max = textarea.maxLength;
+  let clipped = false;
+  if (typeof max === 'number' && max > 0 && before.length + insert.length + after.length > max) {
+    const room = max - before.length - after.length;
+    if (room <= 0) return 'full';
+    insert = insert.slice(0, room);
+    clipped = true;
+    if (!insert.trim()) return 'full';
+  }
+  textarea.value = before + insert + after;
+  const caret = before.length + insert.length;
+  try { textarea.selectionStart = caret; textarea.selectionEnd = caret; } catch {}
+  if (typeof textarea.dispatchEvent === 'function' && typeof Event === 'function') textarea.dispatchEvent(new Event('input', {bubbles: true}));
+  return clipped ? 'clipped' : 'ok';
+}
+function dictateStatus(statusEl, message) {
+  if (!statusEl) return;
+  statusEl.textContent = message || '';
+}
+function setDictateMode(button, mode) {
+  const wrap = button.closest('.dictate');
+  button.classList.toggle('is-recording', mode === 'recording');
+  button.classList.toggle('is-transcribing', mode === 'transcribing');
+  wrap?.classList.toggle('is-recording', mode === 'recording');
+  wrap?.classList.toggle('is-transcribing', mode === 'transcribing');
+  button.disabled = mode === 'transcribing';
+  if (mode === 'transcribing') button.setAttribute('aria-busy', 'true'); else button.removeAttribute('aria-busy');
+  const mic = button.querySelector('.dictate-mic-icon');
+  const stop = button.querySelector('.dictate-stop-icon');
+  const pulse = button.querySelector('.dictate-pulse');
+  const spinner = button.querySelector('.dictate-spinner');
+  const timer = button.querySelector('.dictate-timer');
+  if (mic) mic.hidden = mode !== 'idle';
+  if (stop) stop.hidden = mode !== 'recording';
+  if (pulse) pulse.hidden = mode !== 'recording';
+  if (spinner) spinner.hidden = mode !== 'transcribing';
+  if (timer && mode !== 'recording') timer.textContent = '';
+  if (mode === 'idle') button.setAttribute('aria-label', button.dataset.label || 'Dictate');
+  if (mode === 'transcribing') button.setAttribute('aria-label', 'Transcribing');
+}
+function preferredRecorderType() {
+  if (typeof MediaRecorder.isTypeSupported !== 'function') return '';
+  for (const type of ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']) {
+    if (MediaRecorder.isTypeSupported(type)) return type;
+  }
+  return '';
+}
+function attachDictation(button, field, statusEl) {
+  if (!canDictate() || !button || button.dataset.dictateBound === '1') return;
+  const target = field || document.getElementById(button.dataset.dictate || '');
+  if (!target) return;
+  button.dataset.dictateBound = '1';
+  button.dataset.label = button.dataset.label || button.getAttribute('aria-label') || 'Dictate';
+  button.hidden = false;
+  const status = statusEl || document.getElementById(button.getAttribute('aria-describedby') || '');
+  button.addEventListener('click', event => {
+    event.preventDefault();
+    onDictateClick(button, target, status);
+  });
+}
+function sessionDictate(textarea, id) {
+  if (!canDictate()) return null;
+  const wrap = document.createElement('div');
+  wrap.className = 'dictate';
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'dictate-mic';
+  button.hidden = true;
+  button.dataset.label = 'Dictate this session comment';
+  button.setAttribute('aria-label', 'Dictate this session comment');
+  button.innerHTML = DICTATE_ICON;
+  const status = document.createElement('p');
+  status.className = 'dictate-error help';
+  status.setAttribute('role', 'status');
+  status.id = `session-dictate-${id}`;
+  button.setAttribute('aria-describedby', status.id);
+  const described = textarea.getAttribute('aria-describedby');
+  textarea.setAttribute('aria-describedby', described ? `${described} ${status.id}` : status.id);
+  wrap.append(textarea, button);
+  attachDictation(button, textarea, status);
+  return {wrap, status};
+}
+function releaseStream(stream) {
+  stream?.getTracks?.().forEach(track => track.stop());
+}
+function stopDictation(send) {
+  const state = activeDictation;
+  if (!state) return;
+  state.send = send;
+  clearInterval(state.timer);
+  clearTimeout(state.limit);
+  try {
+    if (state.recorder.state !== 'inactive') state.recorder.stop();
+    else finishDictation(state);
+  } catch { finishDictation(state); }
+}
+function onDictateClick(button, field, statusEl) {
+  if (button.classList.contains('is-transcribing') || dictationStarting) return;
+  if (activeDictation?.button === button) { stopDictation(true); return; }
+  if (activeDictation) { dictateStatus(statusEl, 'Stop the current recording first.'); return; }
+  dictateStatus(statusEl, '');
+  dictationStarting = true;
+  navigator.mediaDevices.getUserMedia({audio: true}).then(stream => {
+    dictationStarting = false;
+    if (activeDictation) { releaseStream(stream); dictateStatus(statusEl, 'Stop the current recording first.'); return; }
+    const mime = preferredRecorderType();
+    let recorder;
+    try { recorder = mime ? new MediaRecorder(stream, {mimeType: mime}) : new MediaRecorder(stream); }
+    catch {
+      releaseStream(stream);
+      dictateStatus(statusEl, 'This browser could not start a recording. Try again.');
+      return;
+    }
+    const state = {button, field, statusEl, stream, recorder, chunks: [], send: true, timer: 0, limit: 0, started: performance.now(), mime, settled: false};
+    recorder.addEventListener('dataavailable', event => { if (event.data?.size) state.chunks.push(event.data); });
+    recorder.addEventListener('stop', () => finishDictation(state));
+    activeDictation = state;
+    setDictateMode(button, 'recording');
+    let announced = -1;
+    const tick = () => {
+      if (activeDictation !== state) return;
+      const elapsedMs = performance.now() - state.started;
+      const timer = button.querySelector('.dictate-timer');
+      if (timer) timer.textContent = formatElapsed(elapsedMs);
+      const second = Math.floor(elapsedMs / 1000);
+      if (second !== announced) {
+        announced = second;
+        button.setAttribute('aria-label', `Stop dictation, ${formatElapsed(elapsedMs)} elapsed`);
+      }
+    };
+    tick();
+    state.timer = setInterval(tick, 250);
+    state.limit = setTimeout(() => { if (activeDictation === state) stopDictation(true); }, DICTATE_LIMIT_MS);
+    try { recorder.start(250); }
+    catch {
+      state.send = false;
+      try { if (recorder.state !== 'inactive') recorder.stop(); else finishDictation(state); }
+      catch { finishDictation(state); }
+      dictateStatus(statusEl, 'This browser could not start a recording. Try again.');
+    }
+  }).catch(error => {
+    dictationStarting = false;
+    const name = error?.name || '';
+    if (name === 'NotAllowedError' || name === 'PermissionDeniedError') dictateStatus(statusEl, 'Microphone permission was denied. Allow the microphone for this site, then try again.');
+    else if (name === 'NotFoundError' || name === 'DevicesNotFoundError') dictateStatus(statusEl, 'No microphone was found. Connect a microphone and try again.');
+    else if (name === 'NotReadableError' || name === 'TrackStartError') dictateStatus(statusEl, 'The microphone is in use by another app. Close it and try again.');
+    else dictateStatus(statusEl, 'The microphone could not be started. Try again.');
+  });
+}
+function finishDictation(state) {
+  if (state.settled) return;
+  state.settled = true;
+  clearInterval(state.timer);
+  clearTimeout(state.limit);
+  releaseStream(state.stream);
+  if (activeDictation === state) activeDictation = null;
+  if (!state.send || !state.button.isConnected) { setDictateMode(state.button, 'idle'); return; }
+  const blob = new Blob(state.chunks, {type: state.chunks[0]?.type || state.mime || 'audio/webm'});
+  if (blob.size < 100) { setDictateMode(state.button, 'idle'); dictateStatus(state.statusEl, 'The recording was too short. Try again.'); return; }
+  if (blob.size > DICTATE_MAX_BYTES) { setDictateMode(state.button, 'idle'); dictateStatus(state.statusEl, 'The recording is too large. Try a shorter clip.'); return; }
+  const mime = String(blob.type || state.mime || 'audio/webm').split(';')[0].trim().toLowerCase();
+  if (!AUDIO_TYPES.has(mime)) { setDictateMode(state.button, 'idle'); dictateStatus(state.statusEl, 'This recording format is not supported.'); return; }
+  setDictateMode(state.button, 'transcribing');
+  blobBase64(blob).then(audio => fetch('transcribe.php', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content},
+    body: JSON.stringify({audio, mime})
+  })).then(async response => {
+    let data = {};
+    try { data = await response.json(); } catch {}
+    if (!response.ok || !data.ok) throw new Error(data.error || 'Dictation failed. Try again.');
+    return data.text || '';
+  }).then(text => {
+    const placed = insertTranscript(state.field, text);
+    setDictateMode(state.button, 'idle');
+    if (placed === 'empty') dictateStatus(state.statusEl, 'No speech was heard. Try again.');
+    else if (placed === 'full') dictateStatus(state.statusEl, 'This field is full, so the transcript was not added.');
+    else if (placed === 'clipped') dictateStatus(state.statusEl, 'Some of the transcript was cut to fit this field.');
+    else dictateStatus(state.statusEl, '');
+    try { state.field.focus(); } catch {}
+  }).catch(error => {
+    setDictateMode(state.button, 'idle');
+    const message = error?.message || '';
+    dictateStatus(state.statusEl, /failed to fetch|network|load failed/i.test(message) || error instanceof TypeError ? 'Dictation could not reach the server. Try again.' : (message || 'Dictation failed. Try again.'));
+  });
+}
+function blobBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('The recording could not be prepared. Try again.'));
+    reader.onload = () => {
+      const value = String(reader.result || '');
+      const comma = value.indexOf(',');
+      resolve(comma >= 0 ? value.slice(comma + 1) : value);
+    };
+    reader.readAsDataURL(blob);
+  });
+}
+if (canDictate()) document.querySelectorAll('.dictate-mic').forEach(button => attachDictation(button));
+
 if ($('session-toggle')) {
   const SESSION_KEY = 'commentDrafterSession';
   let sessionCode = '', sessionComments = [], sessionExpires = '', editingId = null;
@@ -322,6 +546,7 @@ if ($('session-toggle')) {
     return false;
   }
   function renderSession() {
+    if (activeDictation?.field?.closest?.('#session-list')) stopDictation(false);
     const count = sessionComments.length;
     $('session-count').textContent = String(count);
     $('session-list-count').textContent = `${count} ${count === 1 ? 'comment' : 'comments'}`;
@@ -339,6 +564,7 @@ if ($('session-toggle')) {
         name.value = item.name; name.maxLength = 100; name.setAttribute('aria-label', 'First name');
         const text = document.createElement('textarea');
         text.value = item.text; text.maxLength = 8000; text.setAttribute('aria-label', 'Comment');
+        const dictated = sessionDictate(text, item.id);
         const save = document.createElement('button');
         save.type = 'button'; save.textContent = 'Save';
         save.addEventListener('click', async () => {
@@ -348,7 +574,8 @@ if ($('session-toggle')) {
         const cancel = document.createElement('button');
         cancel.type = 'button'; cancel.textContent = 'Cancel';
         cancel.addEventListener('click', () => { editingId = null; renderSession(); });
-        row.append(name, text, save, cancel);
+        if (dictated) row.append(name, dictated.wrap, dictated.status, save, cancel);
+        else row.append(name, text, save, cancel);
       } else {
         const name = document.createElement('p');
         name.className = 'session-name'; name.textContent = item.name;

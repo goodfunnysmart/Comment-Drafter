@@ -102,3 +102,35 @@ main{padding-bottom:96px}
 .session-item textarea{min-height:72px}
 #session-expiry,#session-list-count{margin:8px 0}
 #session-message{min-height:1.2em}
+.dictate{position:relative}
+.dictate textarea{display:block;min-height:96px;padding:11px 52px 44px 12px}
+.dictate #comment{min-height:320px}
+.dictate.is-recording textarea{padding-right:104px}
+.dictate-mic{position:absolute;z-index:2;right:8px;bottom:8px;display:inline-flex;align-items:center;justify-content:center;gap:6px;width:36px;height:36px;min-width:36px;min-height:36px;padding:0;border-radius:999px;border:1px solid #8aa0b8;background:#fff;color:#3e5164;box-shadow:0 1px 2px #16263a14;touch-action:manipulation}
+.dictate-mic:hover{background:#f4f7fb}
+.dictate-mic:disabled{opacity:1;cursor:progress}
+.dictate-mic.is-recording{width:auto;min-width:76px;padding:0 10px 0 8px;color:#a13127;border-color:#c45a52}
+.dictate-mic svg{display:block;flex:none}
+.dictate-pulse{width:8px;height:8px;border-radius:50%;background:#c4372f;flex:none}
+.dictate-spinner{width:16px;height:16px;box-sizing:border-box;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;flex:none}
+.dictate-timer{font-size:12px;font-variant-numeric:tabular-nums;line-height:1}
+.dictate-timer:empty{display:none}
+.dictate-error{color:#a13127;margin:6px 0 0}
+.dictate-error:empty{display:none}
+.session-item .dictate{margin-bottom:8px}
+.session-item .dictate textarea{margin-bottom:0;padding-bottom:56px}
+.session-panel .dictate-mic{width:44px;height:44px;min-width:44px;min-height:44px}
+.session-panel .dictate.is-recording .dictate-mic{width:auto;padding:0 10px 0 8px}
+@media(pointer:coarse){
+  .dictate-mic{width:44px;height:44px;min-width:44px;min-height:44px;right:6px;bottom:6px}
+  .dictate textarea{padding-right:60px;padding-bottom:52px}
+  .dictate.is-recording textarea{padding-right:112px}
+}
+@media(prefers-reduced-motion:no-preference){
+  .dictate-mic.is-recording{animation:dictate-pulse 1.6s ease-in-out infinite}
+  .dictate-pulse{animation:dictate-dot 1.2s ease-in-out infinite}
+  .dictate-spinner{animation:dictate-spin .8s linear infinite}
+}
+@keyframes dictate-pulse{0%,100%{box-shadow:0 0 0 0 #a1312733}50%{box-shadow:0 0 0 5px #a1312700}}
+@keyframes dictate-dot{50%{opacity:.35}}
+@keyframes dictate-spin{to{transform:rotate(360deg)}}

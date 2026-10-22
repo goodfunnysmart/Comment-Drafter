@@ -12,6 +12,7 @@ Comment Drafter/
 ├── public/                       ← Deployed to $HOME/betterschools.com.au/comments
 │   ├── index.php                 # Page, bank rendering, CSRF token
 │   ├── generate.php              # Validated server-side Gemini endpoint
+│   ├── transcribe.php            # In-memory dictation; audio is not stored
 │   ├── session.php               # Session create, resume, save, email and download
 │   ├── private_path.php          # Finds the private bootstrap outside the document root
 │   ├── assets/
@@ -182,7 +183,7 @@ In File Manager, open `betterschools.com.au/comments`. Delete uploaded project f
 - `.git/`
 - `.gitignore`, `.gitattributes`, `.editorconfig`
 
-Keep `.htaccess`, `index.php`, `generate.php`, `private_path.php`, `private-path.php`, `app.css`, `app.js`, `dark.css`, `skin.js`, `assets/logo-classic.webp` and `assets/logo-dark.webp`. Deploy removes a leftover `studio.css` file. Do not delete `comments-private` or `repositories/Comment-Drafter`. If a site file is removed by mistake, click **Deploy HEAD Commit** again. Do not copy `.htaccess` from Git over the server file by hand.
+Keep `.htaccess`, `index.php`, `generate.php`, `transcribe.php`, `private_path.php`, `private-path.php`, `app.css`, `app.js`, `dark.css`, `skin.js`, `assets/logo-classic.webp` and `assets/logo-dark.webp`. Deploy removes a leftover `studio.css` file. Do not delete `comments-private` or `repositories/Comment-Drafter`. If a site file is removed by mistake, click **Deploy HEAD Commit** again. Do not copy `.htaccess` from Git over the server file by hand.
 
 `$HOME/public_html/comments` is not the live site. After `config.php` exists only in `comments-private`, delete `$HOME/public_html/comments` if that tree is still there.
 
@@ -279,7 +280,8 @@ Visit `http://127.0.0.1:8765`. The development server uses the sibling `private/
 ## Data handling and behaviour
 
 - The current draft exists in the page’s memory. There is no database, autosave, analytics or third-party frontend resource. The active session code can be kept in localStorage on this device; the comments themselves are not. Leave session forgets that code and leaves the stored comments in place. Clear session deletes them after confirmation. The page warns before leaving with entered data and reloads if restored from the back/forward cache.
-- When Generate is clicked, the name, pronouns, selected descriptions, observations, any negative behaviours to reframe, any other specific adjustments, and any optional activities go through the PHP server to Google. Tweak comment sends those same details plus the current editor text, including manual edits, and the change request. Google’s policies and your school’s agreement determine retention; this app makes no no-retention claim. Use only school-approved information and follow your school’s AI/data policy.
+- When Generate is clicked, the name, pronouns, selected descriptions, observations, any negative behaviours to reframe, any other specific adjustments, and any optional activities go through the PHP server to Google. Tweak comment sends those same details plus the current editor text, including manual edits, and the change request. Dictation sends that recording to the same provider. This app does not store the audio and does not write it to disk. Google’s policies and your school’s agreement determine retention; this app makes no no-retention claim. Use only school-approved information and follow your school’s AI/data policy.
+- Dictation is limited to 10 transcriptions per 10 minutes, at least 3 seconds apart. That limit is separate from comment generation. A clip can run for about 90 seconds and must stay under 5 MB.
 - Server code does not log names, observations, drafts, tweak requests, keys or upstream bodies. Keep hosting/PHP debug modes and request-body capture disabled; check any host-level logging or monitoring independently. Normal URL access logs contain no form data because generation uses POST JSON, never query parameters.
 - Requests/pages use `Cache-Control: no-store`; shared caches should bypass this application. Copy and download use the editor’s current value without another request. Downloads use a UTF-8 Blob and the teacher’s local time.
 - Descriptions appear on hover/focus; separate information buttons support touch without changing selection. Escape dismisses descriptions. Selected buttons expose `aria-pressed`, ticks and visible counts.

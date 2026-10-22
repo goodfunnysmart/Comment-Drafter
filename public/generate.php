@@ -55,7 +55,8 @@ try {
     $data['length'] = commentLengthTarget($data['length']);
     $supportLabels = commentSelectedSupportLabels($data['supports'], $bank);
     $adjustments = (string) ($data['adjustments'] ?? '');
-    $userText = commentNameRule($data['name'], $pronounChoice) . "\n\n" . commentSupportRule($supportLabels, $data['name'], $pronounChoice, $adjustments) . "\n\n" . ($mode === 'tweak' ? commentTweakText($data, $tweak['comment'], $tweak['instruction']) : commentRequestText($data));
+    $supportSentence = commentSupportSentence($supportLabels, $data['name'], $adjustments) !== '';
+    $userText = commentNameRule($data['name'], $pronounChoice, $supportSentence) . "\n\n" . commentSupportRule($supportLabels, $data['name'], $pronounChoice, $adjustments) . "\n\n" . ($mode === 'tweak' ? commentTweakText($data, $tweak['comment'], $tweak['instruction']) : commentRequestText($data));
     // One provider call is already recorded in the throttle. A single repair retry stays inside that same slot and must finish before the browser aborts at 55 seconds.
     $stage = 'CURL_REQUEST';
     $started = microtime(true);
@@ -63,13 +64,16 @@ try {
     if (isset($draft['error'])) fail($draft['status'], $draft['error']);
     $text = $draft['text'];
     $elapsed = microtime(true) - $started;
-    if ((commentNameCount($text, $data['name']) !== 3 || !commentSupportsCovered($text, $supportLabels, $adjustments)) && $elapsed < 20) {
+    $nameTarget = $supportSentence ? 2 : 3;
+    $prepared = commentStripSupportSentences(commentCanonicalName($text, $data['name']), $supportLabels, $adjustments);
+    if (commentNameCount($prepared, $data['name']) !== $nameTarget && $elapsed < 20) {
         $retryTimeout = (int) max(8, min(25, floor(50 - $elapsed)));
-        $retry = comment_drafter_fetch_draft($model, $key, $instructions, $userText . "\n\nThe previous draft missed the name rule or the supports sentence. Write the comment again. Stay within the selected word range. " . commentNameRule($data['name'], $pronounChoice) . ' ' . commentSupportRule($supportLabels, $data['name'], $pronounChoice, $adjustments), $retryTimeout);
+        $retry = comment_drafter_fetch_draft($model, $key, $instructions, $userText . "\n\nThe previous draft missed the name rule. Write the comment again. Use fewer words rather than padding. Do not write a supports sentence. " . commentNameRule($data['name'], $pronounChoice, $supportSentence) . ' ' . commentSupportRule($supportLabels, $data['name'], $pronounChoice, $adjustments), $retryTimeout);
         if (isset($retry['text']) && $retry['text'] !== '') $text = $retry['text'];
     }
+    // Name repair runs inside commentRepairSupports, before the exact supports sentence is inserted.
     $text = commentRepairSupports($text, $supportLabels, $data['name'], $pronounChoice, $adjustments);
-    $text = commentRepairName($text, $data['name'], $pronounChoice);
+    $text = commentCanonicalName($text, $data['name']);
     reply(200, ['ok' => true, 'comment' => $text]);
 } catch (Throwable $e) {
     // Never log upstream bodies, credentials or student data.
@@ -92,6 +96,7 @@ function comment_drafter_fetch_draft(string $model, string $key, string $instruc
     $payload = [
         'systemInstruction' => ['parts' => [['text' => $instructions]]],
         'contents' => [['role' => 'user', 'parts' => [['text' => $userText]]]],
+        // temperature, topP and topK are omitted. gemini-3.5-flash-lite ignores them, and later Gemini models reject them.
         'generationConfig' => ['maxOutputTokens' => 2048],
     ];
     try {

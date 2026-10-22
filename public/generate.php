@@ -103,6 +103,7 @@ try {
     if ($text === '' || strlen($text) > 16000) fail(502, 'The AI provider returned no usable comment. Please try again.');
     $sentences = commentSentenceCount($text);
     if ($sentences < 5 || $sentences > 7) fail(422, 'The draft was not 5–7 sentences, so it was not kept. Your existing comment is unchanged. Please try again.');
+    if (commentNameCount($text, $data['name']) !== 3) fail(422, 'The draft did not use the student’s first name exactly three times, so it was not kept. Your existing comment is unchanged. Please try again.');
     reply(200, ['ok' => true, 'comment' => $text]);
 } catch (Throwable $e) {
     // Never log upstream bodies, credentials or student data.

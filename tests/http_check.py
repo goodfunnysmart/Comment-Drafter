@@ -26,13 +26,14 @@ assert engagement.index('>Strengths<') < engagement.index('>Areas for growth<')
 assert 'id="tweak"' in page and 'What would you like changed?' in page and 'Tweak comment' in page and 'id="undo-tweak"' in page
 assert 'Negative behaviours to reframe' in page and 'id="reframe"' in page and 'never named in the comment' in page
 assert 'id="arrangements"' not in page and 'Reporting arrangements' not in page
+assert 'id="subject"' not in page and 'Subject or learning area' not in page
 for logo in ('/assets/logo-classic.webp', '/assets/logo-dark.webp'):
     logo_status, logo_headers, logo_body = request(logo, binary=True)
     assert logo_status == 200 and logo_body[:4] == b'RIFF' and logo_body[8:12] == b'WEBP', (logo, logo_status, logo_headers.get('Content-Type'))
     assert 'image/webp' in logo_headers.get('Content-Type', ''), logo_headers.get('Content-Type')
 assert 'HttpOnly' in headers['Set-Cookie'] and 'SameSite=Strict' in headers['Set-Cookie']
 token = re.search(r'name="csrf-token" content="([a-f0-9]+)"', page)[1]
-valid = dict(name='Alex', pronouns='they', subject='', observations='', length='standard', strengths=['natural-curiosity'], nextSteps=[])
+valid = dict(name='Alex', pronouns='they', observations='', length='standard', strengths=['natural-curiosity'], nextSteps=[])
 good_headers = {'Content-Type':'application/json', 'X-CSRF-Token':token, 'Origin':base}
 assert request('/generate.php')[0] == 405
 assert request('/generate.php', valid, {'Content-Type':'application/json'})[0] == 403

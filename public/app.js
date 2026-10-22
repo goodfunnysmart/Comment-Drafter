@@ -3,7 +3,7 @@ const $ = id => document.getElementById(id);
 const form = $('builder'), editor = $('comment'), generate = $('generate');
 const chosen = {strengths: new Set(), nextSteps: new Set(), supports: new Set()};
 let controller = null, requestVersion = 0, generatedSnapshot = null, lastGenerated = '', busy = false, busyKind = '', tweakUndo = null;
-const fields = ['name', 'pronouns', 'subject', 'observations', 'reframe', 'activities', 'length'];
+const fields = ['name', 'pronouns', 'observations', 'reframe', 'activities', 'length'];
 function inputs() {
   return {...Object.fromEntries(fields.map(id => [id, $(id).value.trim()])),
     strengths: [...chosen.strengths].sort(), nextSteps: [...chosen.nextSteps].sort(), supports: [...chosen.supports].sort()};
@@ -174,7 +174,7 @@ form.addEventListener('submit', async event => {
   data.mode = 'generate';
   await runModelRequest('generate', data, 'Writing a thoughtful first draft…', (result, sentSnapshot) => {
     editor.value = result.comment; lastGenerated = result.comment; generatedSnapshot = sentSnapshot; tweakUndo = null;
-    inputChanged(); setStatus('Your draft is ready. Review and personalise it before use.');
+    inputChanged(); setStatus(typeof result.notice === 'string' && result.notice.trim() ? result.notice.trim() : 'Your draft is ready. Review and personalise it before use.');
   });
 });
 $('tweak-comment').addEventListener('click', async () => {
@@ -189,7 +189,7 @@ $('tweak-comment').addEventListener('click', async () => {
   await runModelRequest('tweak', data, 'Applying that change…', result => {
     tweakUndo = {text: previous, baseline: previousBaseline};
     editor.value = result.comment; lastGenerated = result.comment; $('tweak').value = '';
-    inputChanged(); setStatus('The tweak is ready. Review it before use. Undo restores the previous wording.');
+    inputChanged(); setStatus(typeof result.notice === 'string' && result.notice.trim() ? result.notice.trim() : 'The tweak is ready. Review it before use. Undo restores the previous wording.');
   });
 });
 $('undo-tweak').addEventListener('click', () => {
@@ -223,7 +223,7 @@ $('save').addEventListener('click', () => {
   $('action-status').textContent = 'Text file download started.';
 });
 function hasStudentData() {
-  return !!($('name').value.trim() || $('subject').value.trim() || $('observations').value.trim() || $('reframe').value.trim() || $('activities').value.trim() || $('tweak').value.trim() || editor.value.trim() || chosen.strengths.size || chosen.nextSteps.size || chosen.supports.size);
+  return !!($('name').value.trim() || $('observations').value.trim() || $('reframe').value.trim() || $('activities').value.trim() || $('tweak').value.trim() || editor.value.trim() || chosen.strengths.size || chosen.nextSteps.size || chosen.supports.size);
 }
 $('new-student').addEventListener('click', () => {
   if (hasStudentData() && !window.confirm('Clear all entered student details and the current comment?')) return;

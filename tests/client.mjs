@@ -15,9 +15,9 @@ class Element {
   remove() {}
   click() { this.clicked = true; }
 }
-const ids = ['builder','comment','generate','name','pronouns','subject','observations','reframe','activities','length','word-count','copy','save','generation-status','stale','contradictions','action-status','new-student','tweak','tweak-comment','undo-tweak','tweak-panel'];
+const ids = ['builder','comment','generate','name','pronouns','observations','reframe','activities','length','word-count','copy','save','generation-status','stale','contradictions','action-status','new-student','tweak','tweak-comment','undo-tweak','tweak-panel'];
 const elements = Object.fromEntries(ids.map(id => [id, new Element()]));
-elements.builder.reset = () => { for (const id of ['name','subject','observations','reframe','activities']) elements[id].value = ''; elements.pronouns.value = 'they'; elements.length.value = 'standard'; };
+elements.builder.reset = () => { for (const id of ['name','observations','reframe','activities']) elements[id].value = ''; elements.pronouns.value = 'they'; elements.length.value = 'standard'; };
 elements.builder.reportValidity = () => true;
 const chips = ['natural-curiosity','consistent-attendance','attendance-routines'].map(id => {
   const el = new Element(); el.dataset = {id}; el.closest = () => ({dataset:{bank:id === 'attendance-routines' ? 'nextSteps' : 'strengths'}}); return el;
@@ -51,6 +51,7 @@ const sent = JSON.parse(lastRequest.body);
 assert.equal(sent.reframe, 'Rushes work');
 assert.deepEqual(sent.supports, []);
 assert.equal('arrangements' in sent, false);
+assert.equal('subject' in sent, false);
 elements.comment.value = 'My latest edited comment.'; await elements.comment.emit('input');
 await elements.copy.emit('click'); assert.equal(copied, elements.comment.value);
 await elements.save.emit('click'); assert.equal(savedBlob, elements.comment.value); assert.match(anchor.download, /^Élodie O’Neil-Smith_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.txt$/);
@@ -92,7 +93,13 @@ await elements.builder.emit('submit'); assert.equal(elements.generate.disabled, 
 confirmResult = true;
 const failed = elements.builder.emit('submit'); fetchResolve({ok:false,json:async()=>({ok:false,error:'Quota test error'})}); await failed;
 assert.equal(elements.comment.value,'My latest edited comment.'); assert.match(elements['generation-status'].textContent, /Quota/);
-elements.subject.value = 'English'; await elements.builder.emit('input'); assert.equal(elements.stale.hidden, false);
+const noticed = elements.builder.emit('submit');
+fetchResolve({ok:true,json:async()=>({ok:true,comment:'Short draft.',notice:'Your draft is ready. It is 4 sentences, outside the usual 5–7, so please check the length before you use it.'})});
+await noticed;
+assert.equal(elements.comment.value, 'Short draft.');
+assert.match(elements['generation-status'].textContent, /5–7/);
+assert.equal(elements['generation-status'].classes.has('error'), false);
+elements.observations.value = 'Joined the discussion.'; await elements.builder.emit('input'); assert.equal(elements.stale.hidden, false);
 await chips[1].emit('click'); await chips[2].emit('click'); assert.equal(elements.contradictions.hidden, false);
 const old = elements.builder.emit('submit'); const oldResolve = fetchResolve;
 elements.reframe.value = 'Calls out';

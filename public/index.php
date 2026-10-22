@@ -33,7 +33,7 @@ function chipControl(string $id, array $item): void {
   <link rel="stylesheet" href="app.css?v=9">
   <link rel="stylesheet" href="dark.css?v=6">
   <script src="skin.js?v=3" defer></script>
-  <script src="app.js?v=7" defer></script>
+  <script src="app.js?v=8" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to builder</a>
@@ -50,7 +50,6 @@ function chipControl(string $id, array $item): void {
         <div><label for="pronouns">Pronouns</label><select id="pronouns" name="pronouns" aria-describedby="name-help"><option value="they">They/them</option><option value="she">She/her</option><option value="he">He/him</option><option value="name">Prefer name only</option></select></div>
       </div>
       <p id="name-help" class="help">Use the full first name, never a nickname (e.g. Joseph-Thomas, not "JT"). Use a preferred name or pronouns only where parents/carers know and support it; published reports use the legal name unless a preferred name is approved.</p>
-      <label for="subject">Subject or learning area <span class="optional">Optional</span></label><input id="subject" name="subject" maxlength="160" autocomplete="off" placeholder="e.g. English, Mathematics, learning across the curriculum">
     </section>
     <section class="panel selection" aria-labelledby="descriptors-heading">
       <div class="section-heading"><span class="step">02</span><h2 id="descriptors-heading">What to include</h2></div>

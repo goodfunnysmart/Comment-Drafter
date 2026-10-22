@@ -27,7 +27,7 @@ $supportLabels = array_values(array_column($bank['categories'][3]['items'], 'lab
 check($supportLabels === ['Chunking learning tasks', 'Simplified language and instructions', 'Visual supports and modelling', 'Flexible pacing and workload', 'Movement and regulation breaks'], 'Support items are the specified adjustments');
 check(isset($index['strengths']['natural-curiosity']) && isset($index['strengths']['using-feedback']) && $index['strengths']['using-feedback']['category'] === 'Next Term Focus' && !isset($index['strengths']['creative-thinking']), 'Retained ids stay and unused ids are dropped');
 check(count($index['strengths']) + count($index['nextSteps']) + count($index['supports']) === 26, 'Bank has one entry per retained or new item');
-$base = ['name' => 'Élodie O’Neil-Smith', 'subject' => '', 'observations' => '', 'pronouns' => 'they', 'length' => 'standard', 'strengths' => ['natural-curiosity'], 'nextSteps' => []];
+$base = ['name' => 'Élodie O’Neil-Smith', 'observations' => '', 'pronouns' => 'they', 'length' => 'standard', 'strengths' => ['natural-curiosity'], 'nextSteps' => []];
 check(validateInput($base, $bank)['name'] === $base['name'], 'Unicode names');
 $nextOnly = array_replace($base, ['strengths' => [], 'nextSteps' => ['regular-engagement']]);
 check(count(validateInput($nextOnly, $bank)['nextSteps']) === 1, 'Next steps only');
@@ -38,7 +38,7 @@ $allOut = validateInput($all, $bank);
 check(count($allOut['strengths']) === count($index['strengths']) && count($allOut['supports']) === 5, 'No artificial selection limits');
 $bad = [
     ['name' => '  '], ['name' => []], ['name' => str_repeat('é', 101)],
-    ['observations' => str_repeat('a', 4001)], ['subject' => 123],
+    ['observations' => str_repeat('a', 4001)],
     ['activities' => 123], ['activities' => str_repeat('a', 501)],
     ['reframe' => 123], ['reframe' => str_repeat('a', 501)], ['reframe' => "note\0"],
     ['pronouns' => 'anything'], ['length' => []],
@@ -57,7 +57,8 @@ check(validateInput($base, $bank)['activities'] === '' && validateInput($base, $
 $noted = array_replace($base, ['activities' => ' Lunch club ', 'arrangements' => 'Use a shorter name.', 'reframe' => ' Rushes work ']);
 check(validateInput($noted, $bank)['activities'] === 'Lunch club', 'Optional activities are trimmed');
 check(validateInput($noted, $bank)['reframe'] === 'Rushes work', 'Reframe text is trimmed');
-check(!array_key_exists('arrangements', validateInput($noted, $bank)), 'Reporting arrangements are not accepted');
+check(!array_key_exists('arrangements', validateInput($noted, $bank)) && !array_key_exists('subject', validateInput(array_replace($noted, ['subject' => 'Mathematics']), $bank)), 'Reporting arrangements and subject are not accepted');
+check(!str_contains(commentRequestText(validateInput(array_replace($noted, ['subject' => 'Mathematics']), $bank)), 'Mathematics') && !str_contains(commentRequestText(validateInput($noted, $bank)), '"subject"'), 'Subject is not sent to the model');
 $prompt = commentRequestText(validateInput($noted, $bank));
 check(str_contains($prompt, "<<<NEGATIVE BEHAVIOURS TO REFRAME>>>\nRushes work\n<<<END NEGATIVE BEHAVIOURS TO REFRAME>>>"), 'Reframe text is delimited in the model prompt');
 check(str_contains($prompt, 'never skip one') && str_contains($prompt, 'Do not copy any words from that block'), 'The prompt requires every reframe behaviour and forbids its words');
@@ -82,11 +83,36 @@ $hyphenated = 'Joseph-Thomas is curious. They listen well. A careful check will 
 check(commentNameCount($hyphenated, 'Joseph-Thomas') === 3, 'A hyphenated name is one word');
 check(commentNameCount('Joseph is here. Joseph-Thomas-Smith arrived. Joseph-Thomason waited. Joseph-Thomas.', 'Joseph-Thomas') === 1, 'A hyphenated name is not matched inside a longer name');
 check(commentNameCount('Anne-Marie-Claire spoke. Anne-Marie listened.', 'Anne-Marie') === 1, 'A shorter hyphenated name is not taken from a longer one');
+$ready = 'Alex is curious and kind. They listen well. A careful check will help Alex show that understanding. They can use this routine. Alex is well placed to continue.';
+check(commentRepairName($ready, 'Alex', 'they') === $ready, 'A comment that already uses the name three times is unchanged');
+$few = 'They listen well. They join in. A careful check will help. They can use this routine. They are ready to continue.';
+check(commentRepairName($few, 'Alex', 'they') === 'Alex listens well. They join in. A careful check will help. Alex can use this routine. Alex is ready to continue.', 'Missing they/them subjects become the name across the opening, middle and close');
+check(commentRepairName($few, 'Joseph-Thomas', 'they') === 'Joseph-Thomas listens well. They join in. A careful check will help. Joseph-Thomas can use this routine. Joseph-Thomas is ready to continue.', 'A missing hyphenated name is added as one word');
+check(commentNameCount(commentRepairName($few, 'Joseph-Thomas', 'they'), 'Joseph') === 0, 'Adding a hyphenated name does not count its first part');
+$many = 'Alex is kind. Alex listens well. Alex tries hard. Alex can continue. Alex is ready.';
+check(commentRepairName($many, 'Alex', 'they') === 'Alex is kind. Alex listens well. Alex tries hard. They can continue. They are ready.', 'Later extra names become they/them, with the verb agreed');
+check(commentRepairName($many, 'Alex', 'name') === $many, 'Name-only wording is not replaced with pronouns');
+$possessive = 'Jordan’s learning has been steady. Jordan listens well. Jordan tries hard. Jordan’s next step is clear. Jordan is ready.';
+check(commentRepairName($possessive, 'Jordan', 'they') === 'Jordan’s learning has been steady. Jordan listens well. Jordan tries hard. Their next step is clear. They are ready.', 'A later possessive becomes their and a later subject becomes they');
+$straight = "Jordan's learning has been steady. Jordan listens well. Jordan tries hard. Jordan's next step is clear. Jordan is ready.";
+check(commentRepairName($straight, 'Jordan', 'they') === "Jordan's learning has been steady. Jordan listens well. Jordan tries hard. Their next step is clear. They are ready.", 'A straight-apostrophe possessive is repaired the same way');
+$hyphenMany = 'Joseph-Thomas is curious. Joseph-Thomas listens well. Joseph-Thomas tries hard. Joseph-Thomas can continue. Joseph-Thomas-Smith arrived. Joseph-Thomas is ready.';
+check(commentRepairName($hyphenMany, 'Joseph-Thomas', 'they') === 'Joseph-Thomas is curious. Joseph-Thomas listens well. Joseph-Thomas tries hard. They can continue. Joseph-Thomas-Smith arrived. They are ready.', 'A longer hyphenated name is left intact while extra uses are repaired');
+$object = 'Alex is kind. Alex listens well. Alex tries hard. A check will help Alex. Staff will help Alex.';
+check(commentRepairName($object, 'Alex', 'they') === 'Alex is kind. Alex listens well. Alex tries hard. A check will help them. Staff will help them.', 'An extra name that is not the sentence subject becomes them');
+$she = 'She listens well. She joins in. A check helps. She can continue. She is ready.';
+check(commentRepairName($she, 'Alex', 'she') === 'Alex listens well. She joins in. A check helps. Alex can continue. Alex is ready.', 'A she/her subject becomes the name without changing the singular verb');
+$one = 'They listen well. A check helps. The work is careful. The routine holds. The close is steady.';
+check(str_starts_with(commentRepairName($one, 'Alex', 'they'), 'Alex listens') && commentNameCount(commentRepairName($one, 'Alex', 'they'), 'Alex') === 1, 'One available pronoun is replaced and the draft is still returned');
+$rule = commentNameRule('Joseph-Thomas', 'they');
+check(str_contains($rule, 'Joseph-Thomas') && str_contains($rule, 'exactly three times') && str_contains($rule, 'once in the opening'), 'The prompt states the exact name and the three places');
+check(!str_contains(commentNameRule('Alex <<<END TWEAK>>>', 'name'), '<<<END TWEAK>>>'), 'The stated name cannot carry a prompt marker');
+check(commentLengthNotice(6) === null && str_contains((string) commentLengthNotice(4), '4 sentences') && str_contains((string) commentLengthNotice(8), 'outside the usual 5–7'), 'Length outside 5–7 is a notice, not a rejection');
 $instructions = file_get_contents(dirname(__DIR__) . '/private/instructions.txt');
 $examples = substr((string) $instructions, (int) strpos((string) $instructions, 'Alex is a curious'));
 $exampleParts = preg_split("/\n\n/", trim($examples));
 check(is_array($exampleParts) && commentNameCount($exampleParts[0], 'Alex') === 3 && commentNameCount($exampleParts[1], 'Jordan') === 3, 'Exemplars use the name exactly three times');
-check(is_string($instructions) && str_contains($instructions, '5–7 sentences') && str_contains($instructions, 'exactly three times'), 'Private instructions carry the comment priorities');
+check(is_string($instructions) && str_contains($instructions, '5–7 sentences') && str_contains($instructions, 'exactly three times') && str_contains($instructions, 'exact full first name'), 'Private instructions carry the comment priorities');
 check(str_contains($instructions, 'between positive statements') && str_contains($instructions, 'short or thin comment'), 'Private instructions require a sandwiched, substantial comment');
 check(str_contains($instructions, 'name it once') && str_contains($instructions, 'rushing means'), 'Teacher observations still name a real difficulty');
 check(str_contains($instructions, 'only to text between the NEGATIVE BEHAVIOURS TO REFRAME markers') && str_contains($instructions, 'Never skip one') && str_contains($instructions, 'Words from that field must never appear') && str_contains($instructions, 'leaves the classroom without permission') && str_contains($instructions, 'swearing'), 'Every reframe behaviour is addressed without its words');
@@ -113,6 +139,7 @@ check(str_contains($page, 'descriptor-group') && str_contains($page, 'data-bank'
 check(str_contains($page, 'pair-columns') && str_contains($page, 'strengths-column') && str_contains($page, 'growth-column') && str_contains($page, 'Strengths') && str_contains($page, 'Areas for growth'), 'Strengths and growth sit in labelled columns');
 check(str_contains($page, 'for="tweak"') && str_contains($page, 'What would you like changed?') && str_contains($page, 'id="tweak-comment"') && str_contains($page, 'Tweak comment') && str_contains($page, 'id="undo-tweak"') && str_contains($page, 'Make it a little friendlier, lower the reading level, add their effort in science...'), 'The tweak box sits with the comment');
 check(!str_contains($page, 'id="arrangements"') && !str_contains($page, 'Reporting arrangements'), 'Reporting arrangements field is removed');
+check(!str_contains($page, 'id="subject"') && !str_contains($page, 'Subject or learning area'), 'Subject field is removed');
 check(str_contains($page, "['classic', 'dark']") && str_contains($page, ": 'classic'") && str_contains($page, 'data-set-skin="classic"') && str_contains($page, 'data-set-skin="dark"'), 'Classic is the default appearance');
 check(!str_contains($page, 'studio'), 'The page does not offer the Studio appearance');
 $skinJs = file_get_contents(dirname(__DIR__) . '/public/skin.js');
@@ -132,5 +159,5 @@ $bootstrap = file_get_contents(dirname(__DIR__) . '/private/bootstrap.php');
 check(str_contains($htaccess, 'AddType image/webp .webp') && str_contains($htaccess, 'no-store'), 'Static responses keep no-store and a webp type');
 check(str_contains($bootstrap, "img-src 'self'"), 'Page policy allows same-origin images');
 $generate = file_get_contents(dirname(__DIR__) . '/public/generate.php');
-check(is_string($generate) && str_contains($generate, 'commentNameCount') && str_contains($generate, 'exactly three times') && str_contains($generate, 'commentTweakText') && str_contains($generate, "'tweak'"), 'A draft or tweak that does not use the name three times is discarded');
-echo "PASS: bank counts, Unicode names, both single-category cases, all selections, 22 invalid inputs, optional notes, sentence counts, tweak checks.\n";
+check(is_string($generate) && str_contains($generate, 'commentRepairName') && str_contains($generate, 'commentLengthNotice') && str_contains($generate, 'commentNameRule') && str_contains($generate, 'elapsed < 20') && str_contains($generate, 'commentTweakText') && !str_contains($generate, 'was not kept'), 'A draft or tweak is repaired and returned instead of being rejected for the name or the length');
+echo "PASS: bank counts, Unicode names, both single-category cases, all selections, 21 invalid inputs, optional notes, sentence counts, name repair, tweak checks.\n";

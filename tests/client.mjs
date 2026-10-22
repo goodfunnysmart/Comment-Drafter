@@ -15,9 +15,9 @@ class Element {
   remove() {}
   click() { this.clicked = true; }
 }
-const ids = ['builder','comment','generate','name','pronouns','subject','observations','length','word-count','copy','save','generation-status','stale','contradictions','strengths-count','nextSteps-count','action-status','new-student'];
+const ids = ['builder','comment','generate','name','pronouns','subject','observations','activities','arrangements','length','word-count','copy','save','generation-status','stale','contradictions','strengths-count','nextSteps-count','action-status','new-student'];
 const elements = Object.fromEntries(ids.map(id => [id, new Element()]));
-elements.builder.reset = () => { for (const id of ['name','subject','observations']) elements[id].value = ''; elements.pronouns.value = 'they'; elements.length.value = 'standard'; };
+elements.builder.reset = () => { for (const id of ['name','subject','observations','activities','arrangements']) elements[id].value = ''; elements.pronouns.value = 'they'; elements.length.value = 'standard'; };
 elements.builder.reportValidity = () => true;
 const chips = ['natural-curiosity','consistent-attendance','attendance-routines'].map(id => {
   const el = new Element(); el.dataset = {id}; el.closest = () => ({dataset:{bank:id === 'attendance-routines' ? 'nextSteps' : 'strengths'}}); return el;

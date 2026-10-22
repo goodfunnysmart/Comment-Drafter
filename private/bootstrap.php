@@ -37,7 +37,20 @@ function validateInput(array $input, array $bank): array {
             throw new InvalidArgumentException('A text field is too long or contains invalid characters.');
         }
     }
-    if ($out['name'] === '') throw new InvalidArgumentException('Enter the student’s first name.');
+    if ($out['name'] === '') throw new InvalidArgumentException('Enter the student’s full first name.');
+    foreach (['activities' => 500, 'arrangements' => 500] as $key => $limit) {
+        if (!array_key_exists($key, $input) || $input[$key] === null) {
+            $out[$key] = '';
+            continue;
+        }
+        if (!is_string($input[$key]) || !preg_match('//u', $input[$key])) {
+            throw new InvalidArgumentException('Please check the text fields.');
+        }
+        $out[$key] = trim($input[$key]);
+        if (preg_match_all('/./us', $out[$key]) > $limit || preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', $input[$key])) {
+            throw new InvalidArgumentException('A text field is too long or contains invalid characters.');
+        }
+    }
     foreach (['pronouns' => ['they', 'she', 'he', 'name'], 'length' => ['short', 'standard', 'detailed']] as $key => $options) {
         if (!isset($input[$key]) || !is_string($input[$key]) || !in_array($input[$key], $options, true)) {
             throw new InvalidArgumentException('Choose valid pronouns and a comment length.');
@@ -59,4 +72,16 @@ function validateInput(array $input, array $bank): array {
     }
     if (!$out['strengths'] && !$out['nextSteps']) throw new InvalidArgumentException('Choose at least one strength or next step.');
     return $out;
+}
+function normaliseComment(string $text): string {
+    $text = trim(preg_replace('/\s+/u', ' ', $text) ?? '');
+    if (preg_match('/\A["“](.*)["”]\z/u', $text, $wrapped) === 1) $text = trim($wrapped[1]);
+    return $text;
+}
+function commentSentenceCount(string $text): int {
+    $text = trim(preg_replace('/\s+/u', ' ', $text) ?? '');
+    if ($text === '') return 0;
+    $text = preg_replace('/\b(e\.g|i\.e|Mr|Mrs|Ms|Dr)\./iu', '$1<prd>', $text) ?? $text;
+    $parts = preg_split('/(?<=[.!?])\s+/u', $text, -1, PREG_SPLIT_NO_EMPTY);
+    return is_array($parts) ? count(array_filter($parts, fn($part) => trim((string) $part) !== '')) : 0;
 }

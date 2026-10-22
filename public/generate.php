@@ -43,10 +43,10 @@ try {
     if (!is_readable($instructionsPath)) fail(503, 'The private instructions.txt file is missing or unreadable. Check its upload location and permissions. [PROMPT_FILE]');
     $instructions = file_get_contents($instructionsPath);
     if ($instructions === false || trim($instructions) === '') fail(503, 'The private instructions.txt file is empty or unreadable. [PROMPT_FILE]');
-    $ranges = ['short' => '60–90', 'standard' => '100–140', 'detailed' => '150–200'];
+    $ranges = ['short' => '5 sentences', 'standard' => '6 sentences', 'detailed' => '7 sentences'];
     $pronouns = ['they' => 'they/them/their; use plural verb agreement', 'she' => 'she/her/her', 'he' => 'he/him/his', 'name' => 'Use the supplied name only; do not use personal pronouns'];
     $data['pronouns'] = $pronouns[$data['pronouns']];
-    $data['length'] = $ranges[$data['length']] . ' words approximately; shorter when evidence is limited';
+    $data['length'] = $ranges[$data['length']] . '; the whole comment must be 5–7 sentences';
     $payload = [
         'systemInstruction' => ['parts' => [['text' => $instructions]]],
         'contents' => [['role' => 'user', 'parts' => [['text' => json_encode($data, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)]]]],
@@ -99,8 +99,10 @@ try {
     if (!empty($result['promptFeedback']['blockReason']) || ($candidate['finishReason'] ?? '') !== 'STOP') fail(422, 'The provider blocked or did not finish the response. Review the observations and try again.');
     $text = '';
     foreach ($candidate['content']['parts'] ?? [] as $part) if (empty($part['thought']) && isset($part['text'])) $text .= $part['text'];
-    $text = trim(preg_replace('/\s+/u', ' ', $text));
+    $text = normaliseComment($text);
     if ($text === '' || strlen($text) > 16000) fail(502, 'The AI provider returned no usable comment. Please try again.');
+    $sentences = commentSentenceCount($text);
+    if ($sentences < 5 || $sentences > 7) fail(422, 'The draft was not 5–7 sentences, so it was not kept. Your existing comment is unchanged. Please try again.');
     reply(200, ['ok' => true, 'comment' => $text]);
 } catch (Throwable $e) {
     // Never log upstream bodies, credentials or student data.

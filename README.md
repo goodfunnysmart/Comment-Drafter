@@ -225,7 +225,7 @@ The example in this project contains placeholders only. `config.php` is excluded
 
 The exact ID **`gemini-3.5-flash-lite`** was verified against [Google’s model documentation](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite) on 22 October 2026. Account access and quota must still be confirmed with your key. No substitute model is selected automatically. Change only `GEMINI_MODEL` to change models.
 
-The server follows Google’s [generateContent REST reference](https://ai.google.dev/api/generate-content) using an HTTPS POST and `x-goog-api-key` header. [Google’s migration documentation](https://ai.google.dev/gemini-api/docs/generate-content/whats-new-gemini-3.6) says to omit deprecated sampling parameters for this model; the implementation omits them. It sends server-owned `systemInstruction` plus descriptor-resolved source material. Requests have a 10-second connection timeout and 45-second total timeout. Output length is guided by the prompt; evidence may justify fewer words.
+The server follows Google’s [generateContent REST reference](https://ai.google.dev/api/generate-content) using an HTTPS POST and `x-goog-api-key` header. [Google’s migration documentation](https://ai.google.dev/gemini-api/docs/generate-content/whats-new-gemini-3.6) says to omit deprecated sampling parameters for this model; the implementation omits them. It sends server-owned `systemInstruction` plus descriptor-resolved source material. Requests have a 10-second connection timeout and 45-second total timeout. A general comment is 5–7 sentences. The length control chooses 5, 6 or 7. A draft outside that range is not kept. Evidence that is too thin is not padded with invented detail.
 
 ## Required hosting-level authentication
 
@@ -250,7 +250,7 @@ Visit `http://127.0.0.1:8765`. The development server uses the sibling `private/
 ## Data handling and behaviour
 
 - Student details and drafts exist in the page’s memory only. There is no database, localStorage, sessionStorage, autosave, analytics or third-party frontend resource. The page warns before leaving with entered data and reloads if restored from the back/forward cache.
-- When Generate is clicked, the name, pronouns, subject, selected descriptions and observations go through the PHP server to Google. Google’s policies and your school’s agreement determine retention; this app makes no no-retention claim. Use only school-approved information and follow your school’s AI/data policy.
+- When Generate is clicked, the name, pronouns, subject, selected descriptions, observations and any optional activities or reporting arrangements go through the PHP server to Google. Google’s policies and your school’s agreement determine retention; this app makes no no-retention claim. Use only school-approved information and follow your school’s AI/data policy.
 - Server code does not log names, observations, drafts, keys or upstream bodies. Keep hosting/PHP debug modes and request-body capture disabled; check any host-level logging or monitoring independently. Normal URL access logs contain no form data because generation uses POST JSON, never query parameters.
 - Requests/pages use `Cache-Control: no-store`; shared caches should bypass this application. Copy and download use the editor’s current value without another request. Downloads use a UTF-8 Blob and the teacher’s local time.
 - Descriptions appear on hover/focus; separate information buttons support touch without changing selection. Escape dismisses descriptions. Selected buttons expose `aria-pressed`, ticks and visible counts.

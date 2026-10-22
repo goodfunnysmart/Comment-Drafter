@@ -16,3 +16,10 @@
 }
 
 @media(max-width:740px),(pointer:coarse){#builder .info{min-width:44px;min-height:44px}}
+
+.masthead-tools{display:flex;align-items:center;gap:25px}
+.skin-switch{display:flex;align-items:center;gap:3px;padding:4px;border:1px solid #cbd6ce;border-radius:30px;background:#f7f9f5}
+.skin-switch button{border:0;border-radius:24px;background:transparent;color:#4f6156;padding:7px 14px;font-size:12px;line-height:1.4}
+.skin-switch button:hover{background:transparent}
+.skin-switch button[aria-pressed="true"],.skin-switch button[aria-pressed="true"]:hover{background:var(--teal);color:#fff;box-shadow:0 2px 5px #193a2220}
+@media(max-width:450px){.skin-switch button{padding:7px 9px;font-size:11px}}

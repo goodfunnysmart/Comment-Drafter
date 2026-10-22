@@ -71,7 +71,8 @@ code="$(run_deploy "$HOME_A")"
 PUBLIC="$HOME_A/greache.com/comments"
 PRIVATE="$HOME_A/comments-private"
 [[ ! -e "$HOME_A/public_html" ]] || fail "deploy created public_html"
-for name in index.php generate.php private_path.php app.css app.js studio.css dark.css skin.js; do
+[[ ! -e "$PUBLIC/studio.css" ]] || fail "deploy published studio.css"
+for name in index.php generate.php private_path.php app.css app.js dark.css skin.js; do
   assert_file "$PUBLIC/$name"
   cmp -s "$ROOT/public/$name" "$PUBLIC/$name" || fail "public $name differs"
 done
@@ -96,6 +97,7 @@ grep -q 'config.php is not in the private directory' "$WORK/deploy.out" || fail 
 mkdir -p "$PUBLIC/private" "$PUBLIC/public" "$PUBLIC/tests"
 printf 'secret bank\n' > "$PUBLIC/private/bank.json"
 printf 'old readme\n' > "$PUBLIC/README.md"
+printf 'old studio\n' > "$PUBLIC/studio.css"
 printf 'old key\n' > "$PRIVATE/config.php"
 before_key="$(sha256sum "$PRIVATE/config.php")"
 auth_block=$'#----------------------------------------------------------------cp:ppd\n# Section managed by cPanel: Password Protected Directories     -cp:ppd\n# - Do not edit this section of the htaccess file!              -cp:ppd\n#----------------------------------------------------------------cp:ppd\nAuthType Basic\nAuthName "Comments"\nAuthUserFile "/home/example/.htpasswds/greache.com/comments/passwd"\nRequire valid-user\n#----------------------------------------------------------------cp:ppd\n# End section managed by cPanel: Password Protected Directories -cp:ppd\n#----------------------------------------------------------------cp:ppd'
@@ -114,6 +116,12 @@ grep -q 'HAND_EDIT' "$PUBLIC/.htaccess" && fail "hand edits outside the Director
 cmp -s "$PUBLIC/private/bank.json" <(printf 'secret bank\n') || fail "old exposed bank.json was deleted or changed"
 [[ -d "$PUBLIC/public" && -f "$PUBLIC/README.md" ]] || fail "old upload paths were deleted"
 grep -q 'WARNING:' "$WORK/deploy.out" || fail "old upload was not warned about"
+[[ ! -e "$PUBLIC/studio.css" ]] || fail "leftover studio.css was not removed"
+mkdir "$PUBLIC/studio.css"
+code="$(run_deploy "$HOME_A")"
+[[ "$code" == "0" ]] || fail "deploy failed while a studio.css directory was present: $(cat "$WORK/deploy.err")"
+[[ -d "$PUBLIC/studio.css" ]] || fail "deploy removed a studio.css directory"
+rmdir "$PUBLIC/studio.css"
 # A second merge must not duplicate the block.
 code="$(run_deploy "$HOME_A")"
 [[ "$code" == "0" ]] || fail "third deploy failed"

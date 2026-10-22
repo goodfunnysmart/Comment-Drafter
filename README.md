@@ -13,11 +13,10 @@ Comment Drafter/
 │   ├── index.php                 # Page, bank rendering, CSRF token
 │   ├── generate.php              # Validated server-side Gemini endpoint
 │   ├── private_path.php          # Finds the private bootstrap outside the document root
-│   ├── app.css
+│   ├── app.css                   # Classic layout, including the appearance switch
 │   ├── app.js
-│   ├── studio.css                # Studio layout and styling
-│   ├── dark.css                  # Dark palette
-│   ├── skin.js                   # Studio / Classic / Dark switch
+│   ├── dark.css                  # Dark palette on the Classic layout
+│   ├── skin.js                   # Classic / Dark switch
 │   └── .htaccess                 # Merged with cPanel's auth block; never copied over it
 ├── private/                      ← Deployed to $HOME/comments-private
 │   ├── bootstrap.php             # Session, headers, validation
@@ -175,7 +174,7 @@ In File Manager, open `greache.com/comments`. Delete uploaded project files that
 - `.git/`
 - `.gitignore`, `.gitattributes`, `.editorconfig`
 
-Keep `.htaccess`, `index.php`, `generate.php`, `private_path.php`, `private-path.php`, `app.css`, `app.js`, `studio.css`, `dark.css` and `skin.js`. Do not delete `comments-private` or `repositories/Comment-Drafter`. If a site file is removed by mistake, click **Deploy HEAD Commit** again. Do not copy `.htaccess` from Git over the server file by hand.
+Keep `.htaccess`, `index.php`, `generate.php`, `private_path.php`, `private-path.php`, `app.css`, `app.js`, `dark.css` and `skin.js`. Deploy removes a leftover `studio.css` file. Do not delete `comments-private` or `repositories/Comment-Drafter`. If a site file is removed by mistake, click **Deploy HEAD Commit** again. Do not copy `.htaccess` from Git over the server file by hand.
 
 `$HOME/public_html/comments` is not the live site. After `config.php` exists only in `comments-private`, delete `$HOME/public_html/comments` if that tree is still there.
 
@@ -284,4 +283,4 @@ Old distribution ZIPs and pre-change backups are preserved under `.local/archive
 
 Use `git status` to review source changes and `git check-ignore private/config.php` to confirm the key file is excluded. Avoid force-adding ignored configuration files. Before any push, review the staged file list. Create the GitHub repository with **Private** visibility; local Git initialisation does not create a GitHub repository or set remote visibility.
 
-The interface supports Studio, Classic and Dark appearances without reloading or discarding the current draft. Read [SKINS.md](SKINS.md) for styling and description controls. Deploy with the cPanel steps above. Do not upload `private/`, tests, or this README into `greache.com` or `public_html`.
+The interface supports Classic and Dark appearances without reloading or discarding the current draft. Classic is the default. Read [SKINS.md](SKINS.md) for styling and description controls. Deploy with the cPanel steps above. Do not upload `private/`, tests, or this README into `greache.com` or `public_html`.

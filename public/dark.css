@@ -24,9 +24,25 @@ html[data-skin="dark"] .nextSteps .step,html[data-skin="dark"] .nextSteps .count
 html[data-skin="dark"] .group-heading h3{color:#e7eef6}
 html[data-skin="dark"] .chip-wrap{background:#15283d;border-color:#3d5f8a}
 html[data-skin="dark"] .chip-wrap.growth{border-color:#8eafd4;background:#15283d}
-html[data-skin="dark"] .strengths-column{background:#122033;border-color:#3d5f8a}
-html[data-skin="dark"] .growth-column{background:#1a3354;border-color:#8eafd4}
-html[data-skin="dark"] .column-label{color:#b7cbe6}
+html[data-skin="dark"] .strengths-column{background:#143226;border-color:#3e9a6a}
+html[data-skin="dark"] .growth-column{background:#3a2a14;border-color:#d39a45}
+html[data-skin="dark"] .challenge-column{background:#3a1e20;border-color:#d07070}
+html[data-skin="dark"] .strengths-column .chip-wrap{background:#1c4634;border-color:#3e9a6a}
+html[data-skin="dark"] .growth-column .chip-wrap{background:#4a3518;border-color:#d39a45}
+html[data-skin="dark"] .challenge-column .chip-wrap{background:#4a2628;border-color:#d07070}
+html[data-skin="dark"] .column-label{color:#e7eef6}
+html[data-skin="dark"] .strengths-column .column-label{color:#b7ebcf}
+html[data-skin="dark"] .growth-column .column-label{color:#f3d2a2}
+html[data-skin="dark"] .challenge-column .column-label{color:#f5c2bc}
+html[data-skin="dark"] .strengths-column .chip:hover,html[data-skin="dark"] .strengths-column .info:hover{background:#245c42}
+html[data-skin="dark"] .growth-column .chip:hover,html[data-skin="dark"] .growth-column .info:hover{background:#5c421c}
+html[data-skin="dark"] .challenge-column .chip:hover,html[data-skin="dark"] .challenge-column .info:hover{background:#5c3032}
+html[data-skin="dark"] .strengths-column .chip-wrap:has(.chip[aria-pressed="true"]){background:#1f6b48;border-color:#b7ebcf}
+html[data-skin="dark"] .strengths-column .chip[aria-pressed="true"]{background:#1f6b48;color:#f3fff8}
+html[data-skin="dark"] .growth-column .chip-wrap:has(.chip[aria-pressed="true"]){background:#8a5a16;border-color:#f3d2a2}
+html[data-skin="dark"] .growth-column .chip[aria-pressed="true"]{background:#8a5a16;color:#fff8ec}
+html[data-skin="dark"] .challenge-column .chip-wrap:has(.chip[aria-pressed="true"]){background:#8a3330;border-color:#f5c2bc}
+html[data-skin="dark"] .challenge-column .chip[aria-pressed="true"]{background:#8a3330;color:#fff1ef}
 html[data-skin="dark"] .chip,html[data-skin="dark"] .info{color:#e7eef6}
 html[data-skin="dark"] .chip:hover,html[data-skin="dark"] .info:hover{background:#1c3558}
 html[data-skin="dark"] .chip-wrap:has(.chip[aria-pressed="true"]){background:#042e5e;border-color:#8eafd4;box-shadow:none}

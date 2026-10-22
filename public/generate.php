@@ -54,7 +54,8 @@ try {
     $data['pronouns'] = $pronounLabels[$pronounChoice];
     $data['length'] = commentLengthTarget($data['length']);
     $supportLabels = commentSelectedSupportLabels($data['supports'], $bank);
-    $userText = commentNameRule($data['name'], $pronounChoice) . "\n\n" . commentSupportRule($supportLabels, $data['name'], $pronounChoice) . "\n\n" . ($mode === 'tweak' ? commentTweakText($data, $tweak['comment'], $tweak['instruction']) : commentRequestText($data));
+    $adjustments = (string) ($data['adjustments'] ?? '');
+    $userText = commentNameRule($data['name'], $pronounChoice) . "\n\n" . commentSupportRule($supportLabels, $data['name'], $pronounChoice, $adjustments) . "\n\n" . ($mode === 'tweak' ? commentTweakText($data, $tweak['comment'], $tweak['instruction']) : commentRequestText($data));
     // One provider call is already recorded in the throttle. A single repair retry stays inside that same slot and must finish before the browser aborts at 55 seconds.
     $stage = 'CURL_REQUEST';
     $started = microtime(true);
@@ -62,12 +63,12 @@ try {
     if (isset($draft['error'])) fail($draft['status'], $draft['error']);
     $text = $draft['text'];
     $elapsed = microtime(true) - $started;
-    if ((commentNameCount($text, $data['name']) !== 3 || !commentSupportsCovered($text, $supportLabels)) && $elapsed < 20) {
+    if ((commentNameCount($text, $data['name']) !== 3 || !commentSupportsCovered($text, $supportLabels, $adjustments)) && $elapsed < 20) {
         $retryTimeout = (int) max(8, min(25, floor(50 - $elapsed)));
-        $retry = comment_drafter_fetch_draft($model, $key, $instructions, $userText . "\n\nThe previous draft missed the name rule or the supports sentence. Write the comment again. Stay within the selected word range. " . commentNameRule($data['name'], $pronounChoice) . ' ' . commentSupportRule($supportLabels, $data['name'], $pronounChoice), $retryTimeout);
+        $retry = comment_drafter_fetch_draft($model, $key, $instructions, $userText . "\n\nThe previous draft missed the name rule or the supports sentence. Write the comment again. Stay within the selected word range. " . commentNameRule($data['name'], $pronounChoice) . ' ' . commentSupportRule($supportLabels, $data['name'], $pronounChoice, $adjustments), $retryTimeout);
         if (isset($retry['text']) && $retry['text'] !== '') $text = $retry['text'];
     }
-    $text = commentRepairSupports($text, $supportLabels, $data['name'], $pronounChoice);
+    $text = commentRepairSupports($text, $supportLabels, $data['name'], $pronounChoice, $adjustments);
     $text = commentRepairName($text, $data['name'], $pronounChoice);
     reply(200, ['ok' => true, 'comment' => $text]);
 } catch (Throwable $e) {

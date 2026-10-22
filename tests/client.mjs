@@ -15,9 +15,9 @@ class Element {
   remove() {}
   click() { this.clicked = true; }
 }
-const ids = ['builder','comment','generate','name','pronouns','observations','reframe','activities','length','word-count','copy','save','generation-status','stale','contradictions','action-status','new-student','tweak','tweak-comment','undo-tweak','tweak-panel'];
+const ids = ['builder','comment','generate','name','pronouns','observations','reframe','activities','adjustments','length','word-count','copy','save','generation-status','stale','contradictions','action-status','new-student','tweak','tweak-comment','undo-tweak','tweak-panel'];
 const elements = Object.fromEntries(ids.map(id => [id, new Element()]));
-elements.builder.reset = () => { for (const id of ['name','observations','reframe','activities']) elements[id].value = ''; elements.pronouns.value = 'they'; elements.length.value = 'standard'; };
+elements.builder.reset = () => { for (const id of ['name','observations','reframe','activities','adjustments']) elements[id].value = ''; elements.pronouns.value = 'they'; elements.length.value = 'standard'; };
 elements.builder.reportValidity = () => true;
 const chips = ['natural-curiosity','consistent-attendance','attendance-routines'].map(id => {
   const el = new Element(); el.dataset = {id}; el.closest = () => ({dataset:{bank:id === 'attendance-routines' ? 'nextSteps' : 'strengths'}}); return el;
@@ -50,6 +50,8 @@ assert.equal(elements.comment.value,'Synthetic test draft only.');
 const sent = JSON.parse(lastRequest.body);
 assert.equal(sent.reframe, 'Rushes work');
 assert.deepEqual(sent.supports, []);
+assert.deepEqual(sent.challenges, []);
+assert.equal(sent.adjustments, '');
 assert.equal('arrangements' in sent, false);
 assert.equal('subject' in sent, false);
 elements.comment.value = 'My latest edited comment.'; await elements.comment.emit('input');

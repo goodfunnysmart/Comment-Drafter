@@ -29,6 +29,16 @@
           "kind": "next",
           "label": "Sustained Effort",
           "description": "Could strengthen their learning by staying with tasks beyond the initial attempt and using support when the work becomes challenging."
+        },
+        "getting-started": {
+          "kind": "challenge",
+          "label": "Getting Started",
+          "description": "Is working on beginning a task with a clear first step, so learning time is used from the start."
+        },
+        "staying-focused": {
+          "kind": "challenge",
+          "label": "Staying Focused",
+          "description": "Is working on staying with the learning for longer, using an agreed check-in when attention drifts."
         }
       }
     },
@@ -61,6 +71,21 @@
           "kind": "next",
           "label": "Managing Frustration",
           "description": "Would benefit from recognising early signs of frustration and practising agreed strategies before difficulties interrupt their learning."
+        },
+        "building-confidence": {
+          "kind": "next",
+          "label": "Building Confidence",
+          "description": "Could develop greater confidence by attempting manageable challenges and recognising progress, even when the result is not yet perfect."
+        },
+        "turn-taking": {
+          "kind": "challenge",
+          "label": "Turn Taking",
+          "description": "Is working on waiting for a turn in conversation so that everyone can be heard."
+        },
+        "calm-words": {
+          "kind": "challenge",
+          "label": "Calm Words",
+          "description": "Is working on using calm, respectful words when something feels difficult."
         }
       }
     },
@@ -93,38 +118,78 @@
           "kind": "next",
           "label": "Returning to Learning",
           "description": "Could maintain progress by following a supported plan for rejoining learning after a break, absence or difficult moment."
+        },
+        "gaps-in-attendance": {
+          "kind": "challenge",
+          "label": "Gaps in Attendance",
+          "description": "Some learning has been missed, and a steadier pattern of attendance is the focus so routines can take hold."
+        },
+        "arriving-late": {
+          "kind": "challenge",
+          "label": "Arriving Late",
+          "description": "Arriving after learning has started is being worked on, with an agreed way to join the lesson calmly."
         }
       }
     },
     {
       "id": "supports",
       "title": "Specific Adjustments / Supports",
-      "hint": "Adjustments already in place. Mention only the ones selected.",
+      "hint": "Adjustments already in place. Selected items, and anything typed below, are named in one sentence.",
       "items": {
-        "chunking-tasks": {
+        "learning-support": {
           "kind": "support",
-          "label": "Chunking learning tasks",
-          "description": "Tasks are broken into smaller steps so the student can begin, keep going and see each part through."
+          "label": "Learning support",
+          "description": "Extra help with the learning is already part of lessons."
         },
-        "simplified-language": {
+        "adjusted-tasks": {
           "kind": "support",
-          "label": "Simplified language and instructions",
-          "description": "Instructions are given in plain, direct language, with the important steps stated clearly."
+          "label": "Adjusted tasks",
+          "description": "Tasks are adjusted so the student can show what they know."
+        },
+        "extra-time": {
+          "kind": "support",
+          "label": "Extra time",
+          "description": "More time is given to begin, work and finish."
+        },
+        "assistive-technology": {
+          "kind": "support",
+          "label": "Assistive technology",
+          "description": "A tool or device is used so the student can take part in the learning."
         },
         "visual-supports": {
           "kind": "support",
-          "label": "Visual supports and modelling",
-          "description": "A worked example, visual or demonstrated model shows what the learning looks like."
+          "label": "Visual supports",
+          "description": "A visual shows the steps or what the finished learning looks like."
         },
-        "flexible-pacing": {
+        "structured-routines": {
           "kind": "support",
-          "label": "Flexible pacing and workload",
-          "description": "The pace and amount of work are adjusted so the student can learn the task without being rushed."
+          "label": "Structured routines",
+          "description": "A clear routine sets out what happens and in which order."
+        },
+        "sensory-supports": {
+          "kind": "support",
+          "label": "Sensory supports",
+          "description": "The setting or materials are adjusted for sensory comfort."
+        },
+        "wellbeing-support": {
+          "kind": "support",
+          "label": "Wellbeing support",
+          "description": "Support for wellbeing is part of the regular routine."
+        },
+        "family-communication": {
+          "kind": "support",
+          "label": "Family communication",
+          "description": "Family or carers and staff share updates about learning and support."
+        },
+        "flexible-learning": {
+          "kind": "support",
+          "label": "Flexible learning",
+          "description": "Where, when or how learning happens is adjusted so the student can take part."
         },
         "movement-breaks": {
           "kind": "support",
-          "label": "Movement and regulation breaks",
-          "description": "Planned pauses for movement or settling are part of the routine and help the student return to the task."
+          "label": "Movement breaks",
+          "description": "Planned pauses for movement are part of the routine."
         }
       }
     },
@@ -158,10 +223,15 @@
           "label": "Following Through",
           "description": "Could demonstrate more of their learning by completing agreed tasks and returning to unfinished work with staff support."
         },
-        "building-confidence": {
-          "kind": "next",
-          "label": "Building Confidence",
-          "description": "Could develop greater confidence by attempting manageable challenges and recognising progress, even when the result is not yet perfect."
+        "unfinished-tasks": {
+          "kind": "challenge",
+          "label": "Unfinished Tasks",
+          "description": "Some agreed tasks are still unfinished, and completing them with support is the current focus."
+        },
+        "trying-when-unsure": {
+          "kind": "challenge",
+          "label": "Trying When Unsure",
+          "description": "Starting work when the answer is not yet clear is being practised, with permission to attempt a first step."
         }
       }
     }

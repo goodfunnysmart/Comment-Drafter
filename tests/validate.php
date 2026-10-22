@@ -42,6 +42,8 @@ check(commentSentenceCount('') === 0 && normaliseComment("  \"Kept as one. Still
 $instructions = file_get_contents(dirname(__DIR__) . '/private/instructions.txt');
 check(is_string($instructions) && str_contains($instructions, '5–7 sentences') && str_contains($instructions, 'full first name'), 'Private instructions carry the comment priorities');
 check(str_contains($instructions, 'between positive statements') && str_contains($instructions, 'short or thin comment'), 'Private instructions require a sandwiched, substantial comment');
+check(str_contains($instructions, 'Never name, describe, quote or hint') && str_contains($instructions, 'positive behaviour to develop') && str_contains($instructions, 'deficit wording'), 'Private instructions reframe concerns as growth');
+check(!str_contains($instructions, 'name it once') && !str_contains($instructions, 'rushing means'), 'Private instructions do not tell the comment to name a difficulty');
 check(str_contains($instructions, 'name it specifically') && str_contains($instructions, 'skills they built') && str_contains($instructions, 'supplied input'), 'Private instructions name supplied clubs and skills only');
 check(!str_contains($instructions, '.docx') && !str_contains($instructions, 'uploads/'), 'Private instructions do not point at source documents');
 $page = file_get_contents(dirname(__DIR__) . '/public/index.php');

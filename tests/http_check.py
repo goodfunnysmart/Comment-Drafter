@@ -27,6 +27,8 @@ assert 'id="tweak"' in page and 'What would you like changed?' in page and 'Twea
 assert 'Negative behaviours to reframe' in page and 'id="reframe"' in page and 'never named in the comment' in page
 assert 'id="arrangements"' not in page and 'Reporting arrangements' not in page
 assert 'id="subject"' not in page and 'Subject or learning area' not in page
+assert 'Short · approximately 60–90 words' in page and 'value="standard" selected>Standard · approximately 90–120 words' in page
+assert 'Detailed · approximately 120–150 words' in page and 'Long · approximately 150–200 words' in page
 for logo in ('/assets/logo-classic.webp', '/assets/logo-dark.webp'):
     logo_status, logo_headers, logo_body = request(logo, binary=True)
     assert logo_status == 200 and logo_body[:4] == b'RIFF' and logo_body[8:12] == b'WEBP', (logo, logo_status, logo_headers.get('Content-Type'))
@@ -47,6 +49,7 @@ assert request('/generate.php', dict(valid, reframe='x' * 501), good_headers)[0]
 assert request('/generate.php', dict(valid, mode='tweak', comment='Alex is kind.', tweak=' '), good_headers)[0] == 422
 assert request('/generate.php', dict(valid, mode='tweak', comment='Alex is kind.', tweak='x' * 501), good_headers)[0] == 422
 assert request('/generate.php', dict(valid, mode='rewrite'), good_headers)[0] == 422
+assert request('/generate.php', dict(valid, length='huge'), good_headers)[0] == 422
 assert request('/generate.php', headers=good_headers, raw=b'{broken')[0] == 422
 assert request('/generate.php', headers=good_headers, raw=b' ' * 24001)[0] == 413
 assert request('/private/config.php')[0] == 404
@@ -57,7 +60,7 @@ assert request('/bank.json')[0] == 404
 assert request('/README.md')[0] == 404
 status, headers, body = request('/private_path.php')
 assert status == 404 and 'comments-private' not in body and 'bootstrap.php' not in body
-status, headers, body = request('/generate.php', dict(valid, reframe='Rushes work'), good_headers)
+status, headers, body = request('/generate.php', dict(valid, reframe='Rushes work', length='long'), good_headers)
 assert status == 503 and json.loads(body)['ok'] is False, (status, body)
 assert 'no-store' in headers['Cache-Control']
 assert request('/generate.php', valid, good_headers)[0] == 429

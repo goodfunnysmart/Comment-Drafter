@@ -104,7 +104,6 @@ main{padding-bottom:96px}
 #session-message{min-height:1.2em}
 .dictate{position:relative}
 .dictate textarea{display:block;min-height:96px;padding:11px 52px 44px 12px}
-.dictate #comment{min-height:320px}
 .dictate.is-recording textarea{padding-right:104px}
 .dictate-mic{position:absolute;z-index:2;right:8px;bottom:8px;display:inline-flex;align-items:center;justify-content:center;gap:6px;width:36px;height:36px;min-width:36px;min-height:36px;padding:0;border-radius:999px;border:1px solid #8aa0b8;background:#fff;color:#3e5164;box-shadow:0 1px 2px #16263a14;touch-action:manipulation}
 .dictate-mic:hover{background:#f4f7fb}

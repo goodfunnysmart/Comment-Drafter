@@ -28,7 +28,7 @@ function reply(int $status, array $data): never {
 function fail(int $status, string $message): never { reply($status, ['ok' => false, 'error' => $message]); }
 function validateInput(array $input, array $bank): array {
     $out = [];
-    foreach (['name' => 100, 'subject' => 160, 'observations' => 4000] as $key => $limit) {
+    foreach (['name' => 100, 'observations' => 4000] as $key => $limit) {
         if (!isset($input[$key]) || !is_string($input[$key]) || !preg_match('//u', $input[$key])) {
             throw new InvalidArgumentException('Please check the text fields.');
         }
@@ -120,7 +120,7 @@ function stripMarkers(string $text): string {
 }
 function commentRequestText(array $data): string {
     $reframe = trim((string) ($data['reframe'] ?? ''));
-    unset($data['reframe'], $data['arrangements']);
+    unset($data['reframe'], $data['arrangements'], $data['subject']);
     $reframe = stripMarkers($reframe);
     $evidence = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
     $block = $reframe === '' ? '(none)' : $reframe;
@@ -155,6 +155,146 @@ function commentNameCount(string $text, string $name): int {
     $pattern = '/(?<![\p{L}\p{M}-])' . preg_quote($name, '/') . '(?![\p{L}\p{M}-])/u';
     $count = preg_match_all($pattern, $text, $matches);
     return $count === false ? 0 : $count;
+}
+function commentNameRule(string $name, string $pronounChoice): string {
+    $name = trim(stripMarkers(preg_replace('/\s+/u', ' ', $name) ?? $name));
+    $rule = 'The student’s full first name is: ' . $name . '. Write this exact name exactly three times: once in the opening, once in the middle, and once near the close. Do not write it a fourth time. Do not use a nickname, initials, or a different spelling.';
+    if ($pronounChoice === 'name') return $rule . ' Do not use personal pronouns.';
+    return $rule . ' Use the supplied pronouns for every other reference.';
+}
+function commentPronounForms(string $choice): array {
+    return match ($choice) {
+        'she' => ['subject' => 'She', 'possessive' => 'Her', 'possessiveLower' => 'her', 'objectLower' => 'her'],
+        'he' => ['subject' => 'He', 'possessive' => 'His', 'possessiveLower' => 'his', 'objectLower' => 'him'],
+        'name' => ['subject' => '', 'possessive' => '', 'possessiveLower' => '', 'objectLower' => ''],
+        default => ['subject' => 'They', 'possessive' => 'Their', 'possessiveLower' => 'their', 'objectLower' => 'them'],
+    };
+}
+function commentNamePattern(string $name, bool $withPossessive = false): string {
+    $pattern = '(?<![\p{L}\p{M}-])' . preg_quote($name, '/') . '(?![\p{L}\p{M}-])';
+    if ($withPossessive) $pattern .= "(?:['’]s)?";
+    return '/' . $pattern . '/u';
+}
+function commentAtSentenceStart(string $text, int $byte): bool {
+    $before = rtrim(substr($text, 0, $byte));
+    return $before === '' || preg_match('/[.!?]["”\']?\z/u', $before) === 1;
+}
+function commentAgreeVerb(string $verb, bool $plural): string {
+    $lower = strtolower($verb);
+    $capital = $verb !== '' && preg_match('/\A\p{Lu}/u', $verb) === 1;
+    $toPlural = ['is' => 'are', 'was' => 'were', 'has' => 'have', 'does' => 'do'];
+    $toSingular = ['are' => 'is', 'were' => 'was', 'have' => 'has', 'do' => 'does'];
+    if ($plural) {
+        if (isset($toPlural[$lower])) $out = $toPlural[$lower];
+        elseif (str_ends_with($lower, 'ies') && strlen($lower) > 4) $out = substr($lower, 0, -3) . 'y';
+        elseif (preg_match('/(?:ch|sh|x|z|s)es\z/', $lower) === 1 && strlen($lower) > 3) $out = substr($lower, 0, -2);
+        elseif (str_ends_with($lower, 's') && !str_ends_with($lower, 'ss') && strlen($lower) > 3) $out = substr($lower, 0, -1);
+        else $out = $lower;
+    } else {
+        $modals = ['can', 'will', 'may', 'might', 'must', 'should', 'would', 'could', 'shall'];
+        if (isset($toSingular[$lower])) $out = $toSingular[$lower];
+        elseif (in_array($lower, $modals, true)) $out = $lower;
+        elseif (preg_match('/[bcdfghjklmnpqrstvwxz]y\z/', $lower) === 1) $out = substr($lower, 0, -1) . 'ies';
+        elseif (preg_match('/(?:ch|sh|x|z|s)\z/', $lower) === 1) $out = $lower . 'es';
+        elseif (preg_match('/\A\p{L}+\z/u', $lower) === 1) $out = $lower . 's';
+        else $out = $lower;
+    }
+    if ($capital && $out !== '') $out = strtoupper($out[0]) . substr($out, 1);
+    return $out;
+}
+function commentSplitSentences(string $text): array {
+    $mark = "\u{E000}";
+    $protected = preg_replace('/\b(e\.g|i\.e|Mr|Mrs|Ms|Dr)\./iu', '$1' . $mark, $text) ?? $text;
+    $parts = preg_split('/(?<=[.!?])\s+/u', $protected, -1, PREG_SPLIT_NO_EMPTY);
+    if (!is_array($parts) || $parts === []) return [$text];
+    return array_values(array_map(fn($part) => str_replace($mark, '.', (string) $part), $parts));
+}
+function commentPickNameSentences(int $sentenceCount, array $candidates, array $named, int $needed): array {
+    if ($needed <= 0 || $candidates === [] || $sentenceCount < 1) return [];
+    $picked = [];
+    $used = [];
+    $thirds = [[0.0, $sentenceCount / 3], [$sentenceCount / 3, $sentenceCount * 2 / 3], [$sentenceCount * 2 / 3, (float) $sentenceCount]];
+    $open = [];
+    foreach ($thirds as $index => [$start, $end]) {
+        $occupied = false;
+        foreach ($named as $place) if ($place >= $start && $place < $end) $occupied = true;
+        if (!$occupied) $open[] = [$start, $end, $index];
+    }
+    if ($open === []) foreach ($thirds as $index => [$start, $end]) $open[] = [$start, $end, $index];
+    foreach ($open as [$start, $end, $which]) {
+        if (count($picked) >= $needed) break;
+        $choices = array_values(array_filter($candidates, fn($candidate) => $candidate >= $start && $candidate < $end && !isset($used[$candidate])));
+        if ($choices === []) continue;
+        $choice = $which === 2 ? $choices[count($choices) - 1] : ($which === 1 ? $choices[intdiv(count($choices) - 1, 2)] : $choices[0]);
+        $picked[] = $choice;
+        $used[$choice] = true;
+    }
+    foreach ($candidates as $candidate) {
+        if (count($picked) >= $needed) break;
+        if (isset($used[$candidate])) continue;
+        $picked[] = $candidate;
+        $used[$candidate] = true;
+    }
+    sort($picked);
+    return $picked;
+}
+function commentReduceNames(string $text, string $name, array $pronouns): string {
+    if ($pronouns['subject'] === '' || !preg_match_all(commentNamePattern($name, true), $text, $matches, PREG_OFFSET_CAPTURE)) return $text;
+    $found = $matches[0];
+    if (count($found) <= 3) return $text;
+    for ($index = count($found) - 1; $index >= 3; $index--) {
+        [$matched, $byte] = $found[$index];
+        $end = $byte + strlen($matched);
+        $atStart = commentAtSentenceStart($text, $byte);
+        $possessive = preg_match("/['’]s\\z/u", $matched) === 1;
+        if ($possessive) {
+            $replacement = $atStart ? $pronouns['possessive'] : $pronouns['possessiveLower'];
+        } elseif ($atStart) {
+            $replacement = $pronouns['subject'];
+            if (preg_match('/\G(\s+)(\p{L}+)/u', $text, $verb, 0, $end) === 1) {
+                $agreed = commentAgreeVerb($verb[2], true);
+                if ($agreed !== $verb[2]) {
+                    $replacement .= $verb[1] . $agreed;
+                    $end += strlen($verb[0]);
+                }
+            }
+        } else {
+            $replacement = $pronouns['objectLower'];
+        }
+        $text = substr($text, 0, $byte) . $replacement . substr($text, $end);
+    }
+    return $text;
+}
+function commentAddNames(string $text, string $name, array $pronouns, int $needed): string {
+    if ($needed <= 0) return $text;
+    $subjects = $pronouns['subject'] === '' ? ['They', 'He', 'She'] : [$pronouns['subject']];
+    $sentences = commentSplitSentences($text);
+    $candidates = [];
+    $named = [];
+    foreach ($sentences as $index => $sentence) {
+        if (commentNameCount($sentence, $name) > 0) $named[] = $index;
+        if (preg_match('/\A(?:' . implode('|', array_map(fn($subject) => preg_quote($subject, '/'), $subjects)) . ')\s+\p{L}/u', $sentence) === 1) $candidates[] = $index;
+    }
+    foreach (commentPickNameSentences(count($sentences), $candidates, $named, $needed) as $index) {
+        if (preg_match('/\A(' . implode('|', array_map(fn($subject) => preg_quote($subject, '/'), $subjects)) . ')\s+(\p{L}+)/u', $sentences[$index], $lead) !== 1) continue;
+        $verb = strcasecmp($lead[1], 'They') === 0 ? commentAgreeVerb($lead[2], false) : $lead[2];
+        $sentences[$index] = $name . ' ' . $verb . substr($sentences[$index], strlen($lead[0]));
+    }
+    return implode(' ', $sentences);
+}
+function commentRepairName(string $text, string $name, string $pronounChoice): string {
+    $name = trim($name);
+    if ($name === '' || trim($text) === '') return $text;
+    $count = commentNameCount($text, $name);
+    if ($count === 3) return $text;
+    $pronouns = commentPronounForms($pronounChoice);
+    if ($count > 3) return commentReduceNames($text, $name, $pronouns);
+    return commentAddNames($text, $name, $pronouns, 3 - $count);
+}
+function commentLengthNotice(int $sentences): ?string {
+    if ($sentences >= 5 && $sentences <= 7) return null;
+    $label = $sentences === 1 ? 'sentence' : 'sentences';
+    return 'Your draft is ready. It is ' . $sentences . ' ' . $label . ', outside the usual 5–7, so please check the length before you use it.';
 }
 function commentSentenceCount(string $text): int {
     $text = trim(preg_replace('/\s+/u', ' ', $text) ?? '');

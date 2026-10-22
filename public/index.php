@@ -28,6 +28,12 @@ function chipControl(string $id, array $item): void {
           </div>
     <?php
 }
+function dictateControl(string $id, string $label): void {
+    $status = $id . '-dictate-status';
+    ?>
+          <button type="button" class="dictate-mic" hidden data-dictate="<?= e($id) ?>" data-label="<?= e($label) ?>" aria-label="<?= e($label) ?>" aria-describedby="<?= e($status) ?>"><svg class="dictate-mic-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6.5 11a5.5 5.5 0 0 0 11 0M12 16.5v3M9 19.5h6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><svg class="dictate-stop-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" hidden><rect x="7" y="7" width="10" height="10" rx="1.5" fill="currentColor"/></svg><span class="dictate-pulse" hidden></span><span class="dictate-spinner" hidden></span><span class="dictate-timer" aria-hidden="true"></span></button>
+    <?php
+}
 ?><!doctype html>
 <html lang="en-AU" data-skin="<?= e($skin) ?>">
 <head>
@@ -35,10 +41,10 @@ function chipControl(string $id, array $item): void {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="<?= e($token) ?>">
   <title>Report Comment Builder</title>
-  <link rel="stylesheet" href="app.css?v=11">
-  <link rel="stylesheet" href="dark.css?v=8">
+  <link rel="stylesheet" href="app.css?v=14">
+  <link rel="stylesheet" href="dark.css?v=9">
   <script src="skin.js?v=3" defer></script>
-  <script src="app.js?v=12" defer></script>
+  <script src="app.js?v=14" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to builder</a>
@@ -73,7 +79,8 @@ function chipControl(string $id, array $item): void {
         <div class="other-adjustments">
           <label for="adjustments">Other specific adjustments <span class="optional">Optional</span></label>
           <p id="adjustments-help" class="help">Type any other adjustment already in place. It is included with the selected items, in your words.</p>
-          <textarea id="adjustments" name="adjustments" rows="2" maxlength="200" aria-describedby="adjustments-help" placeholder="Optional. For example, a quiet space for independent work."></textarea>
+          <div class="dictate"><textarea id="adjustments" name="adjustments" rows="2" maxlength="200" aria-describedby="adjustments-help adjustments-dictate-status" placeholder="Optional. For example, a quiet space for independent work."></textarea><?php dictateControl('adjustments', 'Dictate other specific adjustments'); ?></div>
+          <p id="adjustments-dictate-status" class="dictate-error help" role="status"></p>
         </div>
         <?php else: ?>
         <div class="traffic-columns">
@@ -94,13 +101,16 @@ function chipControl(string $id, array $item): void {
       <div class="section-heading"><span class="step">03</span><h2 id="context-heading">Make it personal</h2></div>
       <label for="observations">Teacher observations <span class="optional">Optional</span></label>
       <p id="observation-help" class="help">Specific examples help personalise the comment. Avoid sensitive personal or medical information.</p>
-      <textarea id="observations" name="observations" rows="4" maxlength="4000" aria-describedby="observation-help" placeholder="A moment of progress, an achievement, or something you’ve noticed…"></textarea>
+      <div class="dictate"><textarea id="observations" name="observations" rows="4" maxlength="4000" aria-describedby="observation-help observations-dictate-status" placeholder="A moment of progress, an achievement, or something you’ve noticed…"></textarea><?php dictateControl('observations', 'Dictate teacher observations'); ?></div>
+      <p id="observations-dictate-status" class="dictate-error help" role="status"></p>
       <label for="reframe">Negative behaviours to reframe <span class="optional">Optional</span></label>
       <p id="reframe-help" class="help">These are never named in the comment; they are turned into positive next steps.</p>
-      <textarea id="reframe" name="reframe" rows="2" maxlength="500" aria-describedby="reframe-help" placeholder="Optional. Leave blank if there is nothing to reframe."></textarea>
+      <div class="dictate"><textarea id="reframe" name="reframe" rows="2" maxlength="500" aria-describedby="reframe-help reframe-dictate-status" placeholder="Optional. Leave blank if there is nothing to reframe."></textarea><?php dictateControl('reframe', 'Dictate negative behaviours to reframe'); ?></div>
+      <p id="reframe-dictate-status" class="dictate-error help" role="status"></p>
       <label for="activities">Clubs, activities or other experiences <span class="optional">Optional</span></label>
       <p id="activities-help" class="help">Name the specific club or activity, describe how the student took part, and the skills they built. Treat personal development activities the same way.</p>
-      <textarea id="activities" name="activities" rows="2" maxlength="500" aria-describedby="activities-help" placeholder="Optional. Leave blank if it should not appear."></textarea>
+      <div class="dictate"><textarea id="activities" name="activities" rows="2" maxlength="500" aria-describedby="activities-help activities-dictate-status" placeholder="Optional. Leave blank if it should not appear."></textarea><?php dictateControl('activities', 'Dictate clubs or activities'); ?></div>
+      <p id="activities-dictate-status" class="dictate-error help" role="status"></p>
       <label for="length">Comment length</label><select id="length" name="length"><option value="short">Short · approximately 60–90 words</option><option value="standard" selected>Standard · approximately 90–120 words</option><option value="detailed">Detailed · approximately 120–150 words</option><option value="long">Long · approximately 150–200 words</option></select>
     </section>
   </form>
@@ -113,11 +123,13 @@ function chipControl(string $id, array $item): void {
       <p id="generation-status" role="status" aria-live="polite"></p>
       <p id="stale" class="notice" hidden>Inputs have changed. This comment was generated from earlier details.</p>
       <label class="sr-only" for="comment">Editable report comment</label>
-      <textarea id="comment" rows="14" placeholder="Your generated comment will appear here. You can also write or edit directly in this space." spellcheck="true"></textarea>
+      <div class="dictate"><textarea id="comment" rows="14" placeholder="Your generated comment will appear here. You can also write or edit directly in this space." spellcheck="true" aria-describedby="comment-dictate-status"></textarea><?php dictateControl('comment', 'Dictate the comment'); ?></div>
+      <p id="comment-dictate-status" class="dictate-error help" role="status"></p>
       <div id="tweak-panel" class="tweak-panel" hidden>
         <label for="tweak">What would you like changed?</label>
         <p id="tweak-help" class="help">Changes only what you ask for. The comment still uses the first name three times and follows the selected length.</p>
-        <textarea id="tweak" rows="2" maxlength="500" aria-describedby="tweak-help" placeholder="Make it a little friendlier, lower the reading level, add their effort in science..."></textarea>
+        <div class="dictate"><textarea id="tweak" rows="2" maxlength="500" aria-describedby="tweak-help tweak-dictate-status" placeholder="Make it a little friendlier, lower the reading level, add their effort in science..."></textarea><?php dictateControl('tweak', 'Dictate the change you want'); ?></div>
+        <p id="tweak-dictate-status" class="dictate-error help" role="status"></p>
         <div class="tweak-actions">
           <button id="tweak-comment" type="button">Tweak comment</button>
           <button id="undo-tweak" type="button" hidden>Undo</button>
@@ -128,7 +140,7 @@ function chipControl(string $id, array $item): void {
       <p id="action-status" class="help" role="status" aria-live="polite"></p>
       <div class="editor-footer"><span>Ready for a fresh start?</span><button id="new-student" type="button" class="text-button">New student <span aria-hidden="true">↻</span></button></div>
     </section>
-    <p class="privacy"><span aria-hidden="true">◇</span> Student details stay in this page until you clear or close it. When you generate or tweak, the supplied details are sent to the configured AI provider. A tweak also sends the current comment and the change you asked for. Provider retention policies apply. Use only information your school permits you to share.</p>
+    <p class="privacy"><span aria-hidden="true">◇</span> Student details stay in this page until you clear or close it. When you generate or tweak, the supplied details are sent to the configured AI provider. A tweak also sends the current comment and the change you asked for. Dictation sends the recording to the same provider and this app does not store the audio. Provider retention policies apply. Use only information your school permits you to share.</p>
   </aside>
   </div>
   <footer>Thoughtful comments start with what you know about your student.</footer>

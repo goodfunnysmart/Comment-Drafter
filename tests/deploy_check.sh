@@ -77,7 +77,7 @@ PUBLIC="$HOME_A/betterschools.com.au/comments"
 PRIVATE="$HOME_A/comments-private"
 [[ ! -e "$HOME_A/public_html" ]] || fail "deploy created public_html"
 [[ ! -e "$PUBLIC/studio.css" ]] || fail "deploy published studio.css"
-for name in index.php generate.php session.php private_path.php app.css app.js dark.css skin.js .htaccess; do
+for name in index.php generate.php transcribe.php session.php private_path.php app.css app.js dark.css skin.js .htaccess; do
   assert_file "$PUBLIC/$name"
   if [[ "$name" != ".htaccess" ]]; then
     cmp -s "$ROOT/public/$name" "$PUBLIC/$name" || fail "public $name differs"

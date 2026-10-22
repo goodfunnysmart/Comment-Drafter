@@ -82,3 +82,8 @@ html[data-skin="dark"] .session-panel button{background:#15283d;color:#e7eef6;bo
 html[data-skin="dark"] .session-panel .session-primary{background:#042e5e;color:#fff;border-color:#8eafd4}
 html[data-skin="dark"] .session-write{color:#f3dba2}
 html[data-skin="dark"] .session-code{background:#0d1a2c;color:#fff;border-color:#3d5f8a}
+html[data-skin="dark"] .dictate-mic,html[data-skin="dark"] .session-panel .dictate-mic{background:#0d1a2c;color:#c5d7ef;border-color:#8eafd4}
+html[data-skin="dark"] .dictate-mic:hover,html[data-skin="dark"] .session-panel .dictate-mic:hover{background:#15283d}
+html[data-skin="dark"] .dictate-mic.is-recording,html[data-skin="dark"] .session-panel .dictate-mic.is-recording{color:#ffb4aa;border-color:#ffb4aa;background:#2a1720}
+html[data-skin="dark"] .dictate-error{color:#ffb4aa}
+html[data-skin="dark"] .dictate-pulse{background:#ffb4aa}

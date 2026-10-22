@@ -40,6 +40,11 @@ assert 'Email me this code' in page and 'It is not stored.' in page
 assert 'Start new session' in page and 'Leave session' in page and 'Clear session' in page
 assert 'Download .txt' in page and 'Download .docx' in page
 assert 'Negative behaviours to reframe' in page and 'id="reframe"' in page and 'never named in the comment' in page
+assert 'Dictation sends the recording to the same provider and this app does not store the audio.' in page
+mic_buttons = re.findall(r'<button type="button" class="dictate-mic" hidden[^>]*>', page)
+assert len(mic_buttons) == 6, len(mic_buttons)
+for label in ('Dictate teacher observations', 'Dictate negative behaviours to reframe', 'Dictate other specific adjustments', 'Dictate clubs or activities', 'Dictate the comment', 'Dictate the change you want'):
+    assert f'aria-label="{label}"' in page, label
 assert 'id="arrangements"' not in page and 'Reporting arrangements' not in page
 assert 'id="subject"' not in page and 'Subject or learning area' not in page
 assert 'Short · approximately 60–90 words' in page and 'value="standard" selected>Standard · approximately 90–120 words' in page
@@ -135,8 +140,31 @@ for _ in range(6):
     assert missed[0] == 404, missed[0]
 blocked = request('/session.php', {'action':'resume','code':'ZYZY-9876-ZYZY-WYWY'}, good_headers)
 assert blocked[0] == 429, blocked[0]
+def transcribe(payload, headers=None, raw=None):
+    return request('/transcribe.php', payload, headers if headers is not None else good_headers, raw)
+assert transcribe(None, {})[0] == 405
+assert transcribe({'audio': 'YQ==', 'mime': 'audio/webm'}, {'Content-Type': 'application/json'})[0] == 403
+assert transcribe({'audio': 'YQ==', 'mime': 'audio/webm'}, dict(good_headers, Origin='https://another.example'))[0] == 403
+assert transcribe({'audio': 'YQ==', 'mime': 'audio/webm'}, dict(good_headers, **{'Sec-Fetch-Site': 'cross-site'}))[0] == 403
+assert transcribe({'audio': 'YQ==', 'mime': 'application/json'})[0] == 415
+assert transcribe({'audio': '!!!', 'mime': 'audio/webm'})[0] == 422
+assert transcribe({'audio': '', 'mime': 'audio/webm'})[0] == 422
+assert transcribe({'audio': 'YQ==', 'mime': 'audio/webm'})[0] == 422
+short = __import__('base64').b64encode(b'x' * 40).decode()
+assert transcribe({'audio': short, 'mime': 'audio/webm;codecs=opus'})[0] == 422
+over_body = request('/transcribe.php', headers=good_headers, raw=b'{"mime":"audio/webm","audio":"' + (b'A' * 7000001) + b'"}')
+assert over_body[0] == 413, over_body[0]
+over_audio = __import__('base64').b64encode(b'\x00' * 5000001).decode()
+assert transcribe({'audio': over_audio, 'mime': 'audio/mp4'})[0] == 413
+clip = __import__('base64').b64encode(b'\x1a\x45\xdf\xa3' + (b'\x00' * 120)).decode()
+status, headers, body = transcribe({'audio': clip, 'mime': 'audio/webm;codecs=opus'})
+parsed = json.loads(body)
+assert status == 503 and parsed['ok'] is False and clip not in body, (status, body)
+assert 'not configured' in parsed['error'].lower()
+status, headers, body = transcribe({'audio': clip, 'mime': 'audio/mp4'})
+assert status == 429 and 'duration_ms' not in json.loads(body), (status, body)
 status, headers, body = request('/generate.php', dict(valid, reframe='Rushes work', length='long'), good_headers)
 assert status == 503 and json.loads(body)['ok'] is False, (status, body)
 assert 'no-store' in headers['Cache-Control']
 assert request('/generate.php', valid, good_headers)[0] == 429
-print('PASS: rendering, 40 chips, three columns, adjustments field, tweak field, session panel, security headers/cookie, POST/CSRF/origin, invalid data, size cap, private paths, session storage, unconfigured error, throttle. No live AI call.')
+print('PASS: rendering, 40 chips, three columns, adjustments field, tweak field, dictation controls, session panel, security headers/cookie, POST/CSRF/origin, invalid data, size cap, private paths, session storage, unconfigured error, separate dictation throttle. No live AI call.')

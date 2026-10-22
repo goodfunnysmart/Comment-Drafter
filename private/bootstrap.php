@@ -113,6 +113,14 @@ function normaliseComment(string $text): string {
     if (preg_match('/\A["“](.*)["”]\z/u', $text, $wrapped) === 1) $text = trim($wrapped[1]);
     return $text;
 }
+function commentNameCount(string $text, string $name): int {
+    $name = trim($name);
+    if ($name === '' || $text === '') return 0;
+    // Hyphens join a name into one word, so Joseph does not match inside Joseph-Thomas.
+    $pattern = '/(?<![\p{L}\p{M}-])' . preg_quote($name, '/') . '(?![\p{L}\p{M}-])/u';
+    $count = preg_match_all($pattern, $text, $matches);
+    return $count === false ? 0 : $count;
+}
 function commentSentenceCount(string $text): int {
     $text = trim(preg_replace('/\s+/u', ' ', $text) ?? '');
     if ($text === '') return 0;

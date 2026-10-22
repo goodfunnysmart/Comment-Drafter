@@ -64,7 +64,7 @@ function dictateControl(string $id, string $label): void {
     </section>
     <section class="panel selection" aria-labelledby="descriptors-heading">
       <div class="section-heading"><span class="step">02</span><h2 id="descriptors-heading">What to include</h2></div>
-      <p class="help">Choose any that apply. Strengths are on the left, areas for growth in the middle, and challenges on the right. Supports stay in one list. There’s no fixed limit.</p>
+      <p class="help">Choose any that apply. Positives are on the left, challenges and obstacles in the middle, and items for development on the right. Supports stay in one list. There’s no fixed limit.</p>
       <?php foreach ($bank['categories'] as $category):
         $grouped = ['strength' => [], 'next' => [], 'challenge' => [], 'support' => []];
         foreach ($category['items'] as $id => $item) if (isset($grouped[$item['kind']])) $grouped[$item['kind']][$id] = $item;
@@ -84,7 +84,7 @@ function dictateControl(string $id, string $label): void {
         </div>
         <?php else: ?>
         <div class="traffic-columns">
-          <?php foreach (['strength' => ['Strengths', 'strengths-column'], 'next' => ['Areas for Growth', 'growth-column'], 'challenge' => ['Challenges and Obstacles', 'challenge-column']] as $kind => [$columnLabel, $columnClass]): $labelId = $category['id'] . '-' . $kind . '-label'; ?>
+          <?php foreach (['strength' => ['Positives', 'strengths-column'], 'challenge' => ['Challenges / Obstacles', 'challenge-column'], 'next' => ['For Development', 'growth-column']] as $kind => [$columnLabel, $columnClass]): $labelId = $category['id'] . '-' . $kind . '-label'; ?>
           <div class="traffic-column <?= e($columnClass) ?>" role="group" aria-labelledby="<?= e($labelId) ?>">
             <p class="column-label" id="<?= e($labelId) ?>"><?= e($columnLabel) ?></p>
             <div class="chips">

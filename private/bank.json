@@ -1,44 +1,136 @@
 {
   "categories": [
     {
+      "id": "strengths",
+      "title": "Strengths",
+      "hint": "What the student already brings to their learning.",
+      "items": {
+        "academic-ability": {
+          "kind": "strength",
+          "label": "Academic Ability",
+          "description": "Demonstrates strong ability and produces high-quality work."
+        },
+        "creative-thinking": {
+          "kind": "strength",
+          "label": "Creative Thinking",
+          "description": "Brings creativity, curiosity and original ideas to learning."
+        },
+        "independent-learning": {
+          "kind": "strength",
+          "label": "Independent Learning",
+          "description": "Works confidently and independently on familiar tasks."
+        },
+        "positive-contribution": {
+          "kind": "strength",
+          "label": "Positive Contribution",
+          "description": "Brings enthusiasm, energy and ideas to the classroom."
+        },
+        "inconsistent-focus": {
+          "kind": "challenge",
+          "label": "Inconsistent Focus",
+          "description": "Difficulty maintaining focus can limit demonstrated achievement."
+        },
+        "uneven-performance": {
+          "kind": "challenge",
+          "label": "Uneven Performance",
+          "description": "Inconsistent engagement can prevent strengths from being fully demonstrated."
+        },
+        "task-confidence": {
+          "kind": "challenge",
+          "label": "Task Confidence",
+          "description": "Can be hesitant to attempt unfamiliar or challenging tasks."
+        },
+        "rushed-work": {
+          "kind": "challenge",
+          "label": "Rushed Work",
+          "description": "Rushing tasks can affect accuracy and quality."
+        },
+        "consistent-application": {
+          "kind": "next",
+          "label": "Consistent Application",
+          "description": "Applying strengths more consistently will be an important next step."
+        },
+        "extend-abilities": {
+          "kind": "next",
+          "label": "Extend Abilities",
+          "description": "Building confidence with unfamiliar tasks will help extend abilities."
+        },
+        "work-quality": {
+          "kind": "next",
+          "label": "Work Quality",
+          "description": "Taking greater care to review and refine work will be a priority."
+        },
+        "greater-independence": {
+          "kind": "next",
+          "label": "Greater Independence",
+          "description": "Developing independence with challenging tasks will support further growth."
+        }
+      }
+    },
+    {
       "id": "engagement",
       "title": "Engagement in Learning",
       "hint": "How the student takes part in learning.",
       "items": {
-        "natural-curiosity": {
+        "positive-engagement": {
           "kind": "strength",
-          "label": "Natural Curiosity",
-          "description": "Shows interest in new ideas and asks questions that help deepen their understanding of the world around them."
+          "label": "Positive Engagement",
+          "description": "Participates willingly and contributes positively to learning."
         },
-        "willing-participation": {
+        "responds-to-support": {
           "kind": "strength",
-          "label": "Willing Participation",
-          "description": "Contributes to learning activities and discussions, showing a willingness to become involved and share ideas."
+          "label": "Responds to Support",
+          "description": "Responds well to encouragement and individual guidance."
         },
-        "persistent-effort": {
+        "growing-independence": {
           "kind": "strength",
-          "label": "Persistent Effort",
-          "description": "Keeps working when tasks become challenging and shows determination to make progress."
+          "label": "Growing Independence",
+          "description": "Shows increasing independence in following instructions and completing tasks."
         },
-        "regular-engagement": {
-          "kind": "next",
-          "label": "Regular Engagement",
-          "description": "Would benefit from participating more consistently in learning activities, using manageable tasks and agreed support to build momentum."
+        "interest-based": {
+          "kind": "strength",
+          "label": "Interest Based",
+          "description": "Engages enthusiastically in practical, creative and preferred activities."
         },
-        "sustained-effort": {
-          "kind": "next",
-          "label": "Sustained Effort",
-          "description": "Could strengthen their learning by staying with tasks beyond the initial attempt and using support when the work becomes challenging."
-        },
-        "getting-started": {
+        "task-initiation": {
           "kind": "challenge",
-          "label": "Getting Started",
-          "description": "Is working on beginning a task with a clear first step, so learning time is used from the start."
+          "label": "Task Initiation",
+          "description": "Often needs encouragement to begin learning tasks."
         },
-        "staying-focused": {
+        "maintaining-focus": {
           "kind": "challenge",
-          "label": "Staying Focused",
-          "description": "Is working on staying with the learning for longer, using an agreed check-in when attention drifts."
+          "label": "Maintaining Focus",
+          "description": "Distractions can affect sustained engagement and task completion."
+        },
+        "task-resistance": {
+          "kind": "challenge",
+          "label": "Task Resistance",
+          "description": "Sometimes resists instructions or unfamiliar learning activities."
+        },
+        "limited-perseverance": {
+          "kind": "challenge",
+          "label": "Limited Perseverance",
+          "description": "Can struggle to persist when tasks become challenging."
+        },
+        "independent-start": {
+          "kind": "next",
+          "label": "Independent Start",
+          "description": "Beginning tasks with less prompting will be an important next step."
+        },
+        "building-perseverance": {
+          "kind": "next",
+          "label": "Building Perseverance",
+          "description": "Developing persistence with challenging tasks will be a priority."
+        },
+        "learning-routines": {
+          "kind": "next",
+          "label": "Learning Routines",
+          "description": "Establishing consistent routines will support focus and task completion."
+        },
+        "broader-participation": {
+          "kind": "next",
+          "label": "Broader Participation",
+          "description": "Engaging more consistently across subjects will be a key focus."
         }
       }
     },
@@ -47,129 +139,199 @@
       "title": "Social, Emotional and Communication Growth",
       "hint": "Relationships, communication and emotional growth.",
       "items": {
+        "positive-relationships": {
+          "kind": "strength",
+          "label": "Positive Relationships",
+          "description": "Relates well to peers and staff, showing kindness and respect."
+        },
+        "classroom-contribution": {
+          "kind": "strength",
+          "label": "Classroom Contribution",
+          "description": "Brings humour, enthusiasm and positive energy to the classroom."
+        },
+        "communication-confidence": {
+          "kind": "strength",
+          "label": "Communication Confidence",
+          "description": "Shows growing confidence in expressing ideas and joining discussions."
+        },
+        "emotional-awareness": {
+          "kind": "strength",
+          "label": "Emotional Awareness",
+          "description": "Demonstrates increasing awareness of emotions and responses to challenges."
+        },
+        "managing-emotions": {
+          "kind": "challenge",
+          "label": "Managing Emotions",
+          "description": "Can find it difficult to manage frustration or disappointment."
+        },
+        "communication-confidence-challenge": {
+          "kind": "challenge",
+          "label": "Communication Confidence",
+          "description": "Sometimes struggles to express needs or seek assistance."
+        },
+        "peer-distractions": {
+          "kind": "challenge",
+          "label": "Peer Distractions",
+          "description": "Social interactions can sometimes disrupt learning and focus."
+        },
+        "adapting-to-change": {
+          "kind": "challenge",
+          "label": "Adapting to Change",
+          "description": "Can find changes to routines or expectations challenging."
+        },
+        "emotional-regulation": {
+          "kind": "next",
+          "label": "Emotional Regulation",
+          "description": "Strengthening emotional regulation and resilience will be a key priority."
+        },
         "respectful-communication": {
-          "kind": "strength",
+          "kind": "next",
           "label": "Respectful Communication",
-          "description": "Expresses ideas and responds to others in ways that support positive relationships and productive learning."
+          "description": "Developing listening and communication skills will support positive interactions."
         },
-        "working-together": {
-          "kind": "strength",
-          "label": "Working Together",
-          "description": "Works cooperatively with others, shares responsibilities and contributes to a common goal."
-        },
-        "attentive-listening": {
-          "kind": "strength",
-          "label": "Attentive Listening",
-          "description": "Listens carefully to staff and classmates and uses what they hear to guide their work and contributions."
-        },
-        "sharing-ideas": {
+        "social-confidence": {
           "kind": "next",
-          "label": "Sharing Ideas",
-          "description": "Would benefit from contributing their thinking more often through a format that suits them, such as conversation, writing or a small-group discussion."
+          "label": "Social Confidence",
+          "description": "Building confidence in relationships and group activities will be an important focus."
         },
-        "managing-frustration": {
+        "positive-choices": {
           "kind": "next",
-          "label": "Managing Frustration",
-          "description": "Would benefit from recognising early signs of frustration and practising agreed strategies before difficulties interrupt their learning."
-        },
-        "building-confidence": {
-          "kind": "next",
-          "label": "Building Confidence",
-          "description": "Could develop greater confidence by attempting manageable challenges and recognising progress, even when the result is not yet perfect."
-        },
-        "turn-taking": {
-          "kind": "challenge",
-          "label": "Turn Taking",
-          "description": "Is working on waiting for a turn in conversation so that everyone can be heard."
-        },
-        "calm-words": {
-          "kind": "challenge",
-          "label": "Calm Words",
-          "description": "Is working on using calm, respectful words when something feels difficult."
+          "label": "Positive Choices",
+          "description": "Recognising emotions and making constructive choices will be a valuable next step."
         }
       }
     },
     {
       "id": "attendance",
-      "title": "Attendance / Context",
+      "title": "Attendance",
       "hint": "Factual context. State only what was selected.",
       "items": {
         "consistent-attendance": {
           "kind": "strength",
           "label": "Consistent Attendance",
-          "description": "Attends regularly, helping them maintain learning routines, build relationships and develop their skills over time."
+          "description": "Has maintained consistent attendance throughout the semester."
         },
-        "positive-reconnection": {
+        "improved-attendance": {
           "kind": "strength",
-          "label": "Positive Reconnection",
-          "description": "Has made encouraging progress in returning to learning and reconnecting with staff, classmates and classroom routines."
+          "label": "Improved Attendance",
+          "description": "Has shown improved attendance and stronger classroom routines."
         },
-        "attendance-routines": {
-          "kind": "next",
-          "label": "Attendance Routines",
-          "description": "Would benefit from working with staff and family or carers to address attendance barriers and establish a more consistent connection with school."
+        "regular-participation": {
+          "kind": "strength",
+          "label": "Regular Participation",
+          "description": "Attends regularly and participates in classroom learning."
         },
-        "settling-in": {
-          "kind": "next",
-          "label": "Settling In",
-          "description": "Could make better use of learning time by following an agreed arrival routine and beginning with a clear, achievable first task."
+        "positive-commitment": {
+          "kind": "strength",
+          "label": "Positive Commitment",
+          "description": "Demonstrates commitment to attending and engaging in school."
         },
-        "returning-to-learning": {
-          "kind": "next",
-          "label": "Returning to Learning",
-          "description": "Could maintain progress by following a supported plan for rejoining learning after a break, absence or difficult moment."
-        },
-        "gaps-in-attendance": {
+        "irregular-attendance": {
           "kind": "challenge",
-          "label": "Gaps in Attendance",
-          "description": "Some learning has been missed, and a steadier pattern of attendance is the focus so routines can take hold."
+          "label": "Irregular Attendance",
+          "description": "Irregular attendance has affected continuity of learning."
         },
-        "arriving-late": {
+        "limited-attendance": {
           "kind": "challenge",
-          "label": "Arriving Late",
-          "description": "Arriving after learning has started is being worked on, with an agreed way to join the lesson calmly."
+          "label": "Limited Attendance",
+          "description": "Limited attendance has restricted opportunities to observe progress."
+        },
+        "extended-absences": {
+          "kind": "challenge",
+          "label": "Extended Absences",
+          "description": "Extended absences have affected routines and classroom connections."
+        },
+        "inconsistent-participation": {
+          "kind": "challenge",
+          "label": "Inconsistent Participation",
+          "description": "Inconsistent attendance has limited access to learning and support."
+        },
+        "attendance-consistency": {
+          "kind": "next",
+          "label": "Attendance Consistency",
+          "description": "Establishing consistent attendance will be a key priority next term."
+        },
+        "regular-participation-development": {
+          "kind": "next",
+          "label": "Regular Participation",
+          "description": "Increasing attendance will support learning continuity and progress."
+        },
+        "sustainable-routines": {
+          "kind": "next",
+          "label": "Sustainable Routines",
+          "description": "Developing a sustainable attendance routine will support engagement."
+        },
+        "school-connections": {
+          "kind": "next",
+          "label": "School Connections",
+          "description": "Attending more consistently will help strengthen classroom connections."
         }
       }
     },
     {
       "id": "next-term",
-      "title": "Next Term Focus",
+      "title": "Development Areas / Focus for Next Term",
       "hint": "These shape the closing goal.",
       "items": {
-        "personal-progress": {
+        "growing-confidence": {
           "kind": "strength",
-          "label": "Personal Progress",
-          "description": "Has made meaningful progress towards individual learning goals, building skills and confidence from their own starting point."
+          "label": "Growing Confidence",
+          "description": "Has made encouraging progress in confidence and independence."
         },
-        "using-feedback": {
+        "positive-response": {
           "kind": "strength",
-          "label": "Using Feedback",
-          "description": "Uses comments, examples or a checklist to adjust the next piece of work and can point to what has improved."
+          "label": "Positive Response",
+          "description": "Increasingly responds well to guidance and encouragement."
         },
-        "setting-small-goals": {
-          "kind": "next",
-          "label": "Setting Small Goals",
-          "description": "Would benefit from choosing a specific, achievable learning goal and regularly reviewing progress with staff."
+        "demonstrated-growth": {
+          "kind": "strength",
+          "label": "Demonstrated Growth",
+          "description": "Has shown meaningful improvement in developing skills and abilities."
         },
-        "checking-work": {
-          "kind": "next",
-          "label": "Checking Work",
-          "description": "Could improve the accuracy and clarity of their work by reviewing it against instructions, examples or a simple checklist."
+        "improving-consistency": {
+          "kind": "strength",
+          "label": "Improving Consistency",
+          "description": "Is showing greater consistency in applying learning strategies."
         },
-        "following-through": {
-          "kind": "next",
-          "label": "Following Through",
-          "description": "Could demonstrate more of their learning by completing agreed tasks and returning to unfinished work with staff support."
-        },
-        "unfinished-tasks": {
+        "task-completion": {
           "kind": "challenge",
-          "label": "Unfinished Tasks",
-          "description": "Some agreed tasks are still unfinished, and completing them with support is the current focus."
+          "label": "Task Completion",
+          "description": "Difficulty maintaining focus can affect task completion."
         },
-        "trying-when-unsure": {
+        "learning-confidence": {
           "kind": "challenge",
-          "label": "Trying When Unsure",
-          "description": "Starting work when the answer is not yet clear is being practised, with permission to attempt a first step."
+          "label": "Learning Confidence",
+          "description": "Confidence and perseverance remain areas requiring support."
+        },
+        "inconsistent-engagement": {
+          "kind": "challenge",
+          "label": "Inconsistent Engagement",
+          "description": "Inconsistent participation has limited sustained learning progress."
+        },
+        "developing-independence": {
+          "kind": "challenge",
+          "label": "Developing Independence",
+          "description": "Continues to need support with routines and independent learning."
+        },
+        "independent-learning-development": {
+          "kind": "next",
+          "label": "Independent Learning",
+          "description": "Strengthening independence and task completion will be a key priority."
+        },
+        "confidence-building": {
+          "kind": "next",
+          "label": "Confidence Building",
+          "description": "Developing confidence and perseverance will support future learning."
+        },
+        "classroom-routines": {
+          "kind": "next",
+          "label": "Classroom Routines",
+          "description": "Establishing consistent routines will be an important next step."
+        },
+        "continued-growth": {
+          "kind": "next",
+          "label": "Continued Growth",
+          "description": "Building on existing strengths will support further personal and academic growth."
         }
       }
     },
@@ -232,6 +394,31 @@
           "kind": "support",
           "label": "Movement breaks",
           "description": "Planned pauses for movement are part of the routine."
+        },
+        "one-on-one-support": {
+          "kind": "support",
+          "label": "1 on 1 Support",
+          "description": "One-to-one support with the learning is already part of lessons."
+        },
+        "clear-expectations": {
+          "kind": "support",
+          "label": "Clear Expectations",
+          "description": "What is expected is stated clearly before the learning begins."
+        },
+        "group-work": {
+          "kind": "support",
+          "label": "Group Work",
+          "description": "Some of the learning happens by working with others."
+        },
+        "noise-reduction": {
+          "kind": "support",
+          "label": "Noise Reduction",
+          "description": "Noise is reduced so the student can take part in the learning."
+        },
+        "quiet-learning-environment": {
+          "kind": "support",
+          "label": "Quiet Learning Environment",
+          "description": "A quiet setting is used for the learning."
         }
       }
     }

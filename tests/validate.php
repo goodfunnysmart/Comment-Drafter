@@ -7,41 +7,134 @@ function check(bool $condition, string $message): void {
 }
 $index = bankIndex($bank);
 $titles = array_column($bank['categories'], 'title');
-check($titles === ['Engagement in Learning', 'Social, Emotional and Communication Growth', 'Attendance / Context', 'Next Term Focus', 'Specific Adjustments / Supports'], 'Category order');
+check($titles === ['Strengths', 'Engagement in Learning', 'Social, Emotional and Communication Growth', 'Attendance', 'Development Areas / Focus for Next Term', 'Specific Adjustments / Supports'], 'Category order');
 $columnCounts = [
-    'engagement' => ['strength' => 3, 'next' => 2, 'challenge' => 2],
-    'social' => ['strength' => 3, 'next' => 3, 'challenge' => 2],
-    'attendance' => ['strength' => 2, 'next' => 3, 'challenge' => 2],
-    'supports' => ['support' => 11],
-    'next-term' => ['strength' => 2, 'next' => 3, 'challenge' => 2],
+    'strengths' => ['strength' => 4, 'challenge' => 4, 'next' => 4],
+    'engagement' => ['strength' => 4, 'challenge' => 4, 'next' => 4],
+    'social' => ['strength' => 4, 'challenge' => 4, 'next' => 4],
+    'attendance' => ['strength' => 4, 'challenge' => 4, 'next' => 4],
+    'next-term' => ['strength' => 4, 'challenge' => 4, 'next' => 4],
+    'supports' => ['support' => 16],
 ];
 foreach ($bank['categories'] as $category) {
     $counts = [];
     foreach ($category['items'] as $item) $counts[$item['kind']] = ($counts[$item['kind']] ?? 0) + 1;
     check($counts === $columnCounts[$category['id']], $category['title'] . ' column counts');
     if ($category['id'] !== 'supports') {
-        check(($counts['strength'] ?? 0) >= 2 && ($counts['strength'] ?? 0) <= 3 && ($counts['next'] ?? 0) >= 2 && ($counts['next'] ?? 0) <= 3 && ($counts['challenge'] ?? 0) >= 2 && ($counts['challenge'] ?? 0) <= 3, $category['title'] . ' has three columns');
+        check(($counts['strength'] ?? 0) === 4 && ($counts['challenge'] ?? 0) === 4 && ($counts['next'] ?? 0) === 4, $category['title'] . ' has three columns');
     }
 }
 $supportCategory = null;
 foreach ($bank['categories'] as $category) if ($category['id'] === 'supports') $supportCategory = $category;
 $supportLabels = array_values(array_column($supportCategory['items'], 'label'));
-check($supportLabels === ['Learning support', 'Adjusted tasks', 'Extra time', 'Assistive technology', 'Visual supports', 'Structured routines', 'Sensory supports', 'Wellbeing support', 'Family communication', 'Flexible learning', 'Movement breaks'], 'Support items are the specified adjustments');
-check(isset($index['strengths']['natural-curiosity']) && isset($index['strengths']['using-feedback']) && $index['strengths']['using-feedback']['category'] === 'Next Term Focus' && $index['nextSteps']['building-confidence']['category'] === 'Social, Emotional and Communication Growth' && isset($index['challenges']['getting-started']) && !isset($index['strengths']['creative-thinking']), 'Retained ids stay and unused ids are dropped');
-check(count($index['strengths']) + count($index['nextSteps']) + count($index['supports']) + count($index['challenges']) === 40, 'Bank has one entry per retained or new item');
-$base = ['name' => 'Élodie O’Neil-Smith', 'observations' => '', 'pronouns' => 'they', 'length' => 'standard', 'strengths' => ['natural-curiosity'], 'nextSteps' => []];
+check($supportLabels === ['Learning support', 'Adjusted tasks', 'Extra time', 'Assistive technology', 'Visual supports', 'Structured routines', 'Sensory supports', 'Wellbeing support', 'Family communication', 'Flexible learning', 'Movement breaks', '1 on 1 Support', 'Clear Expectations', 'Group Work', 'Noise Reduction', 'Quiet Learning Environment'], 'Support items are the specified adjustments');
+$seenIds = [];
+foreach ($bank['categories'] as $category) {
+    foreach ($category['items'] as $id => $item) {
+        check(!isset($seenIds[$id]), 'Descriptor ids are unique: ' . $id);
+        $seenIds[$id] = $item['label'];
+    }
+}
+check($index['strengths']['academic-ability']['category'] === 'Strengths' && $index['strengths']['academic-ability']['description'] === 'Demonstrates strong ability and produces high-quality work.', 'A positive keeps its description for the prompt');
+check($index['strengths']['creative-thinking']['label'] === 'Creative Thinking' && $index['nextSteps']['emotional-regulation']['category'] === 'Social, Emotional and Communication Growth' && $index['challenges']['task-initiation']['label'] === 'Task Initiation', 'New descriptor ids keep their column and category');
+check($index['strengths']['communication-confidence']['label'] === 'Communication Confidence' && $index['challenges']['communication-confidence-challenge']['label'] === 'Communication Confidence' && $index['strengths']['communication-confidence']['description'] !== $index['challenges']['communication-confidence-challenge']['description'], 'Communication Confidence buttons have unique ids and meanings');
+check($index['strengths']['regular-participation']['description'] === 'Attends regularly and participates in classroom learning.' && $index['nextSteps']['regular-participation-development']['description'] === 'Increasing attendance will support learning continuity and progress.', 'Regular Participation buttons have unique ids and meanings');
+check($index['strengths']['independent-learning']['description'] === 'Works confidently and independently on familiar tasks.' && $index['nextSteps']['independent-learning-development']['label'] === 'Independent Learning' && $index['nextSteps']['independent-learning-development']['description'] === 'Strengthening independence and task completion will be a key priority.', 'Independent Learning buttons have unique ids and meanings');
+$spec = [
+    'strengths' => [
+        'academic-ability' => ['strength', 'Academic Ability', 'Demonstrates strong ability and produces high-quality work.'],
+        'creative-thinking' => ['strength', 'Creative Thinking', 'Brings creativity, curiosity and original ideas to learning.'],
+        'independent-learning' => ['strength', 'Independent Learning', 'Works confidently and independently on familiar tasks.'],
+        'positive-contribution' => ['strength', 'Positive Contribution', 'Brings enthusiasm, energy and ideas to the classroom.'],
+        'inconsistent-focus' => ['challenge', 'Inconsistent Focus', 'Difficulty maintaining focus can limit demonstrated achievement.'],
+        'uneven-performance' => ['challenge', 'Uneven Performance', 'Inconsistent engagement can prevent strengths from being fully demonstrated.'],
+        'task-confidence' => ['challenge', 'Task Confidence', 'Can be hesitant to attempt unfamiliar or challenging tasks.'],
+        'rushed-work' => ['challenge', 'Rushed Work', 'Rushing tasks can affect accuracy and quality.'],
+        'consistent-application' => ['next', 'Consistent Application', 'Applying strengths more consistently will be an important next step.'],
+        'extend-abilities' => ['next', 'Extend Abilities', 'Building confidence with unfamiliar tasks will help extend abilities.'],
+        'work-quality' => ['next', 'Work Quality', 'Taking greater care to review and refine work will be a priority.'],
+        'greater-independence' => ['next', 'Greater Independence', 'Developing independence with challenging tasks will support further growth.'],
+    ],
+    'engagement' => [
+        'positive-engagement' => ['strength', 'Positive Engagement', 'Participates willingly and contributes positively to learning.'],
+        'responds-to-support' => ['strength', 'Responds to Support', 'Responds well to encouragement and individual guidance.'],
+        'growing-independence' => ['strength', 'Growing Independence', 'Shows increasing independence in following instructions and completing tasks.'],
+        'interest-based' => ['strength', 'Interest Based', 'Engages enthusiastically in practical, creative and preferred activities.'],
+        'task-initiation' => ['challenge', 'Task Initiation', 'Often needs encouragement to begin learning tasks.'],
+        'maintaining-focus' => ['challenge', 'Maintaining Focus', 'Distractions can affect sustained engagement and task completion.'],
+        'task-resistance' => ['challenge', 'Task Resistance', 'Sometimes resists instructions or unfamiliar learning activities.'],
+        'limited-perseverance' => ['challenge', 'Limited Perseverance', 'Can struggle to persist when tasks become challenging.'],
+        'independent-start' => ['next', 'Independent Start', 'Beginning tasks with less prompting will be an important next step.'],
+        'building-perseverance' => ['next', 'Building Perseverance', 'Developing persistence with challenging tasks will be a priority.'],
+        'learning-routines' => ['next', 'Learning Routines', 'Establishing consistent routines will support focus and task completion.'],
+        'broader-participation' => ['next', 'Broader Participation', 'Engaging more consistently across subjects will be a key focus.'],
+    ],
+    'social' => [
+        'positive-relationships' => ['strength', 'Positive Relationships', 'Relates well to peers and staff, showing kindness and respect.'],
+        'classroom-contribution' => ['strength', 'Classroom Contribution', 'Brings humour, enthusiasm and positive energy to the classroom.'],
+        'communication-confidence' => ['strength', 'Communication Confidence', 'Shows growing confidence in expressing ideas and joining discussions.'],
+        'emotional-awareness' => ['strength', 'Emotional Awareness', 'Demonstrates increasing awareness of emotions and responses to challenges.'],
+        'managing-emotions' => ['challenge', 'Managing Emotions', 'Can find it difficult to manage frustration or disappointment.'],
+        'communication-confidence-challenge' => ['challenge', 'Communication Confidence', 'Sometimes struggles to express needs or seek assistance.'],
+        'peer-distractions' => ['challenge', 'Peer Distractions', 'Social interactions can sometimes disrupt learning and focus.'],
+        'adapting-to-change' => ['challenge', 'Adapting to Change', 'Can find changes to routines or expectations challenging.'],
+        'emotional-regulation' => ['next', 'Emotional Regulation', 'Strengthening emotional regulation and resilience will be a key priority.'],
+        'respectful-communication' => ['next', 'Respectful Communication', 'Developing listening and communication skills will support positive interactions.'],
+        'social-confidence' => ['next', 'Social Confidence', 'Building confidence in relationships and group activities will be an important focus.'],
+        'positive-choices' => ['next', 'Positive Choices', 'Recognising emotions and making constructive choices will be a valuable next step.'],
+    ],
+    'attendance' => [
+        'consistent-attendance' => ['strength', 'Consistent Attendance', 'Has maintained consistent attendance throughout the semester.'],
+        'improved-attendance' => ['strength', 'Improved Attendance', 'Has shown improved attendance and stronger classroom routines.'],
+        'regular-participation' => ['strength', 'Regular Participation', 'Attends regularly and participates in classroom learning.'],
+        'positive-commitment' => ['strength', 'Positive Commitment', 'Demonstrates commitment to attending and engaging in school.'],
+        'irregular-attendance' => ['challenge', 'Irregular Attendance', 'Irregular attendance has affected continuity of learning.'],
+        'limited-attendance' => ['challenge', 'Limited Attendance', 'Limited attendance has restricted opportunities to observe progress.'],
+        'extended-absences' => ['challenge', 'Extended Absences', 'Extended absences have affected routines and classroom connections.'],
+        'inconsistent-participation' => ['challenge', 'Inconsistent Participation', 'Inconsistent attendance has limited access to learning and support.'],
+        'attendance-consistency' => ['next', 'Attendance Consistency', 'Establishing consistent attendance will be a key priority next term.'],
+        'regular-participation-development' => ['next', 'Regular Participation', 'Increasing attendance will support learning continuity and progress.'],
+        'sustainable-routines' => ['next', 'Sustainable Routines', 'Developing a sustainable attendance routine will support engagement.'],
+        'school-connections' => ['next', 'School Connections', 'Attending more consistently will help strengthen classroom connections.'],
+    ],
+    'next-term' => [
+        'growing-confidence' => ['strength', 'Growing Confidence', 'Has made encouraging progress in confidence and independence.'],
+        'positive-response' => ['strength', 'Positive Response', 'Increasingly responds well to guidance and encouragement.'],
+        'demonstrated-growth' => ['strength', 'Demonstrated Growth', 'Has shown meaningful improvement in developing skills and abilities.'],
+        'improving-consistency' => ['strength', 'Improving Consistency', 'Is showing greater consistency in applying learning strategies.'],
+        'task-completion' => ['challenge', 'Task Completion', 'Difficulty maintaining focus can affect task completion.'],
+        'learning-confidence' => ['challenge', 'Learning Confidence', 'Confidence and perseverance remain areas requiring support.'],
+        'inconsistent-engagement' => ['challenge', 'Inconsistent Engagement', 'Inconsistent participation has limited sustained learning progress.'],
+        'developing-independence' => ['challenge', 'Developing Independence', 'Continues to need support with routines and independent learning.'],
+        'independent-learning-development' => ['next', 'Independent Learning', 'Strengthening independence and task completion will be a key priority.'],
+        'confidence-building' => ['next', 'Confidence Building', 'Developing confidence and perseverance will support future learning.'],
+        'classroom-routines' => ['next', 'Classroom Routines', 'Establishing consistent routines will be an important next step.'],
+        'continued-growth' => ['next', 'Continued Growth', 'Building on existing strengths will support further personal and academic growth.'],
+    ],
+];
+foreach ($bank['categories'] as $category) {
+    if (!isset($spec[$category['id']])) continue;
+    check(array_keys($category['items']) === array_keys($spec[$category['id']]), $category['title'] . ' keeps the spec order');
+    foreach ($spec[$category['id']] as $id => [$kind, $label, $description]) {
+        $item = $category['items'][$id];
+        check($item['kind'] === $kind && $item['label'] === $label && $item['description'] === $description, $label . ' matches the spec');
+    }
+}
+check(isset($index['supports']['learning-support']) && isset($index['supports']['one-on-one-support']) && $index['supports']['quiet-learning-environment']['label'] === 'Quiet Learning Environment', 'Existing supports stay and the five added supports keep their labels');
+check(count($index['strengths']) + count($index['nextSteps']) + count($index['supports']) + count($index['challenges']) === 76, 'Bank has one entry per descriptor');
+$base = ['name' => 'Élodie O’Neil-Smith', 'observations' => '', 'pronouns' => 'they', 'length' => 'standard', 'strengths' => ['academic-ability'], 'nextSteps' => []];
 check(validateInput($base, $bank)['name'] === $base['name'], 'Unicode names');
-$nextOnly = array_replace($base, ['strengths' => [], 'nextSteps' => ['regular-engagement']]);
+$nextOnly = array_replace($base, ['strengths' => [], 'nextSteps' => ['independent-start']]);
 check(count(validateInput($nextOnly, $bank)['nextSteps']) === 1, 'Next steps only');
 $supportOnly = array_replace($base, ['strengths' => [], 'supports' => ['learning-support']]);
 check(validateInput($supportOnly, $bank)['supports']['learning-support']['category'] === 'Specific Adjustments / Supports', 'A selected support keeps its category');
-$challengeOnly = array_replace($base, ['strengths' => [], 'challenges' => ['getting-started']]);
-check(validateInput($challengeOnly, $bank)['challenges']['getting-started']['label'] === 'Getting Started', 'A selected challenge keeps its label');
+$challengeOnly = array_replace($base, ['strengths' => [], 'challenges' => ['task-initiation']]);
+check(validateInput($challengeOnly, $bank)['challenges']['task-initiation']['label'] === 'Task Initiation', 'A selected challenge keeps its label');
 $adjustOnly = array_replace($base, ['strengths' => [], 'adjustments' => ' A quiet corner ']);
 check(validateInput($adjustOnly, $bank)['adjustments'] === 'A quiet corner' && validateInput($adjustOnly, $bank)['supports'] === [], 'Typed adjustments alone are enough');
 $all = array_replace($base, ['strengths' => array_keys($index['strengths']), 'nextSteps' => array_keys($index['nextSteps']), 'supports' => array_keys($index['supports']), 'challenges' => array_keys($index['challenges'])]);
 $allOut = validateInput($all, $bank);
-check(count($allOut['strengths']) === count($index['strengths']) && count($allOut['supports']) === 11 && count($allOut['challenges']) === 8, 'No artificial selection limits');
+check(count($allOut['strengths']) === count($index['strengths']) && count($allOut['nextSteps']) === 20 && count($allOut['supports']) === 16 && count($allOut['challenges']) === 20, 'No artificial selection limits');
 $bad = [
     ['name' => '  '], ['name' => []], ['name' => str_repeat('é', 101)],
     ['observations' => str_repeat('a', 4001)],
@@ -50,10 +143,10 @@ $bad = [
     ['adjustments' => 123], ['adjustments' => str_repeat('a', 201)], ['adjustments' => "note\0"],
     ['pronouns' => 'anything'], ['length' => []],
     ['strengths' => [], 'nextSteps' => []], ['strengths' => ['unknown']],
-    ['strengths' => ['natural-curiosity', 'natural-curiosity']],
-    ['strengths' => ['regular-engagement']], ['strengths' => ['chunking-tasks']], ['nextSteps' => 'not-array'],
+    ['strengths' => ['academic-ability', 'academic-ability']],
+    ['strengths' => ['independent-start']], ['strengths' => ['chunking-tasks']], ['nextSteps' => 'not-array'],
     ['supports' => ['not-a-support']], ['supports' => 'not-array'],
-    ['strengths' => array_fill(0, 27, 'natural-curiosity')], ['name' => "Alex\0"],
+    ['strengths' => array_fill(0, 27, 'academic-ability')], ['name' => "Alex\0"],
 ];
 foreach ($bad as $index => $change) {
     try { validateInput(array_replace($base, $change), $bank); }
@@ -77,6 +170,12 @@ $typed = validateInput(array_replace($base, ['adjustments' => ' A quiet corner. 
 $typedPrompt = commentRequestText($typed);
 check(str_contains($typedPrompt, "<<<OTHER SPECIFIC ADJUSTMENTS>>>\nA quiet corner.  extra\n<<<END OTHER SPECIFIC ADJUSTMENTS>>>") && substr_count($typedPrompt, '<<<END OTHER SPECIFIC ADJUSTMENTS>>>') === 1 && !str_contains($typedPrompt, '"adjustments"'), 'Typed adjustments are delimited and kept out of the evidence');
 check(commentAdjustmentPhrase(' A quiet corner. ') === 'A quiet corner' && commentSupportSentence(['Learning support'], 'alex', 'A quiet corner') === 'Throughout the semester, strategies implemented to support Alex included learning support and A quiet corner.', 'A typed adjustment keeps its wording in the semester sentence');
+$addedSupportInput = array_replace($base, ['strengths' => [], 'supports' => ['one-on-one-support', 'clear-expectations', 'group-work', 'noise-reduction', 'quiet-learning-environment']]);
+$addedSupportLabels = commentSelectedSupportLabels(validateInput($addedSupportInput, $bank)['supports'], $bank);
+check($addedSupportLabels === ['1 on 1 Support', 'Clear Expectations', 'Group Work', 'Noise Reduction', 'Quiet Learning Environment'], 'Added support labels stay word for word');
+check(commentSupportSentence($addedSupportLabels, 'Alex') === 'Throughout the semester, strategies implemented to support Alex included 1 on 1 support, clear expectations, group work, noise reduction, and quiet learning environment.', 'The semester sentence lowercases the added support labels');
+check(commentSupportPhrase('ADHD Plan') === 'ADHD plan' && commentSupportPhrase('IEP') === 'IEP' && commentSupportPhrase('1 on 1 Support') === '1 on 1 support', 'Support phrases are fully lowercased, except all-caps tokens');
+check(str_contains(commentRequestText(validateInput($base, $bank)), 'Demonstrates strong ability and produces high-quality work.'), 'The descriptor description is the meaning sent to the model');
 $five = 'Alex is curious and kind. Alex listens well. Rushing sometimes hides that understanding. A careful check helps. Alex can finish each task with the same care.';
 $six = $five . ' Alex can use this routine next term.';
 $seven = $six . ' That practice matters.';
@@ -186,8 +285,8 @@ check(is_string($instructions) && str_contains($instructions, 'selected approxim
 check(str_contains($instructions, 'between positive statements') && str_contains($instructions, 'Falling below the selected word range is correct') && str_contains($instructions, 'Do not invent activities, subjects, events, achievements, anecdotes or traits'), 'Private instructions keep the sandwich and forbid padding or invented detail');
 check(str_contains($instructions, 'name it once') && str_contains($instructions, 'rushing means'), 'Teacher observations still name a real difficulty');
 check(str_contains($instructions, 'only to text between the NEGATIVE BEHAVIOURS TO REFRAME markers') && str_contains($instructions, 'Never skip one') && str_contains($instructions, 'Words from that field must never appear') && str_contains($instructions, 'leaves the classroom without permission') && str_contains($instructions, 'swearing'), 'Every reframe behaviour is addressed without its words');
-check(str_contains($instructions, 'Attendance / Context is factual context') && str_contains($instructions, 'Next Term Focus feeds the closing goal') && str_contains($instructions, 'Specific Adjustments / Supports are added by the server'), 'Instructions explain the five categories');
-check(strpos($instructions, '- Next Term Focus') < strpos($instructions, '- Specific Adjustments / Supports'), 'Prompt lists Next Term Focus before Specific Adjustments');
+check(str_contains($instructions, 'Attendance is factual context') && str_contains($instructions, 'Development Areas / Focus for Next Term feeds the closing goal') && str_contains($instructions, 'Specific Adjustments / Supports are added by the server'), 'Instructions explain the groups');
+check(strpos($instructions, '- Strengths describes') < strpos($instructions, '- Engagement in Learning') && strpos($instructions, '- Development Areas / Focus for Next Term') < strpos($instructions, '- Specific Adjustments / Supports'), 'Prompt lists Strengths first and Development Areas before Specific Adjustments');
 check(str_contains($instructions, 'Throughout the semester, strategies implemented to support [Name] included learning support, extra time, and a quiet space for independent work.') && !str_contains($examples, 'Throughout the semester'), 'The prompt states the exact supports sentence and the exemplars do not write one');
 check(str_contains($instructions, 'Challenges and Obstacles') && str_contains($instructions, 'constructively and supportively') && str_contains($instructions, 'harsh'), 'Selected challenges are addressed constructively');
 check(str_contains($instructions, 'Name it specifically') && str_contains($instructions, 'skills written there') && str_contains($instructions, 'If that note is empty'), 'Private instructions name supplied clubs and skills only');
@@ -208,8 +307,9 @@ $page = file_get_contents(dirname(__DIR__) . '/public/index.php');
 check(str_contains($page, 'id="name-help"') && str_contains($page, 'aria-describedby="name-help"') && str_contains($page, 'never a nickname'), 'Name field has the full-name reminder');
 check(str_contains($page, 'id="activities-help"') && str_contains($page, 'aria-describedby="activities-help activities-dictate-status"') && str_contains($page, 'skills they built') && str_contains($page, 'personal development activities'), 'Activities field has the participation reminder');
 check(str_contains($page, 'for="reframe"') && str_contains($page, 'Negative behaviours to reframe') && str_contains($page, 'id="reframe-help"') && str_contains($page, 'aria-describedby="reframe-help reframe-dictate-status"') && str_contains($page, 'never named in the comment'), 'Reframe field has a label and help text');
-check(str_contains($page, 'descriptor-group') && str_contains($page, 'data-bank') && str_contains($page, 'What to include') && str_contains($page, 'challenges on the right'), 'Categories are rendered as headed groups');
-check(str_contains($page, 'traffic-columns') && str_contains($page, 'strengths-column') && str_contains($page, 'growth-column') && str_contains($page, 'challenge-column') && str_contains($page, 'Strengths') && str_contains($page, 'Areas for Growth') && str_contains($page, 'Challenges and Obstacles'), 'Strengths, growth and challenges sit in labelled columns');
+check(str_contains($page, 'descriptor-group') && str_contains($page, 'data-bank') && str_contains($page, 'What to include') && str_contains($page, 'items for development on the right'), 'Categories are rendered as headed groups');
+check(str_contains($page, 'traffic-columns') && str_contains($page, 'strengths-column') && str_contains($page, 'growth-column') && str_contains($page, 'challenge-column') && str_contains($page, "'Positives'") && str_contains($page, "'For Development'") && str_contains($page, "'Challenges / Obstacles'"), 'Positives, challenges and development sit in labelled columns');
+check(strpos($page, "'Positives'") < strpos($page, "'Challenges / Obstacles'") && strpos($page, "'Challenges / Obstacles'") < strpos($page, "'For Development'"), 'Columns are ordered positives, challenges, then development');
 check(str_contains($page, 'for="adjustments"') && str_contains($page, 'Other specific adjustments') && str_contains($page, 'maxlength="200"') && str_contains($page, 'id="adjustments-help"'), 'Other adjustments has a label, help text and a short limit');
 check(str_contains($page, 'for="tweak"') && str_contains($page, 'What would you like changed?') && str_contains($page, 'id="tweak-comment"') && str_contains($page, 'Tweak comment') && str_contains($page, 'id="undo-tweak"') && str_contains($page, 'Make it a little friendlier, lower the reading level, add their effort in science...'), 'The tweak box sits with the comment');
 check(str_contains($page, 'Student names are never sent to the AI. Please avoid typing other identifying details.') && str_contains($page, 'value="they"') && str_contains($page, 'They/them') && str_contains($page, 'She/her') && str_contains($page, 'He/him'), 'The page says the name is not sent, and pronouns stay an explicit choice');

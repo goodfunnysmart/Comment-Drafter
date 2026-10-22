@@ -18,20 +18,25 @@ assert status == 200 and 'no-store' in headers['Cache-Control']
 assert "img-src 'self'" in headers['Content-Security-Policy']
 assert page.count('alt="Better Schools"') == 2
 assert 'assets/logo-classic.webp' in page and 'assets/logo-dark.webp' in page
-assert page.count('class="chip"') == 40
-assert page.count('>Strengths<') == 4 and page.count('>Areas for Growth<') == 4 and page.count('>Challenges and Obstacles<') == 4
-assert page.count('traffic-columns') == 4 and page.count('growth-column') == 4 and page.count('challenge-column') == 4
-assert 'Engagement in Learning' in page and 'Next Term Focus' in page and 'Using Feedback' in page and 'Learning support' in page and 'Movement breaks' in page
+assert page.count('class="chip"') == 76
+assert page.count('>Positives<') == 5 and page.count('>Challenges / Obstacles<') == 5 and page.count('>For Development<') == 5
+assert page.count('>Strengths<') == 1 and 'Development Areas / Focus for Next Term' in page and 'Attendance / Context' not in page and 'Next Term Focus' not in page and 'Areas for Growth' not in page
+assert page.count('traffic-columns') == 5 and page.count('growth-column') == 5 and page.count('challenge-column') == 5 and page.count('strengths-column') == 5
+assert 'Engagement in Learning' in page and 'Academic Ability' in page and 'Learning support' in page and 'Movement breaks' in page
+assert '1 on 1 Support' in page and 'Clear Expectations' in page and 'Group Work' in page and 'Noise Reduction' in page and 'Quiet Learning Environment' in page
+assert page.count('>Communication Confidence<') == 2 and page.count('>Regular Participation<') == 2 and page.count('>Independent Learning<') == 2
+assert 'Shows growing confidence in expressing ideas and joining discussions.' in page and 'Sometimes struggles to express needs or seek assistance.' in page
+assert 'Attends regularly and participates in classroom learning.' in page and 'Increasing attendance will support learning continuity and progress.' in page
 assert 'Other specific adjustments' in page and 'id="adjustments"' in page and 'maxlength="200"' in page
-order = ['data-category="engagement"', 'data-category="social"', 'data-category="attendance"', 'data-category="next-term"', 'data-category="supports"']
+order = ['data-category="strengths"', 'data-category="engagement"', 'data-category="social"', 'data-category="attendance"', 'data-category="next-term"', 'data-category="supports"']
 assert [page.index(marker) for marker in order] == sorted(page.index(marker) for marker in order)
 supports = re.search(r'data-category="supports".*?(?=</section>\s*<section)', page, re.S).group(0)
-assert 'traffic-columns' not in supports and supports.count('class="chip"') == 11 and 'id="adjustments"' in supports
+assert 'traffic-columns' not in supports and supports.count('class="chip"') == 16 and 'id="adjustments"' in supports
 assert len(re.findall(r'class="chip"[^>]*\baria-describedby=', page)) == 0
-assert len(re.findall(r'class="info"[^>]*\baria-describedby="[^"]+"', page)) == 40
+assert len(re.findall(r'class="info"[^>]*\baria-describedby="[^"]+"', page)) == 76
 assert not re.search(r'<(?:button|label)\b[^>]*\btitle=', page)
 engagement = re.search(r'data-category="engagement".*?data-category="social"', page, re.S).group(0)
-assert engagement.index('>Strengths<') < engagement.index('>Areas for Growth<') < engagement.index('>Challenges and Obstacles<')
+assert engagement.index('>Positives<') < engagement.index('>Challenges / Obstacles<') < engagement.index('>For Development<')
 assert 'id="tweak"' in page and 'What would you like changed?' in page and 'Tweak comment' in page and 'id="undo-tweak"' in page
 assert 'id="session-toggle"' in page and 'id="commit-session"' in page and 'Commit to session' in page
 assert 'Use a first name only. Do not include a school, campus, class, or other identifying details.' in page
@@ -57,7 +62,7 @@ for logo in ('/assets/logo-classic.webp', '/assets/logo-dark.webp'):
     assert 'image/webp' in logo_headers.get('Content-Type', ''), logo_headers.get('Content-Type')
 assert 'HttpOnly' in headers['Set-Cookie'] and 'SameSite=Strict' in headers['Set-Cookie']
 token = re.search(r'name="csrf-token" content="([a-f0-9]+)"', page)[1]
-valid = dict(name='Alex', pronouns='they', observations='', length='standard', strengths=['natural-curiosity'], nextSteps=[])
+valid = dict(name='Alex', pronouns='they', observations='', length='standard', strengths=['academic-ability'], nextSteps=[])
 good_headers = {'Content-Type':'application/json', 'X-CSRF-Token':token, 'Origin':base}
 assert request('/generate.php')[0] == 405
 assert request('/generate.php', valid, {'Content-Type':'application/json'})[0] == 403
@@ -169,4 +174,4 @@ status, headers, body = request('/generate.php', dict(valid, reframe='Rushes wor
 assert status == 503 and json.loads(body)['ok'] is False, (status, body)
 assert 'no-store' in headers['Cache-Control']
 assert request('/generate.php', valid, good_headers)[0] == 429
-print('PASS: rendering, 40 chips, three columns, adjustments field, tweak field, dictation controls, session panel, security headers/cookie, POST/CSRF/origin, invalid data, size cap, private paths, session storage, unconfigured error, separate dictation throttle. No live AI call.')
+print('PASS: rendering, 76 chips, three columns, adjustments field, tweak field, dictation controls, session panel, security headers/cookie, POST/CSRF/origin, invalid data, size cap, private paths, session storage, unconfigured error, separate dictation throttle. No live AI call.')

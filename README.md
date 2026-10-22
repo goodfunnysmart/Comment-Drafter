@@ -1,6 +1,6 @@
 # Comment Drafter
 
-Report Comment Builder is a complete single-page teacher workspace built with PHP, HTML, CSS and vanilla JavaScript. No build step, framework, database or analytics. The only browser storage is the active session code. The selectable points live in one private JSON bank, grouped into five categories. Strengths, areas for growth, and challenges sit in three columns under each category, except Specific Adjustments / Supports, which stays one list. PHP renders the bank and resolves submitted IDs against it before calling Gemini. A tweak sends the current comment and a short change request through the same endpoint.
+Report Comment Builder is a complete single-page teacher workspace built with PHP, HTML, CSS and vanilla JavaScript. No build step, framework, database or analytics. The only browser storage is the active session code. The selectable points live in one private JSON bank, grouped into six categories. Positives, challenges and obstacles, and items for development sit in three columns under each category, except Specific Adjustments / Supports, which stays one list. PHP renders the bank and resolves submitted IDs against it before calling Gemini. A tweak sends the current comment and a short change request through the same endpoint.
 
 ## Project files
 

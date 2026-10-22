@@ -263,8 +263,13 @@ function commentProviderPayload(string $instructions, string $userText, string $
 }
 function commentSupportPhrase(string $label): string {
     $label = trim($label);
-    if (preg_match('/\A([A-Z])(.*)\z/s', $label, $parts) === 1) return strtolower($parts[1]) . $parts[2];
-    return $label;
+    $replaced = preg_replace_callback('/\S+/u', function (array $match): string {
+        $token = $match[0];
+        $letters = preg_replace('/[^\p{L}]/u', '', $token);
+        if (is_string($letters) && $letters !== '' && preg_match('/\A\p{Lu}+\z/u', $letters) === 1) return $token;
+        return commentLowerLetters($token);
+    }, $label);
+    return is_string($replaced) ? $replaced : $label;
 }
 function commentAdjustmentPhrase(string $text): string {
     $text = trim(stripMarkers(preg_replace('/\s+/u', ' ', $text) ?? $text));

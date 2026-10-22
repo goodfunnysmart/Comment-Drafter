@@ -13,6 +13,9 @@ Comment Drafter/
 │   ├── index.php                 # Page, bank rendering, CSRF token
 │   ├── generate.php              # Validated server-side Gemini endpoint
 │   ├── private_path.php          # Finds the private bootstrap outside the document root
+│   ├── assets/
+│   │   ├── logo-classic.webp     # Better Schools logo for Classic
+│   │   └── logo-dark.webp        # Reversed logo for Dark
 │   ├── app.css                   # Classic layout, including the appearance switch
 │   ├── app.js
 │   ├── dark.css                  # Dark palette on the Classic layout
@@ -46,7 +49,7 @@ Comment Drafter/
 
 ## Deploy on cPanel
 
-cPanel clones this private repository **outside** the website. **Deploy HEAD Commit** runs `.cpanel.yml`, which runs `deploy/cpanel-deploy.sh`. The script uses `$HOME`, so the account name is not stored in Git. The document root for greache.com is `$HOME/greache.com`, not `$HOME/public_html`. The script copies the files in `public/` into `$HOME/greache.com/comments` and the private application files into `$HOME/comments-private`. `SITE_ROOT` at the top of `deploy/cpanel-deploy.sh` defaults to `$HOME/greache.com`; export `SITE_ROOT` to use another directory inside `$HOME`. Site files then go to `$SITE_ROOT/comments`. The live address is `https://greache.com/comments`, with no `/public` on the end.
+cPanel clones this private repository **outside** the website. **Deploy HEAD Commit** runs `.cpanel.yml`, which runs `deploy/cpanel-deploy.sh`. The script uses `$HOME`, so the account name is not stored in Git. The document root for greache.com is `$HOME/greache.com`, not `$HOME/public_html`. The script copies the files in `public/`, including the logo files in `public/assets/`, into `$HOME/greache.com/comments` and the private application files into `$HOME/comments-private`. `SITE_ROOT` at the top of `deploy/cpanel-deploy.sh` defaults to `$HOME/greache.com`; export `SITE_ROOT` to use another directory inside `$HOME`. Site files then go to `$SITE_ROOT/comments`. The live address is `https://greache.com/comments`, with no `/public` on the end.
 
 Do not upload the project into `greache.com` or `public_html`. Do not point the domain’s document root at the clone or at `comments-private`.
 
@@ -174,7 +177,7 @@ In File Manager, open `greache.com/comments`. Delete uploaded project files that
 - `.git/`
 - `.gitignore`, `.gitattributes`, `.editorconfig`
 
-Keep `.htaccess`, `index.php`, `generate.php`, `private_path.php`, `private-path.php`, `app.css`, `app.js`, `dark.css` and `skin.js`. Deploy removes a leftover `studio.css` file. Do not delete `comments-private` or `repositories/Comment-Drafter`. If a site file is removed by mistake, click **Deploy HEAD Commit** again. Do not copy `.htaccess` from Git over the server file by hand.
+Keep `.htaccess`, `index.php`, `generate.php`, `private_path.php`, `private-path.php`, `app.css`, `app.js`, `dark.css`, `skin.js`, `assets/logo-classic.webp` and `assets/logo-dark.webp`. Deploy removes a leftover `studio.css` file. Do not delete `comments-private` or `repositories/Comment-Drafter`. If a site file is removed by mistake, click **Deploy HEAD Commit** again. Do not copy `.htaccess` from Git over the server file by hand.
 
 `$HOME/public_html/comments` is not the live site. After `config.php` exists only in `comments-private`, delete `$HOME/public_html/comments` if that tree is still there.
 

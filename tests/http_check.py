@@ -3,15 +3,23 @@ import http.cookiejar, json, re, sys, urllib.request, urllib.error
 base = (sys.argv[1] if len(sys.argv) > 1 else 'http://127.0.0.1:8765').rstrip('/')
 jar = http.cookiejar.CookieJar()
 client = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
-def request(path, payload=None, headers=None, raw=None):
+def request(path, payload=None, headers=None, raw=None, binary=False):
     body = raw if raw is not None else json.dumps(payload).encode() if payload is not None else None
     req = urllib.request.Request(base+path, data=body, headers=headers or {})
     try: response = client.open(req)
     except urllib.error.HTTPError as error: response = error
-    return response.code, response.headers, response.read().decode()
+    payload_bytes = response.read()
+    return response.code, response.headers, payload_bytes if binary else payload_bytes.decode()
 status, headers, page = request('/')
 assert status == 200 and 'no-store' in headers['Cache-Control']
+assert "img-src 'self'" in headers['Content-Security-Policy']
+assert page.count('alt="Better Schools"') == 2
+assert 'assets/logo-classic.webp' in page and 'assets/logo-dark.webp' in page
 assert page.count('class="chip"') == 54
+for logo in ('/assets/logo-classic.webp', '/assets/logo-dark.webp'):
+    logo_status, logo_headers, logo_body = request(logo, binary=True)
+    assert logo_status == 200 and logo_body[:4] == b'RIFF' and logo_body[8:12] == b'WEBP', (logo, logo_status, logo_headers.get('Content-Type'))
+    assert 'image/webp' in logo_headers.get('Content-Type', ''), logo_headers.get('Content-Type')
 assert 'HttpOnly' in headers['Set-Cookie'] and 'SameSite=Strict' in headers['Set-Cookie']
 token = re.search(r'name="csrf-token" content="([a-f0-9]+)"', page)[1]
 valid = dict(name='Alex', pronouns='they', subject='', observations='', length='standard', strengths=['natural-curiosity'], nextSteps=[])

@@ -17,14 +17,14 @@ function e(string $value): string { return htmlspecialchars($value, ENT_QUOTES |
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="<?= e($token) ?>">
   <title>Report Comment Builder</title>
-  <link rel="stylesheet" href="app.css?v=4">
-  <link rel="stylesheet" href="dark.css?v=2">
+  <link rel="stylesheet" href="app.css?v=5">
+  <link rel="stylesheet" href="dark.css?v=3">
   <script src="skin.js?v=3" defer></script>
   <script src="app.js?v=4" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to builder</a>
-<header class="masthead"><div class="brand"><span class="brand-icon" aria-hidden="true">✎</span> Teacher workspace</div><div class="masthead-tools"><span class="tag">A little support for report season</span><div class="skin-switch" role="group" aria-label="Appearance"><button type="button" data-set-skin="classic" aria-pressed="<?= $skin === 'classic' ? 'true' : 'false' ?>">Classic</button><button type="button" data-set-skin="dark" aria-pressed="<?= $skin === 'dark' ? 'true' : 'false' ?>">Dark</button></div></div></header>
+<header class="masthead"><div class="brand"><img class="logo logo-classic" src="assets/logo-classic.webp" width="692" height="168" alt="Better Schools"><img class="logo logo-dark" src="assets/logo-dark.webp" width="692" height="168" alt="Better Schools"></div><div class="masthead-tools"><span class="tag">A little support for report season</span><div class="skin-switch" role="group" aria-label="Appearance"><button type="button" data-set-skin="classic" aria-pressed="<?= $skin === 'classic' ? 'true' : 'false' ?>">Classic</button><button type="button" data-set-skin="dark" aria-pressed="<?= $skin === 'dark' ? 'true' : 'false' ?>">Dark</button></div></div></header>
 <p id="skin-status" class="sr-only skin-status" role="status" aria-live="polite"></p>
 <main id="main">
   <div class="intro"><p class="eyebrow">PROGRESS, PUT INTO WORDS</p><h1>Report Comment Builder</h1><p>Recognise each student’s strengths. Make their next steps feel achievable.</p></div>

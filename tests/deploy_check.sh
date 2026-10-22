@@ -72,10 +72,19 @@ PUBLIC="$HOME_A/greache.com/comments"
 PRIVATE="$HOME_A/comments-private"
 [[ ! -e "$HOME_A/public_html" ]] || fail "deploy created public_html"
 [[ ! -e "$PUBLIC/studio.css" ]] || fail "deploy published studio.css"
-for name in index.php generate.php private_path.php app.css app.js dark.css skin.js; do
+for name in index.php generate.php private_path.php app.css app.js dark.css skin.js .htaccess; do
   assert_file "$PUBLIC/$name"
-  cmp -s "$ROOT/public/$name" "$PUBLIC/$name" || fail "public $name differs"
+  if [[ "$name" != ".htaccess" ]]; then
+    cmp -s "$ROOT/public/$name" "$PUBLIC/$name" || fail "public $name differs"
+  fi
 done
+for name in logo-classic.webp logo-dark.webp; do
+  assert_file "$PUBLIC/assets/$name"
+  cmp -s "$ROOT/public/assets/$name" "$PUBLIC/assets/$name" || fail "asset $name differs"
+  [[ "$(stat -c '%a' "$PUBLIC/assets/$name")" == "644" ]] || fail "asset $name mode is not 644"
+  [[ "$(stat -c '%s' "$PUBLIC/assets/$name")" -lt 100000 ]] || fail "asset $name is too large"
+done
+grep -q 'AddType image/webp .webp' "$PUBLIC/.htaccess" || fail "webp type was not deployed"
 for name in bootstrap.php bank.json instructions.txt config.example.php; do
   assert_file "$PRIVATE/$name"
   cmp -s "$ROOT/private/$name" "$PRIVATE/$name" || fail "private $name differs"

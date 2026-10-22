@@ -17,10 +17,10 @@ function e(string $value): string { return htmlspecialchars($value, ENT_QUOTES |
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="<?= e($token) ?>">
   <title>Report Comment Builder</title>
-  <link rel="stylesheet" href="app.css?v=7">
-  <link rel="stylesheet" href="dark.css?v=4">
+  <link rel="stylesheet" href="app.css?v=8">
+  <link rel="stylesheet" href="dark.css?v=5">
   <script src="skin.js?v=3" defer></script>
-  <script src="app.js?v=5" defer></script>
+  <script src="app.js?v=6" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to builder</a>
@@ -39,23 +39,28 @@ function e(string $value): string { return htmlspecialchars($value, ENT_QUOTES |
       <p id="name-help" class="help">Use the full first name, never a nickname (e.g. Joseph-Thomas, not "JT"). Use a preferred name or pronouns only where parents/carers know and support it; published reports use the legal name unless a preferred name is approved.</p>
       <label for="subject">Subject or learning area <span class="optional">Optional</span></label><input id="subject" name="subject" maxlength="160" autocomplete="off" placeholder="e.g. English, Mathematics, learning across the curriculum">
     </section>
-    <?php foreach (['strengths' => ['02', 'Strengths', 'Choose two or three things worth recognising.'], 'nextSteps' => ['03', 'Next steps', 'Choose one or two opportunities for growth.']] as $kind => [$step, $title, $hint]): ?>
-    <section class="panel selection <?= e($kind) ?>" aria-labelledby="<?= e($kind) ?>-heading">
-      <div class="section-heading"><span class="step"><?= e($step) ?></span><h2 id="<?= e($kind) ?>-heading"><?= e($title) ?></h2><span class="count" id="<?= e($kind) ?>-count" aria-live="polite">0 selected</span></div>
-      <p class="help"><?= e($hint) ?> There’s no fixed limit.</p>
-      <div class="chips" data-bank="<?= e($kind) ?>">
-      <?php foreach ($bank[$kind] as $id => $item): $tip = $kind . '-' . $id; ?>
-        <div class="chip-wrap">
-          <button type="button" class="chip" data-id="<?= e($id) ?>" aria-pressed="false" aria-describedby="<?= e($tip) ?>"><span class="tick" aria-hidden="true">✓</span><?= e($item['label']) ?></button>
-          <button type="button" class="info" aria-label="About <?= e($item['label']) ?>" aria-expanded="false" aria-controls="descriptor-dialog" aria-haspopup="dialog" aria-describedby="<?= e($tip) ?>">i</button>
-          <div class="description" id="<?= e($tip) ?>" role="tooltip"><?= e($item['description']) ?></div>
+    <section class="panel selection" aria-labelledby="descriptors-heading">
+      <div class="section-heading"><span class="step">02</span><h2 id="descriptors-heading">What to include</h2></div>
+      <p class="help">Choose any that apply. Growth items have a blue edge. There’s no fixed limit.</p>
+      <?php $kinds = ['strength' => 'strengths', 'next' => 'nextSteps', 'support' => 'supports']; ?>
+      <?php foreach ($bank['categories'] as $category): ?>
+      <div class="descriptor-group" data-category="<?= e($category['id']) ?>" role="group" aria-labelledby="<?= e($category['id']) ?>-heading">
+        <div class="group-heading"><h3 id="<?= e($category['id']) ?>-heading"><?= e($category['title']) ?></h3><span class="count" aria-live="polite">0 selected</span></div>
+        <p class="help"><?= e($category['hint']) ?></p>
+        <div class="chips">
+        <?php foreach ($category['items'] as $id => $item): $bankKey = $kinds[$item['kind']]; $tip = $bankKey . '-' . $id; $tone = $item['kind'] === 'next' ? 'growth' : ($item['kind'] === 'support' ? 'support' : 'positive'); ?>
+          <div class="chip-wrap <?= e($tone) ?>">
+            <button type="button" class="chip" data-id="<?= e($id) ?>" data-bank="<?= e($bankKey) ?>" aria-pressed="false" aria-describedby="<?= e($tip) ?>"><span class="tick" aria-hidden="true">✓</span><?= e($item['label']) ?></button>
+            <button type="button" class="info" aria-label="About <?= e($item['label']) ?>" aria-expanded="false" aria-controls="descriptor-dialog" aria-haspopup="dialog" aria-describedby="<?= e($tip) ?>">i</button>
+            <div class="description" id="<?= e($tip) ?>" role="tooltip"><?= e($item['description']) ?></div>
+          </div>
+        <?php endforeach; ?>
         </div>
-      <?php endforeach; ?>
       </div>
+      <?php endforeach; ?>
     </section>
-    <?php endforeach; ?>
     <section class="panel" aria-labelledby="context-heading">
-      <div class="section-heading"><span class="step">04</span><h2 id="context-heading">Make it personal</h2></div>
+      <div class="section-heading"><span class="step">03</span><h2 id="context-heading">Make it personal</h2></div>
       <label for="observations">Teacher observations <span class="optional">Optional</span></label>
       <p id="observation-help" class="help">Specific examples help personalise the comment. Avoid sensitive personal or medical information.</p>
       <textarea id="observations" name="observations" rows="4" maxlength="4000" aria-describedby="observation-help" placeholder="A moment of progress, an achievement, or something you’ve noticed…"></textarea>
@@ -65,9 +70,6 @@ function e(string $value): string { return htmlspecialchars($value, ENT_QUOTES |
       <label for="activities">Clubs, activities or other experiences <span class="optional">Optional</span></label>
       <p id="activities-help" class="help">Name the specific club or activity, describe how the student took part, and the skills they built. Treat personal development activities the same way.</p>
       <textarea id="activities" name="activities" rows="2" maxlength="500" aria-describedby="activities-help" placeholder="Optional. Leave blank if it should not appear."></textarea>
-      <label for="arrangements">Reporting arrangements <span class="optional">Optional</span></label>
-      <p id="arrangements-help" class="help">Use this only when an approved arrangement changes the name to use or what may be included.</p>
-      <textarea id="arrangements" name="arrangements" rows="2" maxlength="500" aria-describedby="arrangements-help" placeholder="Optional. For example, an approved shorter name."></textarea>
       <label for="length">Comment length</label><select id="length" name="length"><option value="short">Shorter · 5 sentences</option><option value="standard" selected>Balanced · 6 sentences</option><option value="detailed">Fuller · 7 sentences</option></select>
     </section>
   </form>

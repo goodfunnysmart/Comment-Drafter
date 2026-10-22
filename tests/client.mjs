@@ -15,9 +15,9 @@ class Element {
   remove() {}
   click() { this.clicked = true; }
 }
-const ids = ['builder','comment','generate','name','pronouns','subject','observations','reframe','activities','arrangements','length','word-count','copy','save','generation-status','stale','contradictions','strengths-count','nextSteps-count','action-status','new-student'];
+const ids = ['builder','comment','generate','name','pronouns','subject','observations','reframe','activities','length','word-count','copy','save','generation-status','stale','contradictions','action-status','new-student'];
 const elements = Object.fromEntries(ids.map(id => [id, new Element()]));
-elements.builder.reset = () => { for (const id of ['name','subject','observations','reframe','activities','arrangements']) elements[id].value = ''; elements.pronouns.value = 'they'; elements.length.value = 'standard'; };
+elements.builder.reset = () => { for (const id of ['name','subject','observations','reframe','activities']) elements[id].value = ''; elements.pronouns.value = 'they'; elements.length.value = 'standard'; };
 elements.builder.reportValidity = () => true;
 const chips = ['natural-curiosity','consistent-attendance','attendance-routines'].map(id => {
   const el = new Element(); el.dataset = {id}; el.closest = () => ({dataset:{bank:id === 'attendance-routines' ? 'nextSteps' : 'strengths'}}); return el;
@@ -47,7 +47,10 @@ const pending = elements.builder.emit('submit');
 assert.equal(elements.generate.disabled, true);
 fetchResolve({ok:true,json:async()=>({ok:true,comment:'Synthetic test draft only.'})}); await pending;
 assert.equal(elements.comment.value,'Synthetic test draft only.');
-assert.equal(JSON.parse(lastRequest.body).reframe, 'Rushes work');
+const sent = JSON.parse(lastRequest.body);
+assert.equal(sent.reframe, 'Rushes work');
+assert.deepEqual(sent.supports, []);
+assert.equal('arrangements' in sent, false);
 elements.comment.value = 'My latest edited comment.'; await elements.comment.emit('input');
 await elements.copy.emit('click'); assert.equal(copied, elements.comment.value);
 await elements.save.emit('click'); assert.equal(savedBlob, elements.comment.value); assert.match(anchor.download, /^Élodie O’Neil-Smith_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.txt$/);

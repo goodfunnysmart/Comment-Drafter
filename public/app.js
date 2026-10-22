@@ -1,12 +1,19 @@
 'use strict';
 const $ = id => document.getElementById(id);
 const form = $('builder'), editor = $('comment'), generate = $('generate');
-const chosen = {strengths: new Set(), nextSteps: new Set()};
+const chosen = {strengths: new Set(), nextSteps: new Set(), supports: new Set()};
 let controller = null, requestVersion = 0, generatedSnapshot = null, lastGenerated = '', busy = false;
-const fields = ['name', 'pronouns', 'subject', 'observations', 'reframe', 'activities', 'arrangements', 'length'];
+const fields = ['name', 'pronouns', 'subject', 'observations', 'reframe', 'activities', 'length'];
 function inputs() {
   return {...Object.fromEntries(fields.map(id => [id, $(id).value.trim()])),
-    strengths: [...chosen.strengths].sort(), nextSteps: [...chosen.nextSteps].sort()};
+    strengths: [...chosen.strengths].sort(), nextSteps: [...chosen.nextSteps].sort(), supports: [...chosen.supports].sort()};
+}
+function updateCounts() {
+  document.querySelectorAll('[data-category]').forEach(group => {
+    const count = group.querySelectorAll('.chip[aria-pressed="true"]').length;
+    const el = group.querySelector('.count');
+    if (el) el.textContent = `${count} selected`;
+  });
 }
 const snapshot = () => JSON.stringify(inputs());
 function setStatus(message, error = false) {
@@ -26,11 +33,6 @@ function inputChanged() {
   $('stale').hidden = generatedSnapshot === null || generatedSnapshot === snapshot();
   const pairs = [
     ['consistent-attendance', 'attendance-routines', 'Consistent Attendance and Attendance Routines'],
-    ['attentive-listening', 'listening-first', 'Attentive Listening and Listening First'],
-    ['using-feedback', 'applying-feedback', 'Using Feedback and Applying Feedback'],
-    ['seeking-support', 'asking-for-help', 'Seeking Support and Asking for Help'],
-    ['growing-independence', 'getting-started', 'Growing Independence and Getting Started'],
-    ['working-together', 'sharing-responsibility', 'Working Together and Sharing Responsibility'],
   ];
   const conflicts = pairs.filter(([a,b]) => chosen.strengths.has(a) && chosen.nextSteps.has(b));
   $('contradictions').hidden = !conflicts.length;
@@ -40,11 +42,10 @@ function inputChanged() {
 form.addEventListener('input', inputChanged);
 form.addEventListener('change', inputChanged);
 document.querySelectorAll('.chip').forEach(button => button.addEventListener('click', () => {
-  const kind = button.closest('[data-bank]').dataset.bank, id = button.dataset.id;
+  const kind = button.dataset.bank || button.closest('[data-bank]').dataset.bank, id = button.dataset.id;
   if (chosen[kind].has(id)) chosen[kind].delete(id); else chosen[kind].add(id);
   button.setAttribute('aria-pressed', String(chosen[kind].has(id)));
-  $('strengths-count').textContent = `${chosen.strengths.size} selected`;
-  $('nextSteps-count').textContent = `${chosen.nextSteps.size} selected`;
+  updateCounts();
   inputChanged();
 }));
 // Explicit tooltip state avoids sticky CSS hover/focus after a mouse click.
@@ -125,8 +126,8 @@ form.addEventListener('submit', async event => {
   if (busy || !form.reportValidity()) return;
   const data = inputs();
   if (!data.name) { setStatus('Enter the student’s full first name.', true); $('name').focus(); return; }
-  if (!data.strengths.length && !data.nextSteps.length) {
-    setStatus('Choose at least one strength or next step.', true); document.querySelector('.chip').focus(); return;
+  if (!data.strengths.length && !data.nextSteps.length && !data.supports.length) {
+    setStatus('Choose at least one strength, next step or support.', true); document.querySelector('.chip').focus(); return;
   }
   if (editor.value.trim() && editor.value !== lastGenerated && !window.confirm('Generating another version will replace your edited comment. Continue?')) return;
   const sentSnapshot = JSON.stringify(data), version = ++requestVersion;
@@ -184,7 +185,7 @@ $('save').addEventListener('click', () => {
   $('action-status').textContent = 'Text file download started.';
 });
 function hasStudentData() {
-  return !!($('name').value.trim() || $('subject').value.trim() || $('observations').value.trim() || $('reframe').value.trim() || $('activities').value.trim() || $('arrangements').value.trim() || editor.value.trim() || chosen.strengths.size || chosen.nextSteps.size);
+  return !!($('name').value.trim() || $('subject').value.trim() || $('observations').value.trim() || $('reframe').value.trim() || $('activities').value.trim() || editor.value.trim() || chosen.strengths.size || chosen.nextSteps.size || chosen.supports.size);
 }
 $('new-student').addEventListener('click', () => {
   if (hasStudentData() && !window.confirm('Clear all entered student details and the current comment?')) return;
@@ -192,7 +193,7 @@ $('new-student').addEventListener('click', () => {
   form.reset(); editor.value = ''; editor.readOnly = false; lastGenerated = ''; generatedSnapshot = null;
   Object.values(chosen).forEach(set => set.clear());
   document.querySelectorAll('.chip').forEach(button => button.setAttribute('aria-pressed', 'false'));
-  ['strengths', 'nextSteps'].forEach(kind => $(kind+'-count').textContent = '0 selected');
+  updateCounts();
   generate.disabled = false; generate.removeAttribute('aria-busy'); setStatus(''); $('action-status').textContent = '';
   closeInfo(); inputChanged(); updateEditor(); $('name').focus();
 });

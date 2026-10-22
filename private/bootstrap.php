@@ -38,7 +38,7 @@ function validateInput(array $input, array $bank): array {
         }
     }
     if ($out['name'] === '') throw new InvalidArgumentException('Enter the student’s full first name.');
-    foreach (['activities' => 500, 'arrangements' => 500, 'reframe' => 500] as $key => $limit) {
+    foreach (['activities' => 500, 'reframe' => 500] as $key => $limit) {
         if (!array_key_exists($key, $input) || $input[$key] === null) {
             $out[$key] = '';
             continue;
@@ -57,25 +57,43 @@ function validateInput(array $input, array $bank): array {
         }
         $out[$key] = $input[$key];
     }
-    foreach (['strengths', 'nextSteps'] as $kind) {
-        $ids = $input[$kind] ?? null;
-        if (!is_array($ids) || !array_is_list($ids) || count($ids) > count($bank[$kind])) {
+    $index = bankIndex($bank);
+    foreach (['strengths', 'nextSteps', 'supports'] as $kind) {
+        $ids = $kind === 'supports' && !array_key_exists($kind, $input) ? [] : ($input[$kind] ?? null);
+        if (!is_array($ids) || !array_is_list($ids) || count($ids) > count($index[$kind])) {
             throw new InvalidArgumentException('Please check the selected descriptors.');
         }
         $out[$kind] = [];
         foreach ($ids as $id) {
-            if (!is_string($id) || !isset($bank[$kind][$id]) || isset($out[$kind][$id])) {
+            if (!is_string($id) || !isset($index[$kind][$id]) || isset($out[$kind][$id])) {
                 throw new InvalidArgumentException('Unknown or duplicate descriptor selected. Reload the page and try again.');
             }
-            $out[$kind][$id] = $bank[$kind][$id];
+            $out[$kind][$id] = $index[$kind][$id];
         }
     }
-    if (!$out['strengths'] && !$out['nextSteps']) throw new InvalidArgumentException('Choose at least one strength or next step.');
+    if (!$out['strengths'] && !$out['nextSteps'] && !$out['supports']) throw new InvalidArgumentException('Choose at least one strength, next step or support.');
     return $out;
+}
+function bankIndex(array $bank): array {
+    $map = ['strength' => 'strengths', 'next' => 'nextSteps', 'support' => 'supports'];
+    $index = ['strengths' => [], 'nextSteps' => [], 'supports' => []];
+    foreach ($bank['categories'] ?? [] as $category) {
+        $title = (string) ($category['title'] ?? '');
+        foreach ($category['items'] ?? [] as $id => $item) {
+            $kind = $map[$item['kind'] ?? ''] ?? null;
+            if (!is_string($id) || $kind === null) continue;
+            $index[$kind][$id] = [
+                'label' => $item['label'],
+                'description' => $item['description'],
+                'category' => $title,
+            ];
+        }
+    }
+    return $index;
 }
 function commentRequestText(array $data): string {
     $reframe = trim((string) ($data['reframe'] ?? ''));
-    unset($data['reframe']);
+    unset($data['reframe'], $data['arrangements']);
     $reframe = str_replace(
         ['<<<NEGATIVE BEHAVIOURS TO REFRAME>>>', '<<<END NEGATIVE BEHAVIOURS TO REFRAME>>>'],
         '',
@@ -88,7 +106,7 @@ function commentRequestText(array $data): string {
         . "<<<NEGATIVE BEHAVIOURS TO REFRAME>>>\n"
         . $block . "\n"
         . "<<<END NEGATIVE BEHAVIOURS TO REFRAME>>>\n"
-        . "Apply the reframing rule only to the text between these markers. Do not apply it to teacher observations.";
+        . "Apply the reframing rule only to the text between these markers. Address every behaviour there and never skip one. Write only the desired positive behaviour and its benefit. Do not copy any words from that block into the comment. Do not apply this rule to teacher observations.";
 }
 function normaliseComment(string $text): string {
     $text = trim(preg_replace('/\s+/u', ' ', $text) ?? '');

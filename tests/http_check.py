@@ -15,8 +15,10 @@ assert status == 200 and 'no-store' in headers['Cache-Control']
 assert "img-src 'self'" in headers['Content-Security-Policy']
 assert page.count('alt="Better Schools"') == 2
 assert 'assets/logo-classic.webp' in page and 'assets/logo-dark.webp' in page
-assert page.count('class="chip"') == 54
+assert page.count('class="chip"') == 25
+assert 'Engagement in Learning' in page and 'Next Term Focus' in page and 'Chunking learning tasks' in page
 assert 'Negative behaviours to reframe' in page and 'id="reframe"' in page and 'never named in the comment' in page
+assert 'id="arrangements"' not in page and 'Reporting arrangements' not in page
 for logo in ('/assets/logo-classic.webp', '/assets/logo-dark.webp'):
     logo_status, logo_headers, logo_body = request(logo, binary=True)
     assert logo_status == 200 and logo_body[:4] == b'RIFF' and logo_body[8:12] == b'WEBP', (logo, logo_status, logo_headers.get('Content-Type'))
@@ -32,6 +34,7 @@ assert request('/generate.php', valid, dict(good_headers, **{'Sec-Fetch-Site':'c
 assert request('/generate.php', dict(valid, name=' '), good_headers)[0] == 422
 assert request('/generate.php', dict(valid, strengths=[]), good_headers)[0] == 422
 assert request('/generate.php', dict(valid, strengths=['invented']), good_headers)[0] == 422
+assert request('/generate.php', dict(valid, supports=['not-a-support']), good_headers)[0] == 422
 assert request('/generate.php', dict(valid, reframe='x' * 501), good_headers)[0] == 422
 assert request('/generate.php', headers=good_headers, raw=b'{broken')[0] == 422
 assert request('/generate.php', headers=good_headers, raw=b' ' * 24001)[0] == 413
@@ -47,4 +50,4 @@ status, headers, body = request('/generate.php', dict(valid, reframe='Rushes wor
 assert status == 503 and json.loads(body)['ok'] is False, (status, body)
 assert 'no-store' in headers['Cache-Control']
 assert request('/generate.php', valid, good_headers)[0] == 429
-print('PASS: rendering, 54 chips, security headers/cookie, POST/CSRF/origin, invalid data, size cap, private paths, unconfigured error, throttle. No live AI call.')
+print('PASS: rendering, 25 chips, security headers/cookie, POST/CSRF/origin, invalid data, size cap, private paths, unconfigured error, throttle. No live AI call.')

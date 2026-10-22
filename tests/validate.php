@@ -173,7 +173,8 @@ check(commentAdjustmentPhrase(' A quiet corner. ') === 'A quiet corner' && comme
 $addedSupportInput = array_replace($base, ['strengths' => [], 'supports' => ['one-on-one-support', 'clear-expectations', 'group-work', 'noise-reduction', 'quiet-learning-environment']]);
 $addedSupportLabels = commentSelectedSupportLabels(validateInput($addedSupportInput, $bank)['supports'], $bank);
 check($addedSupportLabels === ['1 on 1 Support', 'Clear Expectations', 'Group Work', 'Noise Reduction', 'Quiet Learning Environment'], 'Added support labels stay word for word');
-check(commentSupportSentence($addedSupportLabels, 'Alex') === 'Throughout the semester, strategies implemented to support Alex included 1 on 1 Support, clear Expectations, group Work, noise Reduction, and quiet Learning Environment.', 'The semester sentence uses the added support labels');
+check(commentSupportSentence($addedSupportLabels, 'Alex') === 'Throughout the semester, strategies implemented to support Alex included 1 on 1 support, clear expectations, group work, noise reduction, and quiet learning environment.', 'The semester sentence lowercases the added support labels');
+check(commentSupportPhrase('ADHD Plan') === 'ADHD plan' && commentSupportPhrase('IEP') === 'IEP' && commentSupportPhrase('1 on 1 Support') === '1 on 1 support', 'Support phrases are fully lowercased, except all-caps tokens');
 check(str_contains(commentRequestText(validateInput($base, $bank)), 'Demonstrates strong ability and produces high-quality work.'), 'The descriptor description is the meaning sent to the model');
 $five = 'Alex is curious and kind. Alex listens well. Rushing sometimes hides that understanding. A careful check helps. Alex can finish each task with the same care.';
 $six = $five . ' Alex can use this routine next term.';

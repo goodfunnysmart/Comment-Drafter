@@ -92,7 +92,7 @@ function chipControl(string $id, array $item): void {
       <label for="activities">Clubs, activities or other experiences <span class="optional">Optional</span></label>
       <p id="activities-help" class="help">Name the specific club or activity, describe how the student took part, and the skills they built. Treat personal development activities the same way.</p>
       <textarea id="activities" name="activities" rows="2" maxlength="500" aria-describedby="activities-help" placeholder="Optional. Leave blank if it should not appear."></textarea>
-      <label for="length">Comment length</label><select id="length" name="length"><option value="short">Shorter · 5 sentences</option><option value="standard" selected>Balanced · 6 sentences</option><option value="detailed">Fuller · 7 sentences</option></select>
+      <label for="length">Comment length</label><select id="length" name="length"><option value="short">Short · approximately 60–90 words</option><option value="standard" selected>Standard · approximately 90–120 words</option><option value="detailed">Detailed · approximately 120–150 words</option><option value="long">Long · approximately 150–200 words</option></select>
     </section>
   </form>
   <aside class="editor-column" aria-labelledby="editor-heading">
@@ -107,7 +107,7 @@ function chipControl(string $id, array $item): void {
       <textarea id="comment" rows="14" placeholder="Your generated comment will appear here. You can also write or edit directly in this space." spellcheck="true"></textarea>
       <div id="tweak-panel" class="tweak-panel" hidden>
         <label for="tweak">What would you like changed?</label>
-        <p id="tweak-help" class="help">Changes only what you ask for. The comment stays 5–7 sentences and still uses the first name three times.</p>
+        <p id="tweak-help" class="help">Changes only what you ask for. The comment still uses the first name three times and follows the selected length.</p>
         <textarea id="tweak" rows="2" maxlength="500" aria-describedby="tweak-help" placeholder="Make it a little friendlier, lower the reading level, add their effort in science..."></textarea>
         <div class="tweak-actions">
           <button id="tweak-comment" type="button">Tweak comment</button>

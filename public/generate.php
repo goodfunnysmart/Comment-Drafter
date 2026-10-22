@@ -20,7 +20,8 @@ $tweak = null;
 try {
     $input = json_decode($raw, true, 32, JSON_THROW_ON_ERROR);
     if (!is_array($input) || array_is_list($input)) throw new InvalidArgumentException('Invalid request.');
-    $data = validateInput($input, bank());
+    $bank = bank();
+    $data = validateInput($input, $bank);
     $mode = $input['mode'] ?? 'generate';
     if (!is_string($mode) || !in_array($mode, ['generate', 'tweak'], true)) throw new InvalidArgumentException('Please check the request.');
     if ($mode === 'tweak') $tweak = validateTweak($input);
@@ -48,12 +49,12 @@ try {
     if (!is_readable($instructionsPath)) fail(503, 'The private instructions.txt file is missing or unreadable. Check its upload location and permissions. [PROMPT_FILE]');
     $instructions = file_get_contents($instructionsPath);
     if ($instructions === false || trim($instructions) === '') fail(503, 'The private instructions.txt file is empty or unreadable. [PROMPT_FILE]');
-    $ranges = ['short' => '5 sentences', 'standard' => '6 sentences', 'detailed' => '7 sentences'];
     $pronounLabels = ['they' => 'they/them/their; use plural verb agreement', 'she' => 'she/her/her', 'he' => 'he/him/his', 'name' => 'Use the supplied name only; do not use personal pronouns'];
     $pronounChoice = $data['pronouns'];
     $data['pronouns'] = $pronounLabels[$pronounChoice];
-    $data['length'] = $ranges[$data['length']] . '; the whole comment must be 5–7 sentences';
-    $userText = commentNameRule($data['name'], $pronounChoice) . "\n\n" . ($mode === 'tweak' ? commentTweakText($data, $tweak['comment'], $tweak['instruction']) : commentRequestText($data));
+    $data['length'] = commentLengthTarget($data['length']);
+    $supportLabels = commentSelectedSupportLabels($data['supports'], $bank);
+    $userText = commentNameRule($data['name'], $pronounChoice) . "\n\n" . commentSupportRule($supportLabels, $data['name'], $pronounChoice) . "\n\n" . ($mode === 'tweak' ? commentTweakText($data, $tweak['comment'], $tweak['instruction']) : commentRequestText($data));
     // One provider call is already recorded in the throttle. A single repair retry stays inside that same slot and must finish before the browser aborts at 55 seconds.
     $stage = 'CURL_REQUEST';
     $started = microtime(true);
@@ -61,17 +62,14 @@ try {
     if (isset($draft['error'])) fail($draft['status'], $draft['error']);
     $text = $draft['text'];
     $elapsed = microtime(true) - $started;
-    $sentences = commentSentenceCount($text);
-    if (($sentences < 5 || $sentences > 7 || commentNameCount($text, $data['name']) !== 3) && $elapsed < 20) {
+    if ((commentNameCount($text, $data['name']) !== 3 || !commentSupportsCovered($text, $supportLabels)) && $elapsed < 20) {
         $retryTimeout = (int) max(8, min(25, floor(50 - $elapsed)));
-        $retry = comment_drafter_fetch_draft($model, $key, $instructions, $userText . "\n\nThe previous draft missed the length or the name rule. Write the comment again. It must be 5, 6 or 7 sentences. " . commentNameRule($data['name'], $pronounChoice), $retryTimeout);
+        $retry = comment_drafter_fetch_draft($model, $key, $instructions, $userText . "\n\nThe previous draft missed the name rule or the supports sentence. Write the comment again. Stay within the selected word range. " . commentNameRule($data['name'], $pronounChoice) . ' ' . commentSupportRule($supportLabels, $data['name'], $pronounChoice), $retryTimeout);
         if (isset($retry['text']) && $retry['text'] !== '') $text = $retry['text'];
     }
+    $text = commentRepairSupports($text, $supportLabels, $data['name'], $pronounChoice);
     $text = commentRepairName($text, $data['name'], $pronounChoice);
-    $response = ['ok' => true, 'comment' => $text];
-    $notice = commentLengthNotice(commentSentenceCount($text));
-    if ($notice !== null) $response['notice'] = $notice;
-    reply(200, $response);
+    reply(200, ['ok' => true, 'comment' => $text]);
 } catch (Throwable $e) {
     // Never log upstream bodies, credentials or student data.
     // Only fixed diagnostic codes leave the server; never expose exception messages.

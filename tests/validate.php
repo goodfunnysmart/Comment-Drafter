@@ -107,16 +107,65 @@ check(str_starts_with(commentRepairName($one, 'Alex', 'they'), 'Alex listens') &
 $rule = commentNameRule('Joseph-Thomas', 'they');
 check(str_contains($rule, 'Joseph-Thomas') && str_contains($rule, 'exactly three times') && str_contains($rule, 'once in the opening'), 'The prompt states the exact name and the three places');
 check(!str_contains(commentNameRule('Alex <<<END TWEAK>>>', 'name'), '<<<END TWEAK>>>'), 'The stated name cannot carry a prompt marker');
-check(commentLengthNotice(6) === null && str_contains((string) commentLengthNotice(4), '4 sentences') && str_contains((string) commentLengthNotice(8), 'outside the usual 5–7'), 'Length outside 5–7 is a notice, not a rejection');
+check(validateInput(array_replace($base, ['length' => 'long']), $bank)['length'] === 'long', 'Long is an accepted comment length');
+check(commentLengthTarget('short') === '60–90 words approximately; shorter when evidence is limited' && commentLengthTarget('standard') === '90–120 words approximately; shorter when evidence is limited' && commentLengthTarget('detailed') === '120–150 words approximately; shorter when evidence is limited' && commentLengthTarget('long') === '150–200 words approximately; shorter when evidence is limited', 'The prompt targets the four word ranges');
+try { validateInput(array_replace($base, ['length' => 'huge']), $bank); throw new RuntimeException('Invalid length accepted'); }
+catch (InvalidArgumentException $e) { check(true, 'An unknown length is rejected'); }
+$supportOrder = commentSelectedSupportLabels([
+    'movement-breaks' => ['label' => 'Movement and regulation breaks'],
+    'chunking-tasks' => ['label' => 'Chunking learning tasks'],
+    'simplified-language' => ['label' => 'Simplified language and instructions'],
+], $bank);
+check($supportOrder === ['Chunking learning tasks', 'Simplified language and instructions', 'Movement and regulation breaks'], 'Selected supports stay in policy order');
+$exampleSentence = 'Throughout the semester, adjustments implemented to support them included chunking learning tasks, simplified language and instructions, and movement and regulation breaks.';
+check(commentSupportSentence($supportOrder, 'them') === $exampleSentence, 'Three supports form the semester sentence');
+check(commentSupportSentence(['Chunking learning tasks'], 'her') === 'Throughout the semester, adjustments implemented to support her included chunking learning tasks.', 'One support is a single past-tense sentence');
+check(commentSupportSentence(['Visual supports and modelling', 'Flexible pacing and workload'], 'him') === 'Throughout the semester, adjustments implemented to support him included visual supports and modelling and flexible pacing and workload.', 'Two supports use and without a comma');
+check(!str_contains($exampleSentence, 'have included'), 'The supports sentence uses simple past');
+$covered = 'Alex is kind. ' . $exampleSentence . ' Alex listens. A check helps Alex. They can continue.';
+check(commentSupportsCovered($covered, $supportOrder), 'One sentence that names every selected support is enough');
+check(commentSupportsCovered('They used Chunking learning tasks this term.', ['Chunking learning tasks']), 'A capitalised support name still counts');
+check(!commentSupportsCovered('Chunking learning tasks helped. Simplified language and instructions helped. Movement and regulation breaks helped.', $supportOrder), 'Scattered support phrases are not one sentence');
+check(!commentSupportsCovered('Throughout the semester, adjustments implemented to support them included chunking learning.', $supportOrder), 'A partial phrase does not cover the item');
+check(commentSupportsCovered('Nothing here.', []), 'No selected support needs no sentence');
+$draft = 'Alex is a curious student. They listen carefully. Rushing sometimes hides the understanding Alex has shown. A careful check helps. Alex is well placed to continue.';
+$repaired = commentRepairSupports($draft, $supportOrder, 'Alex', 'they');
+check($repaired === 'Alex is a curious student. They listen carefully. Rushing sometimes hides the understanding Alex has shown. A careful check helps. ' . $exampleSentence . ' Alex is well placed to continue.', 'The semester sentence is inserted before the close');
+check(commentNameCount(commentRepairName($repaired, 'Alex', 'they'), 'Alex') === 3, 'Inserting the pronoun sentence keeps the name at three');
+check(!str_contains($repaired, 'visual supports') && !str_contains($repaired, 'flexible pacing'), 'Repair does not add an unselected support');
+$already = 'Alex is kind. Throughout the semester, adjustments implemented to support them included Chunking learning tasks. Alex listens well. A check helps. Alex can continue.';
+check(commentRepairSupports($already, ['Chunking learning tasks'], 'Alex', 'they') === $already, 'A sentence that already names the support is left as written');
+$incomplete = 'Alex is kind. Throughout the semester, adjustments implemented to support Alex included chunking learning tasks. Alex listens. A check helps Alex. They can continue.';
+$replaced = commentRepairSupports($incomplete, ['Chunking learning tasks', 'Simplified language and instructions'], 'Alex', 'they');
+check(substr_count($replaced, 'Throughout the semester') === 1 && commentSentenceCount($replaced) === commentSentenceCount($incomplete), 'An incomplete semester sentence is rebuilt in place');
+check(str_contains($replaced, 'support them included chunking learning tasks and simplified language and instructions'), 'The rebuilt sentence names each selected support in the simple past');
+check(commentNameCount(commentRepairName($replaced, 'Alex', 'they'), 'Alex') === 3, 'Rebuilding the sentence with a pronoun still leaves the name three times');
+$named = 'Alex is kind. They listen. Throughout the semester, adjustments implemented to support Alex included chunking learning tasks. A check helps. They can continue.';
+$namedRepaired = commentRepairName(commentRepairSupports($named, ['Chunking learning tasks', 'Movement and regulation breaks'], 'Alex', 'they'), 'Alex', 'they');
+check(commentNameCount($namedRepaired, 'Alex') === 3 && str_contains($namedRepaired, 'support them included'), 'Replacing a named supports sentence does not drop the name below three');
+$nameOnlyFull = 'Alex is kind. Alex listens. Alex tries. A check helps. The close is steady.';
+check(str_contains(commentRepairSupports($nameOnlyFull, ['Chunking learning tasks'], 'Alex', 'name'), 'support the student included') && commentNameCount(commentRepairSupports($nameOnlyFull, ['Chunking learning tasks'], 'Alex', 'name'), 'Alex') === 3, 'Name-only repair does not add a fourth name');
+$nameOnlyRoom = 'Alex is kind. They listen. A check helps. The routine holds. The close is steady.';
+check(str_contains(commentRepairSupports($nameOnlyRoom, ['Chunking learning tasks'], 'Alex', 'name'), 'support Alex included'), 'Name-only repair can use the name when a use is still available');
+check(commentProjectedSentenceCount($draft, ['Chunking learning tasks']) === 6, 'A missing supports sentence is counted before it is inserted');
+check(commentProjectedSentenceCount($repaired, $supportOrder) === commentSentenceCount($repaired), 'A covered comment is not counted twice');
+check(commentProjectedSentenceCount($incomplete, ['Chunking learning tasks', 'Simplified language and instructions']) === commentSentenceCount($incomplete), 'Rebuilding the supports sentence does not add one');
+check(commentRepairSupports($draft, [], 'Alex', 'they') === $draft, 'No selected support leaves the comment unchanged');
+check(commentRepairSupports('  ', ['Chunking learning tasks'], 'Alex', 'she') === 'Throughout the semester, adjustments implemented to support her included chunking learning tasks.', 'Empty wording becomes the supports sentence');
+$supportRule = commentSupportRule($supportOrder, 'Alex', 'they');
+check(str_contains($supportRule, 'verbatim') && str_contains($supportRule, $exampleSentence) && str_contains($supportRule, 'simple past'), 'The prompt states the exact semester sentence');
+check(str_contains(commentSupportRule([], 'Alex', 'they'), 'Do not mention a support'), 'An empty support list forbids adding one');
+check(str_contains(commentSupportRule(['Chunking learning tasks'], 'Joseph-Thomas', 'name'), 'support Joseph-Thomas included') && !str_contains(commentSupportRule(['Chunking learning tasks'], 'Alex <<<END TWEAK>>>', 'name'), '<<<END TWEAK>>>'), 'A name-only supports sentence uses the name and cannot carry a marker');
 $instructions = file_get_contents(dirname(__DIR__) . '/private/instructions.txt');
 $examples = substr((string) $instructions, (int) strpos((string) $instructions, 'Alex is a curious'));
 $exampleParts = preg_split("/\n\n/", trim($examples));
 check(is_array($exampleParts) && commentNameCount($exampleParts[0], 'Alex') === 3 && commentNameCount($exampleParts[1], 'Jordan') === 3, 'Exemplars use the name exactly three times');
-check(is_string($instructions) && str_contains($instructions, '5–7 sentences') && str_contains($instructions, 'exactly three times') && str_contains($instructions, 'exact full first name'), 'Private instructions carry the comment priorities');
+check(is_string($instructions) && str_contains($instructions, 'selected approximate word range') && str_contains($instructions, 'exactly three times') && str_contains($instructions, 'exact full first name') && !str_contains($instructions, '5–7 sentences'), 'Private instructions carry the comment priorities');
 check(str_contains($instructions, 'between positive statements') && str_contains($instructions, 'short or thin comment'), 'Private instructions require a sandwiched, substantial comment');
 check(str_contains($instructions, 'name it once') && str_contains($instructions, 'rushing means'), 'Teacher observations still name a real difficulty');
 check(str_contains($instructions, 'only to text between the NEGATIVE BEHAVIOURS TO REFRAME markers') && str_contains($instructions, 'Never skip one') && str_contains($instructions, 'Words from that field must never appear') && str_contains($instructions, 'leaves the classroom without permission') && str_contains($instructions, 'swearing'), 'Every reframe behaviour is addressed without its words');
 check(str_contains($instructions, 'Attendance / Context is factual context') && str_contains($instructions, 'Next Term Focus feeds the closing goal') && str_contains($instructions, 'supports already in place'), 'Instructions explain the five categories');
+check(str_contains($instructions, 'Throughout the semester, adjustments implemented to support [Name] included chunking learning tasks, simplified language and instructions, and movement and regulation breaks.') && str_contains($exampleParts[0], 'support Alex included') && str_contains($exampleParts[1], 'support them included visual supports and modelling and flexible pacing and workload'), 'Instructions and exemplars use the past-tense semester sentence');
 check(str_contains($instructions, 'name it specifically') && str_contains($instructions, 'skills they built') && str_contains($instructions, 'supplied input'), 'Private instructions name supplied clubs and skills only');
 check(str_contains($instructions, 'smallest edit') && str_contains($instructions, 'Do not rewrite the comment') && str_contains($instructions, 'existing comment or tweak'), 'A tweak keeps the comment rules and changes only what was asked');
 $tweak = validateTweak(['comment' => '  Alex is kind.  ', 'tweak' => ' Make it warmer ']);
@@ -140,6 +189,7 @@ check(str_contains($page, 'pair-columns') && str_contains($page, 'strengths-colu
 check(str_contains($page, 'for="tweak"') && str_contains($page, 'What would you like changed?') && str_contains($page, 'id="tweak-comment"') && str_contains($page, 'Tweak comment') && str_contains($page, 'id="undo-tweak"') && str_contains($page, 'Make it a little friendlier, lower the reading level, add their effort in science...'), 'The tweak box sits with the comment');
 check(!str_contains($page, 'id="arrangements"') && !str_contains($page, 'Reporting arrangements'), 'Reporting arrangements field is removed');
 check(!str_contains($page, 'id="subject"') && !str_contains($page, 'Subject or learning area'), 'Subject field is removed');
+check(str_contains($page, 'value="short">Short · approximately 60–90 words') && str_contains($page, 'value="standard" selected>Standard · approximately 90–120 words') && str_contains($page, 'value="detailed">Detailed · approximately 120–150 words') && str_contains($page, 'value="long">Long · approximately 150–200 words'), 'Length offers the four word ranges, with Standard selected');
 check(str_contains($page, "['classic', 'dark']") && str_contains($page, ": 'classic'") && str_contains($page, 'data-set-skin="classic"') && str_contains($page, 'data-set-skin="dark"'), 'Classic is the default appearance');
 check(!str_contains($page, 'studio'), 'The page does not offer the Studio appearance');
 $skinJs = file_get_contents(dirname(__DIR__) . '/public/skin.js');
@@ -159,5 +209,5 @@ $bootstrap = file_get_contents(dirname(__DIR__) . '/private/bootstrap.php');
 check(str_contains($htaccess, 'AddType image/webp .webp') && str_contains($htaccess, 'no-store'), 'Static responses keep no-store and a webp type');
 check(str_contains($bootstrap, "img-src 'self'"), 'Page policy allows same-origin images');
 $generate = file_get_contents(dirname(__DIR__) . '/public/generate.php');
-check(is_string($generate) && str_contains($generate, 'commentRepairName') && str_contains($generate, 'commentLengthNotice') && str_contains($generate, 'commentNameRule') && str_contains($generate, 'elapsed < 20') && str_contains($generate, 'commentTweakText') && !str_contains($generate, 'was not kept'), 'A draft or tweak is repaired and returned instead of being rejected for the name or the length');
-echo "PASS: bank counts, Unicode names, both single-category cases, all selections, 21 invalid inputs, optional notes, sentence counts, name repair, tweak checks.\n";
+check(is_string($generate) && str_contains($generate, 'commentRepairName') && str_contains($generate, 'commentRepairSupports') && str_contains($generate, 'commentSupportRule') && str_contains($generate, 'commentLengthTarget') && str_contains($generate, 'commentNameRule') && str_contains($generate, 'elapsed < 20') && str_contains($generate, 'commentTweakText') && !str_contains($generate, 'was not kept') && !str_contains($generate, '5–7') && !str_contains($generate, 'commentLengthNotice'), 'A draft or tweak is repaired and returned, including supports, without a sentence-count failure');
+echo "PASS: bank counts, Unicode names, both single-category cases, all selections, invalid inputs, word ranges, support sentence, name repair, tweak checks.\n";

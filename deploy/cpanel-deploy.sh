@@ -228,6 +228,12 @@ for path in "$REPO"/public/*; do
   copy_file "$path" "$PUBLIC/$name" 644
 done
 
+# An earlier deploy published studio.css. Remove that leftover file.
+# A directory with the same name is left in place.
+if [[ -e "$PUBLIC/studio.css" && ! -d "$PUBLIC/studio.css" ]]; then
+  "$RM" -f -- "$PUBLIC/studio.css"
+fi
+
 for path in "$REPO"/private/*; do
   name="$(basename "$path")"
   case "$name" in

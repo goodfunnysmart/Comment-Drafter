@@ -47,4 +47,9 @@ check(!str_contains($instructions, '.docx') && !str_contains($instructions, 'upl
 $page = file_get_contents(dirname(__DIR__) . '/public/index.php');
 check(str_contains($page, 'id="name-help"') && str_contains($page, 'aria-describedby="name-help"') && str_contains($page, 'never a nickname'), 'Name field has the full-name reminder');
 check(str_contains($page, 'id="activities-help"') && str_contains($page, 'aria-describedby="activities-help"') && str_contains($page, 'skills they built') && str_contains($page, 'personal development activities'), 'Activities field has the participation reminder');
+check(str_contains($page, "['classic', 'dark']") && str_contains($page, ": 'classic'") && str_contains($page, 'data-set-skin="classic"') && str_contains($page, 'data-set-skin="dark"'), 'Classic is the default appearance');
+check(!str_contains($page, 'studio'), 'The page does not offer the Studio appearance');
+$skinJs = file_get_contents(dirname(__DIR__) . '/public/skin.js');
+check(is_string($skinJs) && str_contains($skinJs, "['classic', 'dark']") && !str_contains($skinJs, 'studio'), 'The appearance switch only offers Classic and Dark');
+check(!is_file(dirname(__DIR__) . '/public/studio.css'), 'studio.css is not part of the site');
 echo "PASS: bank counts, Unicode names, both single-category cases, all selections, 17 invalid inputs, optional notes, sentence counts.\n";

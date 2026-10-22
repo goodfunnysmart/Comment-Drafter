@@ -5,7 +5,7 @@ require __DIR__ . '/private_path.php';
 comment_drafter_require_private(__DIR__);
 if (!empty($_SERVER['PATH_INFO'])) { http_response_code(404); exit('Page not found.'); }
 $requestedSkin = $_GET['skin'] ?? '';
-$skin = in_array($requestedSkin, ['studio', 'classic', 'dark'], true) ? $requestedSkin : 'studio';
+$skin = in_array($requestedSkin, ['classic', 'dark'], true) ? $requestedSkin : 'classic';
 $bank = bank();
 $token = $_SESSION['csrf'];
 session_write_close();
@@ -17,15 +17,14 @@ function e(string $value): string { return htmlspecialchars($value, ENT_QUOTES |
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="<?= e($token) ?>">
   <title>Report Comment Builder</title>
-  <link rel="stylesheet" href="app.css?v=3">
-  <link rel="stylesheet" href="studio.css?v=2">
-  <link rel="stylesheet" href="dark.css?v=1">
-  <script src="skin.js?v=2" defer></script>
+  <link rel="stylesheet" href="app.css?v=4">
+  <link rel="stylesheet" href="dark.css?v=2">
+  <script src="skin.js?v=3" defer></script>
   <script src="app.js?v=4" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to builder</a>
-<header class="masthead"><div class="brand"><span class="brand-icon" aria-hidden="true">✎</span> Teacher workspace</div><div class="masthead-tools"><span class="tag">A little support for report season</span><div class="skin-switch" role="group" aria-label="Appearance"><button type="button" data-set-skin="studio" aria-pressed="<?= $skin === 'studio' ? 'true' : 'false' ?>">Studio</button><button type="button" data-set-skin="classic" aria-pressed="<?= $skin === 'classic' ? 'true' : 'false' ?>">Classic</button><button type="button" data-set-skin="dark" aria-pressed="<?= $skin === 'dark' ? 'true' : 'false' ?>">Dark</button></div></div></header>
+<header class="masthead"><div class="brand"><span class="brand-icon" aria-hidden="true">✎</span> Teacher workspace</div><div class="masthead-tools"><span class="tag">A little support for report season</span><div class="skin-switch" role="group" aria-label="Appearance"><button type="button" data-set-skin="classic" aria-pressed="<?= $skin === 'classic' ? 'true' : 'false' ?>">Classic</button><button type="button" data-set-skin="dark" aria-pressed="<?= $skin === 'dark' ? 'true' : 'false' ?>">Dark</button></div></div></header>
 <p id="skin-status" class="sr-only skin-status" role="status" aria-live="polite"></p>
 <main id="main">
   <div class="intro"><p class="eyebrow">PROGRESS, PUT INTO WORDS</p><h1>Report Comment Builder</h1><p>Recognise each student’s strengths. Make their next steps feel achievable.</p></div>

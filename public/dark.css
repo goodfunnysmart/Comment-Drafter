@@ -1,4 +1,4 @@
-/* Dark uses Studio's layout with a complete dark colour palette. */
+/* Dark keeps the Classic layout and replaces it with a dark palette. */
 :root[data-skin="dark"]{color-scheme:dark;--ink:#e0ebe3;--muted:#a8b8ae;--teal:#a3d5ad;--line:#384a40;--paper:#1b2822;--bg:#111b16;--soft:#293e30}
 html[data-skin="dark"] body{background:radial-gradient(ellipse at 95% 10%,#253b2750,transparent 45%),var(--bg)}
 html[data-skin="dark"] body{background-color:var(--bg);color:var(--ink)}

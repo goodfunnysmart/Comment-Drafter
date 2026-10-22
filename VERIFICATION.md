@@ -32,8 +32,8 @@ The user reported successful live demo generation. Automated regression tests us
 
 ## Theme and description checks
 
-- All three theme URLs render the 54 selection controls and shared editor.
-- Theme switch checks passed for Studio, Classic and Dark, including `aria-pressed` updates without accessing student fields or storage.
+- Classic and Dark render the 54 selection controls and shared editor. Classic is the default. An old `?skin=studio` address uses Classic.
+- The appearance switch offers Classic and Dark. Switching updates `aria-pressed` without accessing student fields or storage.
 - Description interaction checks passed with a fake DOM: mouse departure, selection click, scroll and outside dismissal; keyboard-only focus; no touch hover; information dialog content; Close, Escape and backdrop dismissal; `aria-expanded` reset.
 - Existing comment workflow regressions passed after these interface changes.
 - cPanel diagnostic checks passed for invalid config syntax/format and disabled cURL functions, without exposing raw exception messages or credentials.

@@ -1,10 +1,15 @@
 #!/bin/bash
 # Copy this repository into the cPanel account that serves the site.
-# Site files go to $HOME/public_html/comments.
+# Document root: $SITE_ROOT, default $HOME/greache.com. Export SITE_ROOT to override.
+# Site files go to $SITE_ROOT/comments.
 # Private application files go to $HOME/comments-private.
 # config.php is never created, copied, or deleted.
-# public_html/comments/.htaccess keeps its cPanel Directory Privacy block.
+# The site .htaccess keeps its cPanel Directory Privacy block.
 set -euo pipefail
+
+# Document root for greache.com. Export SITE_ROOT to use another directory inside $HOME.
+# Site files are copied to $SITE_ROOT/comments.
+SITE_ROOT="${SITE_ROOT:-${HOME:-}/greache.com}"
 
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
@@ -27,6 +32,16 @@ fi
 die() {
   printf '%s\n' "$1" >&2
   exit 1
+}
+
+resolve_path() {
+  if [[ -x /usr/bin/realpath ]]; then
+    /usr/bin/realpath -- "$1"
+  elif [[ -x /bin/realpath ]]; then
+    /bin/realpath -- "$1"
+  else
+    readlink -f -- "$1"
+  fi
 }
 
 tmp_files=()
@@ -54,6 +69,9 @@ case "$REPO" in
   */public_html|*/public_html/*)
     die "Refusing to deploy: the Git clone is inside public_html. Clone to \$HOME/repositories/Comment-Drafter."
     ;;
+  */greache.com|*/greache.com/*)
+    die "Refusing to deploy: the Git clone is inside the document root. Clone to \$HOME/repositories/Comment-Drafter."
+    ;;
 esac
 
 if [[ -z "${HOME:-}" || "$HOME" == "/" ]]; then
@@ -68,10 +86,35 @@ if [[ ! "$HOME" =~ ^/[A-Za-z0-9._/-]+$ ]]; then
   die "Refusing to deploy: HOME is not a plain absolute path."
 fi
 
-PUBLIC="$HOME/public_html/comments"
+SITE_ROOT="${SITE_ROOT%/}"
+if [[ -z "$SITE_ROOT" || "$SITE_ROOT" == "/" ]]; then
+  die "Refusing to deploy: SITE_ROOT is empty or '/'."
+fi
+case "$SITE_ROOT" in
+  *[[:space:]]*|*\'*|*\"*|*'\'*)
+    die "Refusing to deploy: SITE_ROOT contains unsafe characters."
+    ;;
+esac
+if [[ ! "$SITE_ROOT" =~ ^/[A-Za-z0-9._/-]+$ ]]; then
+  die "Refusing to deploy: SITE_ROOT is not a plain absolute path."
+fi
+case "$SITE_ROOT" in
+  "$HOME"/*) ;;
+  *) die "Refusing to deploy: SITE_ROOT must be a directory inside HOME." ;;
+esac
+case "/$SITE_ROOT/" in
+  */../*|*/./*)
+    die "Refusing to deploy: SITE_ROOT contains '.' or '..'."
+    ;;
+  */public_html|*/public_html/*)
+    die "Refusing to deploy: SITE_ROOT is inside public_html. Use \$HOME/greache.com."
+    ;;
+esac
+
+PUBLIC="$SITE_ROOT/comments"
 PRIVATE="$HOME/comments-private"
 
-if [[ -L "$HOME/public_html" || -L "$PUBLIC" || -L "$PRIVATE" ]]; then
+if [[ -L "$SITE_ROOT" || -L "$PUBLIC" || -L "$PRIVATE" ]]; then
   die "Refusing to deploy through a symlink."
 fi
 
@@ -90,28 +133,37 @@ fi
 
 "$MKDIR" -p -- "$PUBLIC" "$PRIVATE"
 
-if [[ -L "$PUBLIC" || -L "$PRIVATE" ]]; then
+if [[ -L "$SITE_ROOT" || -L "$PUBLIC" || -L "$PRIVATE" ]]; then
   die "Refusing to deploy through a symlink."
 fi
 
-resolve_path() {
-  if [[ -x /usr/bin/realpath ]]; then
-    /usr/bin/realpath -- "$1"
-  elif [[ -x /bin/realpath ]]; then
-    /bin/realpath -- "$1"
-  else
-    readlink -f -- "$1"
-  fi
-}
-
 home_real="$(resolve_path "$HOME")"
+site_real="$(resolve_path "$SITE_ROOT")"
 public_real="$(resolve_path "$PUBLIC")"
 private_real="$(resolve_path "$PRIVATE")"
-[[ "$public_real" == "$home_real/public_html/comments" ]] || die "Public path is not \$HOME/public_html/comments."
+repo_real="$(resolve_path "$REPO")"
+[[ "$site_real" == "$home_real"/* ]] || die "Refusing to deploy: SITE_ROOT is outside HOME."
+[[ "$public_real" == "$site_real/comments" ]] || die "Public path is not \$SITE_ROOT/comments."
 [[ "$private_real" == "$home_real/comments-private" ]] || die "Private path is not \$HOME/comments-private."
+case "$site_real" in
+  "$home_real"/public_html|"$home_real"/public_html/*)
+    die "Refusing to place site files inside public_html."
+    ;;
+esac
 case "$private_real" in
   "$home_real"/public_html|"$home_real"/public_html/*)
     die "Refusing to place private files inside public_html."
+    ;;
+  "$site_real"|"$site_real"/*)
+    die "Refusing to place private files inside the document root."
+    ;;
+esac
+case "$repo_real" in
+  "$site_real"|"$site_real"/*)
+    die "Refusing to deploy: the Git clone is inside the document root. Clone to \$HOME/repositories/Comment-Drafter."
+    ;;
+  "$home_real"/public_html|"$home_real"/public_html/*)
+    die "Refusing to deploy: the Git clone is inside public_html. Clone to \$HOME/repositories/Comment-Drafter."
     ;;
 esac
 

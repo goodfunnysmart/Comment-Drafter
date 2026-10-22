@@ -17,6 +17,8 @@ function make_tree(string $root): void
         $root . '/project/private',
         $root . '/home/public_html/comments/private',
         $root . '/home/public_html/private',
+        $root . '/home/greache.com/comments/private',
+        $root . '/home/greache.com/private',
         $root . '/home/comments-private',
         $root . '/www/project/public',
         $root . '/www/project/private',
@@ -33,6 +35,8 @@ function make_tree(string $root): void
         $root . '/home/comments-private/bootstrap.php',
         $root . '/home/public_html/private/bootstrap.php',
         $root . '/home/public_html/comments/private/bootstrap.php',
+        $root . '/home/greache.com/private/bootstrap.php',
+        $root . '/home/greache.com/comments/private/bootstrap.php',
         $root . '/www/project/private/bootstrap.php',
         $root . '/hint-target/bootstrap.php',
         $root . '/env-target/bootstrap.php',
@@ -87,6 +91,18 @@ try {
         'C:\\home\\public_html\\private\\bootstrap.php',
         'C:\\home\\public_html\\comments'
     ), 'Windows separators still detect public_html');
+    check(comment_drafter_path_is_web_exposed(
+        '/home/user/greache.com/private/bootstrap.php',
+        '/home/user/greache.com/comments'
+    ), 'A private directory under greache.com is exposed');
+    check(!comment_drafter_path_is_web_exposed(
+        '/home/user/comments-private/bootstrap.php',
+        '/home/user/greache.com/comments'
+    ), 'comments-private beside greache.com is outside the document root');
+    check(!comment_drafter_path_is_web_exposed(
+        '/tmp/not-greache.com/private/bootstrap.php',
+        '/tmp/not-greache.com/public'
+    ), 'greache.com must match a whole path component');
 
     make_tree($root);
     $local = comment_drafter_private_bootstrap($root . '/project/public');
@@ -94,6 +110,9 @@ try {
 
     $deployed = comment_drafter_private_bootstrap($root . '/home/public_html/comments');
     check($deployed === comment_drafter_normalise_path(realpath($root . '/home/comments-private/bootstrap.php')), 'Deployed comments-private directory');
+
+    $domain = comment_drafter_private_bootstrap($root . '/home/greache.com/comments');
+    check($domain === comment_drafter_normalise_path(realpath($root . '/home/comments-private/bootstrap.php')), 'greache.com/comments resolves to comments-private');
 
     $www = comment_drafter_private_bootstrap($root . '/www/project/public');
     check($www === comment_drafter_normalise_path(realpath($root . '/www/project/private/bootstrap.php')), 'A www directory name is not treated as the document root');
@@ -118,6 +137,9 @@ try {
     putenv('COMMENT_DRAFTER_PRIVATE=' . $root . '/home/public_html/private');
     $ignoredEnv = comment_drafter_private_bootstrap($root . '/project/public');
     check($ignoredEnv === $local, 'An environment path inside public_html is ignored');
+    putenv('COMMENT_DRAFTER_PRIVATE=' . $root . '/home/greache.com/private');
+    $ignoredDomainEnv = comment_drafter_private_bootstrap($root . '/project/public');
+    check($ignoredDomainEnv === $local, 'An environment path inside greache.com is ignored');
     putenv('COMMENT_DRAFTER_PRIVATE');
 
     try {

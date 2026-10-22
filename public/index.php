@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
-require dirname(__DIR__) . '/private/bootstrap.php';
+ini_set('display_errors', '0');
+require __DIR__ . '/private_path.php';
+comment_drafter_require_private(__DIR__);
 if (!empty($_SERVER['PATH_INFO'])) { http_response_code(404); exit('Page not found.'); }
 $requestedSkin = $_GET['skin'] ?? '';
 $skin = in_array($requestedSkin, ['studio', 'classic', 'dark'], true) ? $requestedSkin : 'studio';

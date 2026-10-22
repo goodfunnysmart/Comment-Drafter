@@ -26,7 +26,13 @@ assert request('/generate.php', dict(valid, strengths=['invented']), good_header
 assert request('/generate.php', headers=good_headers, raw=b'{broken')[0] == 422
 assert request('/generate.php', headers=good_headers, raw=b' ' * 24001)[0] == 413
 assert request('/private/config.php')[0] == 404
+assert request('/private/bank.json')[0] == 404
+assert request('/private/instructions.txt')[0] == 404
+assert request('/private/bootstrap.php')[0] == 404
 assert request('/bank.json')[0] == 404
+assert request('/README.md')[0] == 404
+status, headers, body = request('/private_path.php')
+assert status == 404 and 'comments-private' not in body and 'bootstrap.php' not in body
 status, headers, body = request('/generate.php', valid, good_headers)
 assert status == 503 and json.loads(body)['ok'] is False, (status, body)
 assert 'no-store' in headers['Cache-Control']

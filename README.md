@@ -6,22 +6,28 @@ Report Comment Builder is a complete single-page teacher workspace built with PH
 
 ```text
 Comment Drafter/
-├── public/                       ← Only this directory is web-accessible
+├── .cpanel.yml                   ← cPanel "Deploy HEAD Commit" tasks
+├── deploy/
+│   └── cpanel-deploy.sh          # Copies site files; keeps config.php and Directory Privacy
+├── public/                       ← Deployed to public_html/comments
 │   ├── index.php                 # Page, bank rendering, CSRF token
 │   ├── generate.php              # Validated server-side Gemini endpoint
+│   ├── private_path.php          # Finds the private bootstrap outside the document root
 │   ├── app.css
 │   ├── app.js
 │   ├── studio.css                # Studio layout and styling
 │   ├── dark.css                  # Dark palette
 │   ├── skin.js                   # Studio / Classic / Dark switch
-│   └── .htaccess
-├── private/                      ← Keep outside ALL document roots
+│   └── .htaccess                 # Merged with cPanel's auth block; never copied over it
+├── private/                      ← Deployed to $HOME/comments-private
 │   ├── bootstrap.php             # Session, headers, validation
 │   ├── bank.json                 # Single source of truth, stable IDs
 │   ├── instructions.txt          # Server-owned generation rules
-│   └── config.example.php        # Placeholders; copy privately to config.php
+│   └── config.example.php        # Placeholders; the real config.php stays server-only
 ├── tests/
 │   ├── validate.php
+│   ├── private_path.php
+│   ├── deploy_check.sh
 │   ├── http_check.py
 │   └── client.mjs
 ├── .gitignore
@@ -39,47 +45,160 @@ Comment Drafter/
 - HTTPS and hosting-level authentication covering the entire public directory.
 - An API key with access and quota for the configured Gemini model.
 
-## Installation on ordinary PHP / cPanel hosting
+## Deploy on cPanel
 
-### Recommended: a dedicated subdomain
+cPanel clones this private repository **outside** the website. **Deploy HEAD Commit** runs `.cpanel.yml`, which runs `deploy/cpanel-deploy.sh`. The script uses `$HOME`, so the account name is not stored in Git. It copies the files in `public/` into `$HOME/public_html/comments` and the private application files into `$HOME/comments-private`. The live address is `https://greache.com/comments`, with no `/public` on the end.
 
-1. Create `/home/YOURACCOUNT/report-builder/` outside `public_html` and other document roots.
-2. Upload the `public` and `private` folders into it, preserving this structure:
+Do not upload the project into `public_html`. Do not point the domain’s document root at the clone or at `comments-private`.
 
-   ```text
-   /home/YOURACCOUNT/report-builder/private/bootstrap.php
-   /home/YOURACCOUNT/report-builder/private/bank.json
-   /home/YOURACCOUNT/report-builder/private/instructions.txt
-   /home/YOURACCOUNT/report-builder/private/config.php
-   /home/YOURACCOUNT/report-builder/public/index.php
-   /home/YOURACCOUNT/report-builder/public/generate.php
-   /home/YOURACCOUNT/report-builder/public/app.js
-   /home/YOURACCOUNT/report-builder/public/app.css
-   /home/YOURACCOUNT/report-builder/public/.htaccess
-   ```
+The deploy copies named application files only. It does not create, copy, or delete `config.php`. It does not delete Directory Privacy rules in `public_html/comments/.htaccess`. cPanel keeps those rules in a block marked `cp:ppd`. Each deploy writes `public/.htaccess` and then puts that block back unchanged. Lines outside the block are replaced by the copy in Git. If deploy finds authentication directives that are not inside a `cp:ppd` block, it stops and leaves `.htaccess` as it is.
 
-3. In cPanel Domains, create a dedicated subdomain with document root **`/home/YOURACCOUNT/report-builder/public`**. If your provider restricts subdomain roots, use the alternative below. Never point a document root at the project parent or private directory.
-4. Enable HTTPS for that domain and redirect HTTP to HTTPS through the host’s controls. PHP should receive `HTTPS=on`; if the host terminates TLS at a proxy, have it set the correct HTTPS server variable. The app does not trust arbitrary forwarded headers.
-5. Use cPanel’s PHP selector / extensions page to enable cURL. Confirm JSON and sessions work. Use restrictive permissions: private directory `700`, private files `600` where PHP runs as your account. Some hosts need `750` / `640` for the PHP group; ask your provider. Public files usually use `644`, directories `755`. Never use `777`.
-6. Configure the key and model as described below, then protect the directory **before making generation available**.
+`index.php` and `generate.php` load the private bootstrap only after this search:
 
-### Alternative: existing public_html directory
+1. `COMMENT_DRAFTER_PRIVATE`, when that environment variable names a directory outside the document root.
+2. `private-path.php`, which deploy writes next to `index.php`. Opening that address in a browser does not print the path.
+3. A sibling `private/` directory. This is what `php -S 127.0.0.1:8765 -t public` uses.
+4. `$HOME/comments-private`, when the site files are in `$HOME/public_html/comments`.
 
-For an application at the domain root, upload **only the contents** of `public/` into `/home/YOURACCOUNT/public_html/`, and upload `private/` as `/home/YOURACCOUNT/private/`. The existing PHP includes work unchanged because these are sibling directories. Keep other existing site files intact.
+A result inside the front-controller directory, or anywhere under a `public_html` directory, is ignored. The loaded bootstrap reads `bank.json`, `instructions.txt` and `config.php` from its own directory.
 
-For a subfolder such as `/home/YOURACCOUNT/public_html/reports/`, put private files in `/home/YOURACCOUNT/report-builder-private/`. In **both** `index.php` and `generate.php`, replace:
+### One-time cPanel setup
 
-```php
-require dirname(__DIR__) . '/private/bootstrap.php';
+Use the cPanel account that serves `greache.com`. File Manager shows the home directory as `/home/<account>/`. Nothing below puts that account name into Git.
+
+**1. Password-protect the current upload**
+
+`public_html/comments` was uploaded by hand, so `private/bank.json`, `private/instructions.txt` and `README.md` can be downloaded. `private/config.php` runs as PHP.
+
+1. Open **cPanel → Files → Directory Privacy**.
+2. Open `public_html`, then `comments`, then **Edit**.
+3. Select **Password protect this directory**. Enter a name such as `Comments`. Click **Save**.
+4. Create a username and a strong password. cPanel stores the password file under `.htpasswds`, outside `public_html`.
+5. In a private browser window, open `https://greache.com/comments/private/bank.json`. It must ask for a password or return **401** before you continue.
+
+**2. Give cPanel read access to the private GitHub repository**
+
+Clone URL: `git@github.com:goodfunnysmart/Comment-Drafter.git`
+
+SSH deploy key (read-only) is the method that **Update from Remote** can keep using. **cPanel → Advanced → Terminal** is required.
+
+```bash
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+ssh-keygen -t ed25519 -f ~/.ssh/comment-drafter -C "comments-deploy"
 ```
 
-with your actual absolute filesystem path:
+Press Enter for no passphrase. A passphrase stops unattended pulls. If `ed25519` is rejected, use `ssh-keygen -t rsa -b 4096 -f ~/.ssh/comment-drafter -C "comments-deploy"` instead.
 
-```php
-require '/home/YOURACCOUNT/report-builder-private/bootstrap.php';
+If `~/.ssh/config` does not exist, create it with the block below. If it already has a `Host github.com` entry, add the `IdentityFile` and `IdentitiesOnly` lines to that entry instead of adding a second one.
+
+```text
+Host github.com
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/comment-drafter
+    IdentitiesOnly yes
 ```
 
-The loaded bootstrap uses its own absolute directory for the bank, instructions and configuration. Do not create a private folder inside `public_html`, even with a dot prefix or access-deny rule. Do not upload the project parent, tests or README into a public directory. Do not store secrets in a public `.env`, JavaScript, HTML, `.htaccess` or version control.
+```bash
+chmod 600 ~/.ssh/config ~/.ssh/comment-drafter
+cat ~/.ssh/comment-drafter.pub
+```
+
+On GitHub, open the private repository **goodfunnysmart/Comment-Drafter → Settings → Deploy keys → Add deploy key**. Paste the public key. Leave **Allow write access** unchecked.
+
+Test the key:
+
+```bash
+ssh -o IdentitiesOnly=yes -i ~/.ssh/comment-drafter -T git@github.com
+```
+
+The first connection shows GitHub’s host-key fingerprint. Accept it only when the SHA-256 value is one of these, which GitHub publishes for `github.com`:
+
+- Ed25519 `SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU`
+- ECDSA `SHA256:p2QAMXNIC1TJYWeIOttrVc98/R1BUFWu3/LiyKgUfQM`
+- RSA `SHA256:uNiVztksCsDhcc0u9e8BujQXVUpKZIDTMczCvj3tD2s`
+
+GitHub then says the key authenticated successfully and does not provide shell access. `Permission denied` means the deploy key or `IdentityFile` is not in use.
+
+HTTPS alternative: on GitHub, create a fine-grained personal access token for only this repository with **Contents: Read-only**. In Terminal:
+
+```bash
+mkdir -p "$HOME/repositories"
+git clone https://github.com/goodfunnysmart/Comment-Drafter.git "$HOME/repositories/Comment-Drafter"
+```
+
+When Git asks, the username is the GitHub user and the password is the token. Do not put the token in the URL, in `.cpanel.yml`, or in `public_html`. Then in **Git Version Control → Create**, turn **Clone a Repository** off, set Repository Path to `repositories/Comment-Drafter`, name it `Comment Drafter`, and click **Create**. Skip step 3.
+
+**3. Clone outside the website**
+
+1. Open **cPanel → Files → Git Version Control → Create**.
+2. Leave **Clone a Repository** on.
+3. Clone URL: `git@github.com:goodfunnysmart/Comment-Drafter.git`. If cPanel asks to save GitHub’s host key, accept it only when the SHA-256 fingerprint matches one of the values above.
+4. Repository Path: `repositories/Comment-Drafter`. cPanel creates `/home/<account>/repositories/Comment-Drafter`. Do not use any path inside `public_html`.
+5. Repository Name: `Comment Drafter`.
+6. Click **Create** and wait until the clone finishes.
+
+**4. First deploy**
+
+1. **Git Version Control → Manage** for Comment Drafter.
+2. On **Basic Information**, set **Checked-Out Branch** to `main` and click **Update** if another branch is selected.
+3. Open **Pull or Deploy**.
+4. Click **Update from Remote**, then **Deploy HEAD Commit**.
+
+Deployment must succeed, and **Last Deployed SHA** must match `main` on GitHub. This creates:
+
+```text
+/home/<account>/public_html/comments/     site files only
+/home/<account>/comments-private/         bootstrap, bank, instructions, example config
+```
+
+`comments-private/config.php` is not created yet. In **cPanel → Software → Select PHP Version** (or MultiPHP), use PHP 8.2 or newer and enable cURL for this domain.
+
+**5. Move the existing key**
+
+1. Open **File Manager** and confirm `comments-private/bootstrap.php`, `bank.json` and `instructions.txt` exist, and that this folder is not inside `public_html`.
+2. **Move** `public_html/comments/private/config.php` to `comments-private/config.php`. Do not leave a second copy, and do not replace it with `config.example.php`.
+3. Confirm the old path is gone and `comments-private/config.php` is present.
+4. **Deploy HEAD Commit** again. That sets private-file permissions and rewrites `.htaccess` while keeping the Directory Privacy block. It does not change `config.php`.
+
+**6. Delete the old upload**
+
+In File Manager, open `public_html/comments`. Delete uploaded project files that are not the site. Delete these if they are present:
+
+- `private/`
+- `public/`
+- `README.md`
+- `tests/`
+- `SKINS.md`
+- `VERIFICATION.md`
+- `.git/`
+- `.gitignore`, `.gitattributes`, `.editorconfig`
+
+Keep `.htaccess`, `index.php`, `generate.php`, `private_path.php`, `private-path.php`, `app.css`, `app.js`, `studio.css`, `dark.css` and `skin.js`. Do not delete `comments-private` or `repositories/Comment-Drafter`. If a site file is removed by mistake, click **Deploy HEAD Commit** again. Do not copy `.htaccess` from Git over the server file by hand.
+
+**7. Check the lock and the private files**
+
+Run these while signed out. Every `https://greache.com/comments` URL must print `401`. The two `comments-private` URLs must print `404`. None of them may print `200`.
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' https://greache.com/comments
+curl -s -o /dev/null -w '%{http_code}\n' https://greache.com/comments/generate.php
+curl -s -o /dev/null -w '%{http_code}\n' https://greache.com/comments/app.js
+curl -s -o /dev/null -w '%{http_code}\n' https://greache.com/comments/private/bank.json
+curl -s -o /dev/null -w '%{http_code}\n' https://greache.com/comments/private/instructions.txt
+curl -s -o /dev/null -w '%{http_code}\n' https://greache.com/comments/private/config.php
+curl -s -o /dev/null -w '%{http_code}\n' https://greache.com/comments/README.md
+curl -s -o /dev/null -w '%{http_code}\n' https://greache.com/comments/public/
+curl -s -o /dev/null -w '%{http_code}\n' https://greache.com/comments-private/bank.json
+curl -s -o /dev/null -w '%{http_code}\n' https://greache.com/comments-private/config.php
+```
+
+Then sign in with the Directory Privacy user, open `https://greache.com/comments`, and generate a comment with a made-up student. That confirms PHP is reading the moved key.
+
+### Later changes
+
+Merge the change into GitHub `main`. In cPanel, open **Git Version Control → Manage → Pull or Deploy**, click **Update from Remote**, then **Deploy HEAD Commit**. Do not move `config.php` again. In a private window, `https://greache.com/comments` must still return **401**.
 
 ## Private Gemini configuration
 
@@ -92,7 +211,7 @@ GEMINI_MODEL=gemini-3.5-flash-lite
 
 The application never sends these settings to the browser. Environment variables take precedence over private configuration.
 
-If the host cannot supply environment variables, copy `private/config.example.php` to `private/config.php` **outside the document root**, and edit that private copy:
+If the host cannot supply environment variables, copy `private/config.example.php` to `config.php` in the same private directory as `bootstrap.php`, outside the document root, and edit that private copy. On the server that directory is `$HOME/comments-private/`. Deploy never creates, copies, or deletes `config.php`. Locally it is `private/config.php`, which Git ignores.
 
 ```php
 <?php
@@ -112,14 +231,11 @@ The server follows Google’s [generateContent REST reference](https://ai.google
 
 CSRF tokens and same-origin checks **are not authentication**. Do not deploy an anonymously accessible paid-generation endpoint.
 
-1. Open **cPanel → Files → Directory Privacy** (sometimes called Password Protect Directories).
-2. Select the actual application document root (the `public` directory, `public_html` for a dedicated domain root, or the `reports` subdirectory). Choose **Password protect this directory**, name the protected area, and save.
-3. Create a username and strong password using the host’s interface. The host should keep its password file outside the public directory.
-4. If uploading `.htaccess`, upload it before enabling Directory Privacy, or carefully merge the host’s authentication directives. **Do not overwrite the provider’s generated authentication rules.** If `Options -Indexes` causes a 500 error on your host, ask the provider to disable directory listing in its controls and remove that one directive.
-5. In a private/incognito window, visit both the page and `https://YOURDOMAIN/generate.php` without credentials. **Both must prompt for credentials or return 401.** A direct unauthenticated POST must also return 401 before PHP runs. Check static assets too.
-6. Log in and complete the manual checks in `VERIFICATION.md`. Use HTTPS exclusively: HTTP Basic authentication needs TLS.
+For this site, Directory Privacy on `public_html/comments` is step 1 of the setup above. It covers the page, `generate.php`, static files, and any subdirectory still left from the old upload. The password file stays in `.htpasswds`. Redeploys keep the `cp:ppd` block. Do not replace that `.htaccess` with a raw copy from Git. If `Options -Indexes` causes a 500 error, ask the provider to turn directory listing off, remove that one line from `public/.htaccess` in Git, and deploy again. Do not remove the `cp:ppd` block.
 
-For non-cPanel hosting, use the provider’s equivalent whole-directory authentication. The app’s basic per-session throttle allows at most 10 validated attempts per 10 minutes, at least five seconds apart. A new session can reset it; it is not an abuse-proof account/IP quota. Use hosting/WAF rate limits and Google project quotas for stronger cost control. PHP sessions contain only CSRF and throttle metadata, never student records.
+Without the Directory Privacy password, `https://greache.com/comments` and `https://greache.com/comments/generate.php` must return **401**, including a direct POST, before PHP runs. Use HTTPS. HTTP Basic authentication needs TLS. Then complete the manual checks in `VERIFICATION.md`.
+
+The app’s basic per-session throttle allows at most 10 validated attempts per 10 minutes, at least five seconds apart. A new session can reset it; it is not an abuse-proof account/IP quota. Use hosting/WAF rate limits and Google project quotas for stronger cost control. PHP sessions contain only CSRF and throttle metadata, never student records.
 
 ## Running locally
 
@@ -129,7 +245,7 @@ From the project directory:
 php -S 127.0.0.1:8765 -t public
 ```
 
-Visit `http://127.0.0.1:8765`. The PHP development server is for local testing only; bind it to loopback. Cookies are HttpOnly and SameSite=Strict, with Secure enabled when PHP receives HTTPS. Do not use the development server as public hosting. Without a configured key/model, generation reports that it is not configured; manual editing, copying and downloading still work.
+Visit `http://127.0.0.1:8765`. The development server uses the sibling `private/` directory and does not need `private-path.php`. It is for local testing only; bind it to loopback. Cookies are HttpOnly and SameSite=Strict, with Secure enabled when PHP receives HTTPS. Do not use the development server as public hosting. Without a configured key/model, generation reports that it is not configured; manual editing, copying and downloading still work.
 
 ## Data handling and behaviour
 
@@ -146,6 +262,8 @@ Visit `http://127.0.0.1:8765`. The PHP development server is for local testing o
 
 ```powershell
 php tests/validate.php
+php tests/private_path.php
+bash tests/deploy_check.sh
 # Start the local PHP server in another terminal first. No key/config should be set for this test:
 python tests/http_check.py http://127.0.0.1:8765
 # Optional Node.js runtime for client logic regression checks:
@@ -164,4 +282,4 @@ Old distribution ZIPs and pre-change backups are preserved under `.local/archive
 
 Use `git status` to review source changes and `git check-ignore private/config.php` to confirm the key file is excluded. Avoid force-adding ignored configuration files. Before any push, review the staged file list. Create the GitHub repository with **Private** visibility; local Git initialisation does not create a GitHub repository or set remote visibility.
 
-The interface supports Studio, Classic and Dark appearances without reloading or discarding the current draft. Read [SKINS.md](SKINS.md) for styling and description controls. For deployment, upload all files under `public/`, including the theme assets; keep the private files outside the document root.
+The interface supports Studio, Classic and Dark appearances without reloading or discarding the current draft. Read [SKINS.md](SKINS.md) for styling and description controls. Deploy with the cPanel steps above. Do not upload `private/`, tests, or this README into `public_html`.

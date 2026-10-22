@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
-require dirname(__DIR__) . '/private/bootstrap.php';
+ini_set('display_errors', '0');
+require __DIR__ . '/private_path.php';
+comment_drafter_require_private(__DIR__);
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Allow: POST'); fail(405, 'Use POST to generate a comment.');
 }

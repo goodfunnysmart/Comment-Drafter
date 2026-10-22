@@ -21,7 +21,9 @@ html[data-skin="dark"] ::placeholder{color:#9bb6dc;opacity:1}
 html[data-skin="dark"] .strengths{background:linear-gradient(135deg,#15283d,#122033 65%);border-color:#2c4a70}
 html[data-skin="dark"] .nextSteps{background:linear-gradient(135deg,#182a42,#122033 65%);border-color:#2c4a70}
 html[data-skin="dark"] .nextSteps .step,html[data-skin="dark"] .nextSteps .count{background:#0d1a2c;border-color:#2c4a70;color:#c5d7ef}
+html[data-skin="dark"] .group-heading h3{color:#e7eef6}
 html[data-skin="dark"] .chip-wrap{background:#15283d;border-color:#3d5f8a}
+html[data-skin="dark"] .chip-wrap.growth{border-color:#8eafd4;background:#15283d}
 html[data-skin="dark"] .chip,html[data-skin="dark"] .info{color:#e7eef6}
 html[data-skin="dark"] .chip:hover,html[data-skin="dark"] .info:hover{background:#1c3558}
 html[data-skin="dark"] .chip-wrap:has(.chip[aria-pressed="true"]){background:#042e5e;border-color:#8eafd4;box-shadow:none}

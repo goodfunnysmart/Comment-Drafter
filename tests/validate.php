@@ -212,6 +212,7 @@ check(str_contains($page, 'descriptor-group') && str_contains($page, 'data-bank'
 check(str_contains($page, 'traffic-columns') && str_contains($page, 'strengths-column') && str_contains($page, 'growth-column') && str_contains($page, 'challenge-column') && str_contains($page, 'Strengths') && str_contains($page, 'Areas for Growth') && str_contains($page, 'Challenges and Obstacles'), 'Strengths, growth and challenges sit in labelled columns');
 check(str_contains($page, 'for="adjustments"') && str_contains($page, 'Other specific adjustments') && str_contains($page, 'maxlength="200"') && str_contains($page, 'id="adjustments-help"'), 'Other adjustments has a label, help text and a short limit');
 check(str_contains($page, 'for="tweak"') && str_contains($page, 'What would you like changed?') && str_contains($page, 'id="tweak-comment"') && str_contains($page, 'Tweak comment') && str_contains($page, 'id="undo-tweak"') && str_contains($page, 'Make it a little friendlier, lower the reading level, add their effort in science...'), 'The tweak box sits with the comment');
+check(str_contains($page, 'Student names are never sent to the AI. Please avoid typing other identifying details.') && str_contains($page, 'value="they"') && str_contains($page, 'They/them') && str_contains($page, 'She/her') && str_contains($page, 'He/him'), 'The page says the name is not sent, and pronouns stay an explicit choice');
 check(!str_contains($page, 'id="arrangements"') && !str_contains($page, 'Reporting arrangements'), 'Reporting arrangements field is removed');
 check(!str_contains($page, 'id="subject"') && !str_contains($page, 'Subject or learning area'), 'Subject field is removed');
 check(str_contains($page, 'value="short">Short · approximately 60–90 words') && str_contains($page, 'value="standard" selected>Standard · approximately 90–120 words') && str_contains($page, 'value="detailed">Detailed · approximately 120–150 words') && str_contains($page, 'value="long">Long · approximately 150–200 words'), 'Length offers the four word ranges, with Standard selected');
@@ -233,8 +234,37 @@ $htaccess = file_get_contents(dirname(__DIR__) . '/public/.htaccess');
 $bootstrap = file_get_contents(dirname(__DIR__) . '/private/bootstrap.php');
 check(str_contains($htaccess, 'AddType image/webp .webp') && str_contains($htaccess, 'no-store'), 'Static responses keep no-store and a webp type');
 check(str_contains($bootstrap, "img-src 'self'"), 'Page policy allows same-origin images');
+$sam = validateInput(array_replace($base, [
+    'name' => 'sam',
+    'observations' => "Sam's reading showed Sam improving, and sample work stayed.",
+    'reframe' => 'Sam rushes',
+    'activities' => 'Sam joined chess',
+    'adjustments' => 'a quiet corner for Sam',
+    'supports' => ['learning-support'],
+]), $bank);
+$samChoice = $sam['pronouns'];
+$sam['pronouns'] = 'they/them/their; use plural verb agreement';
+$sam['length'] = commentLengthTarget('standard');
+$samLabels = commentSelectedSupportLabels($sam['supports'], $bank);
+$samAdjustments = (string) $sam['adjustments'];
+$samSupports = commentSupportSentence($samLabels, $sam['name'], $samAdjustments) !== '';
+$samUser = commentNameRule($sam['name'], $samChoice, $samSupports) . "\n\n" . commentSupportRule($samLabels, $sam['name'], $samChoice, $samAdjustments) . "\n\n" . commentTweakText($sam, "Sam is kind. SAM can continue.", "Mention Sam’s effort");
+$samInstructions = (string) file_get_contents(dirname(__DIR__) . '/private/instructions.txt');
+$samPayload = commentProviderPayload($samInstructions, $samUser, $sam['name']);
+$samBody = json_encode($samPayload, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+check(preg_match('/(?<![\p{L}\p{M}-])sam(?![\p{L}\p{M}-])/ui', $samBody) !== 1, 'The outgoing Gemini payload does not contain the student name');
+check(str_contains($samBody, "[NAME]'s reading showed [NAME] improving, and sample work stayed."), 'The name is replaced on word boundaries, including a possessive, and a longer word is kept');
+check(str_contains($samBody, 'Mention [NAME]’s effort') && str_contains($samBody, '[NAME] is kind. [NAME] can continue.'), 'A tweak and the existing comment are scrubbed before they are sent');
+check(str_contains($samBody, 'support [NAME] included') && str_contains($samBody, 'use plural verb agreement') && str_contains($samBody, 'exactly twice'), 'The name rule and supports sentence keep their wording, with the placeholder in place of the name');
+check($samPayload['systemInstruction']['parts'][0]['text'] === $samInstructions, 'Instructions that do not contain the name stay unchanged');
+check(commentRedactStudentName('Joseph helped Joseph-Thomas.', 'Joseph') === '[NAME] helped Joseph-Thomas.', 'A shorter name is not removed from inside a hyphenated name');
+check(str_starts_with(commentRedactStudentName('élodie o\'neil-smith listened.', 'Élodie O’Neil-Smith'), '[NAME] listened.'), 'A full first name is matched without regard to case or apostrophe style');
+$restored = commentRestoreStudentName("[NAME] is curious. [name] listens well. A careful check will help {NAME} show that understanding.", 'sam');
+$final = commentRepairSupports($restored, ['Learning support'], 'Sam', 'they', '');
+check($final === 'Sam is curious. Sam listens well. Throughout the semester, strategies implemented to support Sam included learning support. A careful check will help them show that understanding.', 'Placeholder variants become the real name and the existing repair still returns the comment');
+check(commentNameCount($final, 'Sam') === 3 && !preg_match('/[\[{]\s*name\s*[\]}]/ui', $final), 'The final comment uses the real name three times and no placeholder');
 $generate = file_get_contents(dirname(__DIR__) . '/public/generate.php');
 check(is_string($generate) && str_contains($generate, 'commentCanonicalName') && str_contains($generate, 'commentRepairSupports') && str_contains($bootstrap, 'commentRepairName') && str_contains($generate, 'commentSupportRule') && str_contains($generate, 'commentLengthTarget') && str_contains($generate, 'commentNameRule') && str_contains($generate, 'elapsed < 20') && str_contains($generate, 'commentTweakText') && !str_contains($generate, 'was not kept') && !str_contains($generate, '5–7') && !str_contains($generate, 'commentLengthNotice') && !str_contains($generate, "'temperature'"), 'A draft or tweak is repaired and returned, including supports, without a sentence-count failure');
 $transcribe = file_get_contents(dirname(__DIR__) . '/public/transcribe.php');
-check(is_string($transcribe) && str_contains($transcribe, 'inlineData') && str_contains($transcribe, 'Australian English') && str_contains($transcribe, 'duration_ms') && str_contains($transcribe, '$_SESSION[\'transcriptions\']') && !str_contains($transcribe, '$_SESSION[\'requests\']') && !str_contains($transcribe, 'temperature') && !str_contains($transcribe, 'file_put_contents') && !str_contains($transcribe, 'tmpfile') && !str_contains($transcribe, 'fopen'), 'Transcription stays in memory, uses its own throttle, and omits sampling parameters');
+check(is_string($transcribe) && str_contains($transcribe, 'inlineData') && str_contains($transcribe, 'Australian English') && str_contains($transcribe, 'duration_ms') && str_contains($transcribe, '$_SESSION[\'transcriptions\']') && !str_contains($transcribe, '$_SESSION[\'requests\']') && !str_contains($transcribe, 'temperature') && !str_contains($transcribe, 'file_put_contents') && !str_contains($transcribe, 'tmpfile') && !str_contains($transcribe, 'fopen') && !str_contains($transcribe, "['name']") && !str_contains($transcribe, 'commentNameRule'), 'Transcription stays in memory, uses its own throttle, omits sampling parameters, and does not send the student name');
 echo "PASS: bank counts, Unicode names, both single-category cases, all selections, invalid inputs, word ranges, support sentence, name repair, tweak checks.\n";

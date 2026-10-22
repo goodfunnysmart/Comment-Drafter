@@ -52,4 +52,15 @@ check(!str_contains($page, 'studio'), 'The page does not offer the Studio appear
 $skinJs = file_get_contents(dirname(__DIR__) . '/public/skin.js');
 check(is_string($skinJs) && str_contains($skinJs, "['classic', 'dark']") && !str_contains($skinJs, 'studio'), 'The appearance switch only offers Classic and Dark');
 check(!is_file(dirname(__DIR__) . '/public/studio.css'), 'studio.css is not part of the site');
+check(str_contains($page, 'alt="Better Schools"') && str_contains($page, 'assets/logo-classic.webp') && str_contains($page, 'assets/logo-dark.webp'), 'The header includes both Better Schools logos');
+foreach (['logo-classic.webp', 'logo-dark.webp'] as $logo) {
+    $logoPath = dirname(__DIR__) . '/public/assets/' . $logo;
+    check(is_file($logoPath) && filesize($logoPath) < 100000, $logo . ' is an optimised asset');
+}
+$styles = file_get_contents(dirname(__DIR__) . '/public/app.css');
+check(is_string($styles) && str_contains($styles, '#042e5e'), 'Classic accent uses the measured logo navy');
+$htaccess = file_get_contents(dirname(__DIR__) . '/public/.htaccess');
+$bootstrap = file_get_contents(dirname(__DIR__) . '/private/bootstrap.php');
+check(str_contains($htaccess, 'AddType image/webp .webp') && str_contains($htaccess, 'no-store'), 'Static responses keep no-store and a webp type');
+check(str_contains($bootstrap, "img-src 'self'"), 'Page policy allows same-origin images');
 echo "PASS: bank counts, Unicode names, both single-category cases, all selections, 17 invalid inputs, optional notes, sentence counts.\n";

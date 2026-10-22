@@ -3,7 +3,7 @@
 html[data-skin="dark"] body{background:radial-gradient(ellipse at 95% 10%,#253b2750,transparent 45%),var(--bg)}
 html[data-skin="dark"] body{background-color:var(--bg);color:var(--ink)}
 html[data-skin="dark"] .masthead{background:#17231c;border-color:#344638}
-html[data-skin="dark"] .brand-icon{background:#91c69d;color:#14271a}
+html[data-skin="dark"] a{color:#d7e6da}
 html[data-skin="dark"] .tag,html[data-skin="dark"] .intro>p:last-child,html[data-skin="dark"] .help,html[data-skin="dark"] .optional,html[data-skin="dark"] .privacy,html[data-skin="dark"] .review,html[data-skin="dark"] .editor-footer{color:#a8b8ae}
 html[data-skin="dark"] .skin-switch{background:#111d16;border-color:#415644}
 html[data-skin="dark"] .skin-switch button{color:#b9cbbb}

@@ -225,6 +225,19 @@ for path in "$REPO"/public/*; do
       die "Refusing to publish $name."
       ;;
   esac
+  if [[ -d "$path" ]]; then
+    [[ "$name" == "assets" ]] || die "Refusing to deploy unexpected directory $name."
+    if [[ -L "$PUBLIC/assets" ]]; then
+      die "Refusing to deploy through a symlink."
+    fi
+    "$MKDIR" -p -- "$PUBLIC/assets"
+    for asset in "$path"/*; do
+      asset_name="$(basename "$asset")"
+      [[ -f "$asset" ]] || die "Refusing to deploy non-file $asset_name."
+      copy_file "$asset" "$PUBLIC/assets/$asset_name" 644
+    done
+    continue
+  fi
   copy_file "$path" "$PUBLIC/$name" 644
 done
 
@@ -247,6 +260,7 @@ for path in "$REPO"/private/*; do
 done
 
 [[ -f "$PUBLIC/index.php" && -f "$PUBLIC/generate.php" && -f "$PUBLIC/private_path.php" ]] || die "Site files were not deployed."
+[[ -f "$PUBLIC/assets/logo-classic.webp" && -f "$PUBLIC/assets/logo-dark.webp" ]] || die "Logo files were not deployed."
 [[ -f "$PRIVATE/bootstrap.php" && -f "$PRIVATE/bank.json" && -f "$PRIVATE/instructions.txt" ]] || die "Private files were not deployed."
 [[ ! -f "$REPO/private/config.php" || ! -f "$PRIVATE/config.php" || "$(resolve_path "$REPO/private/config.php")" != "$(resolve_path "$PRIVATE/config.php")" ]] || die "Refusing to treat the repository config.php as the server file."
 

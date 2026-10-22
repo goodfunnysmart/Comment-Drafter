@@ -1,6 +1,6 @@
 # Appearance and descriptions
 
-The header offers **Classic** and **Dark**. Classic is the default. Dark uses that same layout with a dark palette.
+The header shows the Better Schools logo and offers **Classic** and **Dark**. Classic is the default and uses the full-colour logo. Dark uses the same layout with a dark palette and the reversed logo.
 
 Switching changes appearance in page memory without reloading, calling the API or touching student inputs and drafts. The choice is not stored. Direct links `?skin=classic` and `?skin=dark` select an initial appearance. Any other value, including an old `?skin=studio` link, uses Classic. Opening a link reloads the page, so copy any existing draft first.
 

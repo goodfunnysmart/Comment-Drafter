@@ -1,7 +1,7 @@
 ---
 # Deploy HEAD Commit runs this from the Git clone, which must stay outside the document root.
 # deploy/cpanel-deploy.sh uses $HOME and SITE_ROOT. It does not contain the cPanel username.
-# SITE_ROOT defaults to $HOME/greache.com.
+# SITE_ROOT defaults to $HOME/betterschools.com.au.
 # It copies public/ into $SITE_ROOT/comments and private application files
 # into $HOME/comments-private. It does not copy or delete config.php.
 # It rewrites .htaccess only by joining public/.htaccess with the existing

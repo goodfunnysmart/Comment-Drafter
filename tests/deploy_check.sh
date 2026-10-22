@@ -68,7 +68,7 @@ HOME_A="$WORK/home-a"
 mkdir -p "$HOME_A"
 code="$(run_deploy "$HOME_A")"
 [[ "$code" == "0" ]] || fail "first deploy failed: $(cat "$WORK/deploy.err")"
-PUBLIC="$HOME_A/greache.com/comments"
+PUBLIC="$HOME_A/betterschools.com.au/comments"
 PRIVATE="$HOME_A/comments-private"
 [[ ! -e "$HOME_A/public_html" ]] || fail "deploy created public_html"
 [[ ! -e "$PUBLIC/studio.css" ]] || fail "deploy published studio.css"
@@ -109,14 +109,14 @@ printf 'old readme\n' > "$PUBLIC/README.md"
 printf 'old studio\n' > "$PUBLIC/studio.css"
 printf 'old key\n' > "$PRIVATE/config.php"
 before_key="$(sha256sum "$PRIVATE/config.php")"
-auth_block=$'#----------------------------------------------------------------cp:ppd\n# Section managed by cPanel: Password Protected Directories     -cp:ppd\n# - Do not edit this section of the htaccess file!              -cp:ppd\n#----------------------------------------------------------------cp:ppd\nAuthType Basic\nAuthName "Comments"\nAuthUserFile "/home/example/.htpasswds/greache.com/comments/passwd"\nRequire valid-user\n#----------------------------------------------------------------cp:ppd\n# End section managed by cPanel: Password Protected Directories -cp:ppd\n#----------------------------------------------------------------cp:ppd'
+auth_block=$'#----------------------------------------------------------------cp:ppd\n# Section managed by cPanel: Password Protected Directories     -cp:ppd\n# - Do not edit this section of the htaccess file!              -cp:ppd\n#----------------------------------------------------------------cp:ppd\nAuthType Basic\nAuthName "Comments"\nAuthUserFile "/home/example/.htpasswds/betterschools.com.au/comments/passwd"\nRequire valid-user\n#----------------------------------------------------------------cp:ppd\n# End section managed by cPanel: Password Protected Directories -cp:ppd\n#----------------------------------------------------------------cp:ppd'
 printf '%s\nHAND_EDIT keep-me-not\n' "$auth_block" > "$PUBLIC/.htaccess"
 code="$(run_deploy "$HOME_A")"
 [[ "$code" == "0" ]] || fail "second deploy failed: $(cat "$WORK/deploy.err")"
 [[ "$(sha256sum "$PRIVATE/config.php")" == "$before_key" ]] || fail "config.php contents changed"
 [[ "$(stat -c '%a' "$PRIVATE/config.php")" == "600" ]] || fail "existing config.php was not kept at mode 600"
 grep -q 'Left existing config.php in place.' "$WORK/deploy.out" || fail "existing config.php was not reported"
-[[ "$(grep -c 'AuthUserFile "/home/example/.htpasswds/greache.com/comments/passwd"' "$PUBLIC/.htaccess")" == "1" ]] || fail "Directory Privacy block was duplicated or dropped"
+[[ "$(grep -c 'AuthUserFile "/home/example/.htpasswds/betterschools.com.au/comments/passwd"' "$PUBLIC/.htaccess")" == "1" ]] || fail "Directory Privacy block was duplicated or dropped"
 grep -q 'Directories     -cp:ppd' "$PUBLIC/.htaccess" || fail "Directory Privacy spacing was not preserved"
 grep -q 'End section managed by cPanel: Password Protected Directories -cp:ppd' "$PUBLIC/.htaccess" || fail "Directory Privacy end marker was dropped"
 grep -q 'Options -Indexes' "$PUBLIC/.htaccess" || fail "application rules were dropped while merging"
@@ -134,11 +134,11 @@ rmdir "$PUBLIC/studio.css"
 # A second merge must not duplicate the block.
 code="$(run_deploy "$HOME_A")"
 [[ "$code" == "0" ]] || fail "third deploy failed"
-[[ "$(grep -c 'AuthUserFile "/home/example/.htpasswds/greache.com/comments/passwd"' "$PUBLIC/.htaccess")" == "1" ]] || fail "redeploy duplicated Directory Privacy"
+[[ "$(grep -c 'AuthUserFile "/home/example/.htpasswds/betterschools.com.au/comments/passwd"' "$PUBLIC/.htaccess")" == "1" ]] || fail "redeploy duplicated Directory Privacy"
 [[ "$(sha256sum "$PRIVATE/config.php")" == "$before_key" ]] || fail "config.php changed on the third deploy"
 
 # Authentication that cPanel did not mark must stop the deploy without a rewrite.
-plain_auth=$'AuthType Basic\nAuthName "Comments"\nAuthUserFile "/home/example/.htpasswds/greache.com/comments/passwd"\nRequire valid-user\n'
+plain_auth=$'AuthType Basic\nAuthName "Comments"\nAuthUserFile "/home/example/.htpasswds/betterschools.com.au/comments/passwd"\nRequire valid-user\n'
 printf '%s' "$plain_auth" > "$PUBLIC/.htaccess"
 plain_hash="$(sha256sum "$PUBLIC/.htaccess")"
 set +e
@@ -174,18 +174,18 @@ code="$(run_deploy "$HOME_B" "$FIXTURE")"
 [[ "$code" == "0" ]] || fail "fixture deploy failed: $(cat "$WORK/deploy.err" "$WORK/deploy.out")"
 [[ "$(sha256sum "$HOME_B/comments-private/config.php")" == "$dest_hash" ]] || fail "source config.php replaced the server file"
 grep -q 'SOURCE_SENTINEL' "$HOME_B/comments-private/config.php" && fail "source sentinel was copied"
-grep -q 'SOURCE_SENTINEL' "$HOME_B/greache.com/comments/.htaccess" && fail "source sentinel leaked into .htaccess"
-[[ ! -f "$HOME_B/greache.com/comments/config.php" ]] || fail "config.php was published"
+grep -q 'SOURCE_SENTINEL' "$HOME_B/betterschools.com.au/comments/.htaccess" && fail "source sentinel leaked into .htaccess"
+[[ ! -f "$HOME_B/betterschools.com.au/comments/config.php" ]] || fail "config.php was published"
 [[ ! -e "$HOME_B/public_html" ]] || fail "fixture deploy created public_html"
 
 # Privacy-only .htaccess (Directory Privacy enabled before the first deploy) is kept.
 HOME_C="$WORK/home-c"
-mkdir -p "$HOME_C/greache.com/comments"
-printf '%s\n' "$auth_block" > "$HOME_C/greache.com/comments/.htaccess"
+mkdir -p "$HOME_C/betterschools.com.au/comments"
+printf '%s\n' "$auth_block" > "$HOME_C/betterschools.com.au/comments/.htaccess"
 code="$(run_deploy "$HOME_C")"
 [[ "$code" == "0" ]] || fail "privacy-first deploy failed: $(cat "$WORK/deploy.err")"
-[[ "$(head -n 1 "$HOME_C/greache.com/comments/.htaccess")" == "Options -Indexes" ]] || fail "privacy-first deploy lost application rules"
-[[ "$(grep -c 'Require valid-user' "$HOME_C/greache.com/comments/.htaccess")" == "1" ]] || fail "privacy-first deploy lost Require valid-user"
+[[ "$(head -n 1 "$HOME_C/betterschools.com.au/comments/.htaccess")" == "Options -Indexes" ]] || fail "privacy-first deploy lost application rules"
+[[ "$(grep -c 'Require valid-user' "$HOME_C/betterschools.com.au/comments/.htaccess")" == "1" ]] || fail "privacy-first deploy lost Require valid-user"
 
 # An explicit document root still keeps private files beside $HOME.
 HOME_D="$WORK/home-d"
@@ -194,7 +194,7 @@ code="$(run_deploy "$HOME_D" "" "$HOME_D/custom-root")"
 [[ "$code" == "0" ]] || fail "SITE_ROOT override failed: $(cat "$WORK/deploy.err")"
 assert_file "$HOME_D/custom-root/comments/index.php"
 assert_file "$HOME_D/comments-private/bootstrap.php"
-[[ ! -e "$HOME_D/greache.com" ]] || fail "SITE_ROOT override also created greache.com"
+[[ ! -e "$HOME_D/betterschools.com.au" ]] || fail "SITE_ROOT override also created betterschools.com.au"
 [[ ! -e "$HOME_D/public_html" ]] || fail "SITE_ROOT override created public_html"
 hint="$(php -r 'echo require $argv[1];' "$HOME_D/custom-root/comments/private-path.php")"
 [[ "$hint" == "$HOME_D/comments-private" ]] || fail "override private-path.php returned [$hint]"
@@ -209,10 +209,10 @@ grep -q 'public_html' "$WORK/deploy.err" || fail "public_html SITE_ROOT error wa
 
 # A clone inside the domain document root must fail before writing the site.
 HOME_F="$WORK/home-f"
-mkdir -p "$HOME_F" "$WORK/greache.com/repo"
-code="$(run_deploy "$HOME_F" "$WORK/greache.com/repo")"
-[[ "$code" != "0" ]] || fail "clone inside greache.com was accepted"
-[[ ! -f "$HOME_F/greache.com/comments/index.php" ]] || fail "clone inside greache.com wrote site files"
+mkdir -p "$HOME_F" "$WORK/betterschools.com.au/repo"
+code="$(run_deploy "$HOME_F" "$WORK/betterschools.com.au/repo")"
+[[ "$code" != "0" ]] || fail "clone inside betterschools.com.au was accepted"
+[[ ! -f "$HOME_F/betterschools.com.au/comments/index.php" ]] || fail "clone inside betterschools.com.au wrote site files"
 grep -q 'document root' "$WORK/deploy.err" || fail "document-root clone error was not explained"
 
 # Direct HTTP access to the generated hint must not reveal the path.

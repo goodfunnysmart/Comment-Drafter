@@ -51,7 +51,7 @@ function comment_drafter_private_bootstrap(string $frontDir): string
 
     // Local development: private/ is the sibling of public/.
     $candidates[] = dirname($frontReal) . '/private';
-    // cPanel deploy: site files in $HOME/greache.com/comments, private files in $HOME/comments-private.
+    // cPanel deploy: site files in $HOME/betterschools.com.au/comments, private files in $HOME/comments-private.
     $candidates[] = dirname($frontReal, 2) . '/comments-private';
 
     foreach ($candidates as $directory) {
@@ -85,7 +85,7 @@ function comment_drafter_path_is_web_exposed(string $bootstrapReal, string $fron
         return true;
     }
     foreach (explode('/', $bootstrapReal) as $part) {
-        if ($part === 'public_html' || $part === 'greache.com') {
+        if ($part === 'public_html' || $part === 'betterschools.com.au') {
             return true;
         }
     }

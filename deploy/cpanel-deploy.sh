@@ -1,15 +1,15 @@
 #!/bin/bash
 # Copy this repository into the cPanel account that serves the site.
-# Document root: $SITE_ROOT, default $HOME/greache.com. Export SITE_ROOT to override.
+# Document root: $SITE_ROOT, default $HOME/betterschools.com.au. Export SITE_ROOT to override.
 # Site files go to $SITE_ROOT/comments.
 # Private application files go to $HOME/comments-private.
 # config.php is never created, copied, or deleted.
 # The site .htaccess keeps its cPanel Directory Privacy block.
 set -euo pipefail
 
-# Document root for greache.com. Export SITE_ROOT to use another directory inside $HOME.
+# Document root for betterschools.com.au. Export SITE_ROOT to use another directory inside $HOME.
 # Site files are copied to $SITE_ROOT/comments.
-SITE_ROOT="${SITE_ROOT:-${HOME:-}/greache.com}"
+SITE_ROOT="${SITE_ROOT:-${HOME:-}/betterschools.com.au}"
 
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
@@ -69,7 +69,7 @@ case "$REPO" in
   */public_html|*/public_html/*)
     die "Refusing to deploy: the Git clone is inside public_html. Clone to \$HOME/repositories/Comment-Drafter."
     ;;
-  */greache.com|*/greache.com/*)
+  */betterschools.com.au|*/betterschools.com.au/*)
     die "Refusing to deploy: the Git clone is inside the document root. Clone to \$HOME/repositories/Comment-Drafter."
     ;;
 esac
@@ -107,7 +107,7 @@ case "/$SITE_ROOT/" in
     die "Refusing to deploy: SITE_ROOT contains '.' or '..'."
     ;;
   */public_html|*/public_html/*)
-    die "Refusing to deploy: SITE_ROOT is inside public_html. Use \$HOME/greache.com."
+    die "Refusing to deploy: SITE_ROOT is inside public_html. Use \$HOME/betterschools.com.au."
     ;;
 esac
 

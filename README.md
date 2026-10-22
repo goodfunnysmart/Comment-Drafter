@@ -9,7 +9,7 @@ Comment Drafter/
 ├── .cpanel.yml                   ← cPanel "Deploy HEAD Commit" tasks
 ├── deploy/
 │   └── cpanel-deploy.sh          # Copies site files; keeps config.php and Directory Privacy
-├── public/                       ← Deployed to $HOME/greache.com/comments
+├── public/                       ← Deployed to $HOME/betterschools.com.au/comments
 │   ├── index.php                 # Page, bank rendering, CSRF token
 │   ├── generate.php              # Validated server-side Gemini endpoint
 │   ├── private_path.php          # Finds the private bootstrap outside the document root
@@ -49,34 +49,34 @@ Comment Drafter/
 
 ## Deploy on cPanel
 
-cPanel clones this private repository **outside** the website. **Deploy HEAD Commit** runs `.cpanel.yml`, which runs `deploy/cpanel-deploy.sh`. The script uses `$HOME`, so the account name is not stored in Git. The document root for greache.com is `$HOME/greache.com`, not `$HOME/public_html`. The script copies the files in `public/`, including the logo files in `public/assets/`, into `$HOME/greache.com/comments` and the private application files into `$HOME/comments-private`. `SITE_ROOT` at the top of `deploy/cpanel-deploy.sh` defaults to `$HOME/greache.com`; export `SITE_ROOT` to use another directory inside `$HOME`. Site files then go to `$SITE_ROOT/comments`. The live address is `https://greache.com/comments`, with no `/public` on the end.
+cPanel clones this private repository **outside** the website. **Deploy HEAD Commit** runs `.cpanel.yml`, which runs `deploy/cpanel-deploy.sh`. The script uses `$HOME`, so the account name is not stored in Git. The document root for betterschools.com.au is `$HOME/betterschools.com.au`, not `$HOME/public_html`. The script copies the files in `public/`, including the logo files in `public/assets/`, into `$HOME/betterschools.com.au/comments` and the private application files into `$HOME/comments-private`. `SITE_ROOT` at the top of `deploy/cpanel-deploy.sh` defaults to `$HOME/betterschools.com.au`; export `SITE_ROOT` to use another directory inside `$HOME`. Site files then go to `$SITE_ROOT/comments`. The live address is `https://betterschools.com.au/comments`, with no `/public` on the end.
 
-Do not upload the project into `greache.com` or `public_html`. Do not point the domain’s document root at the clone or at `comments-private`.
+Do not upload the project into `betterschools.com.au` or `public_html`. Do not point the domain’s document root at the clone or at `comments-private`.
 
-The deploy copies named application files only. It does not create, copy, or delete `config.php`. It does not delete Directory Privacy rules in `greache.com/comments/.htaccess`. cPanel keeps those rules in a block marked `cp:ppd`. Each deploy writes `public/.htaccess` and then puts that block back unchanged. Lines outside the block are replaced by the copy in Git. If deploy finds authentication directives that are not inside a `cp:ppd` block, it stops and leaves `.htaccess` as it is.
+The deploy copies named application files only. It does not create, copy, or delete `config.php`. It does not delete Directory Privacy rules in `betterschools.com.au/comments/.htaccess`. cPanel keeps those rules in a block marked `cp:ppd`. Each deploy writes `public/.htaccess` and then puts that block back unchanged. Lines outside the block are replaced by the copy in Git. If deploy finds authentication directives that are not inside a `cp:ppd` block, it stops and leaves `.htaccess` as it is.
 
 `index.php` and `generate.php` load the private bootstrap only after this search:
 
 1. `COMMENT_DRAFTER_PRIVATE`, when that environment variable names a directory outside the document root.
 2. `private-path.php`, which deploy writes next to `index.php`. Opening that address in a browser does not print the path.
 3. A sibling `private/` directory. This is what `php -S 127.0.0.1:8765 -t public` uses.
-4. `$HOME/comments-private`, when the site files are in `$HOME/greache.com/comments`.
+4. `$HOME/comments-private`, when the site files are in `$HOME/betterschools.com.au/comments`.
 
-A result inside the front-controller directory, or anywhere under a `public_html` or `greache.com` directory, is ignored. The loaded bootstrap reads `bank.json`, `instructions.txt` and `config.php` from its own directory.
+A result inside the front-controller directory, or anywhere under a `public_html` or `betterschools.com.au` directory, is ignored. The loaded bootstrap reads `bank.json`, `instructions.txt` and `config.php` from its own directory.
 
 ### One-time cPanel setup
 
-Use the cPanel account that serves `greache.com`. File Manager shows the home directory as `/home/<account>/`. Nothing below puts that account name into Git.
+Use the cPanel account that serves `betterschools.com.au`. File Manager shows the home directory as `/home/<account>/`. Nothing below puts that account name into Git.
 
 **1. Password-protect the live comments directory**
 
-The live document root is `$HOME/greache.com`. The site directory is `$HOME/greache.com/comments`. An earlier upload can leave `private/bank.json`, `private/instructions.txt` and `README.md` downloadable there. `private/config.php` runs as PHP. An earlier deploy also created `$HOME/public_html/comments`; that path is not the live site.
+The live document root is `$HOME/betterschools.com.au`. The site directory is `$HOME/betterschools.com.au/comments`. An earlier upload can leave `private/bank.json`, `private/instructions.txt` and `README.md` downloadable there. `private/config.php` runs as PHP. An earlier deploy also created `$HOME/public_html/comments`; that path is not the live site.
 
 1. Open **cPanel → Files → Directory Privacy**.
-2. Open `greache.com`, then `comments`, then **Edit**.
+2. Open `betterschools.com.au`, then `comments`, then **Edit**.
 3. Select **Password protect this directory**. Enter a name such as `Comments`. Click **Save**.
 4. Create a username and a strong password. cPanel stores the password file under `.htpasswds`, outside the document root.
-5. In a private browser window, open `https://greache.com/comments/private/bank.json`. It must ask for a password or return **401** before you continue.
+5. In a private browser window, open `https://betterschools.com.au/comments/private/bank.json`. It must ask for a password or return **401** before you continue.
 
 **2. Give cPanel read access to the private GitHub repository**
 
@@ -137,7 +137,7 @@ When Git asks, the username is the GitHub user and the password is the token. Do
 1. Open **cPanel → Files → Git Version Control → Create**.
 2. Leave **Clone a Repository** on.
 3. Clone URL: `git@github.com:goodfunnysmart/Comment-Drafter.git`. If cPanel asks to save GitHub’s host key, accept it only when the SHA-256 fingerprint matches one of the values above.
-4. Repository Path: `repositories/Comment-Drafter`. cPanel creates `/home/<account>/repositories/Comment-Drafter`. Do not use any path inside `greache.com` or `public_html`.
+4. Repository Path: `repositories/Comment-Drafter`. cPanel creates `/home/<account>/repositories/Comment-Drafter`. Do not use any path inside `betterschools.com.au` or `public_html`.
 5. Repository Name: `Comment Drafter`.
 6. Click **Create** and wait until the clone finishes.
 
@@ -151,7 +151,7 @@ When Git asks, the username is the GitHub user and the password is the token. Do
 Deployment must succeed, and **Last Deployed SHA** must match `main` on GitHub. This creates:
 
 ```text
-/home/<account>/greache.com/comments/     site files only
+/home/<account>/betterschools.com.au/comments/     site files only
 /home/<account>/comments-private/         bootstrap, bank, instructions, example config
 ```
 
@@ -159,14 +159,14 @@ Deployment must succeed, and **Last Deployed SHA** must match `main` on GitHub. 
 
 **5. Move the existing key**
 
-1. Open **File Manager** and confirm `comments-private/bootstrap.php`, `bank.json` and `instructions.txt` exist, and that this folder is not inside `greache.com` or `public_html`.
-2. **Move** the real `config.php` to `comments-private/config.php`. Check `greache.com/comments/private/config.php` and, if the earlier deploy left one, `public_html/comments/private/config.php`. Move the one real key. Do not leave a second copy, and do not replace it with `config.example.php`.
+1. Open **File Manager** and confirm `comments-private/bootstrap.php`, `bank.json` and `instructions.txt` exist, and that this folder is not inside `betterschools.com.au` or `public_html`.
+2. **Move** the real `config.php` to `comments-private/config.php`. Check `betterschools.com.au/comments/private/config.php` and, if the earlier deploy left one, `public_html/comments/private/config.php`. Move the one real key. Do not leave a second copy, and do not replace it with `config.example.php`.
 3. Confirm those old paths are gone and `comments-private/config.php` is present.
 4. **Deploy HEAD Commit** again. That sets private-file permissions and rewrites `.htaccess` while keeping the Directory Privacy block. It does not change `config.php`.
 
 **6. Delete the old upload**
 
-In File Manager, open `greache.com/comments`. Delete uploaded project files that are not the site. Delete these if they are present:
+In File Manager, open `betterschools.com.au/comments`. Delete uploaded project files that are not the site. Delete these if they are present:
 
 - `private/`
 - `public/`
@@ -183,26 +183,26 @@ Keep `.htaccess`, `index.php`, `generate.php`, `private_path.php`, `private-path
 
 **7. Check the lock and the private files**
 
-Run these while signed out. Every `https://greache.com/comments` URL must print `401`. The two `comments-private` URLs must print `404`. None of them may print `200`.
+Run these while signed out. Every `https://betterschools.com.au/comments` URL must print `401`. The two `comments-private` URLs must print `404`. None of them may print `200`.
 
 ```bash
-curl -s -o /dev/null -w '%{http_code}\n' https://greache.com/comments
-curl -s -o /dev/null -w '%{http_code}\n' https://greache.com/comments/generate.php
-curl -s -o /dev/null -w '%{http_code}\n' https://greache.com/comments/app.js
-curl -s -o /dev/null -w '%{http_code}\n' https://greache.com/comments/private/bank.json
-curl -s -o /dev/null -w '%{http_code}\n' https://greache.com/comments/private/instructions.txt
-curl -s -o /dev/null -w '%{http_code}\n' https://greache.com/comments/private/config.php
-curl -s -o /dev/null -w '%{http_code}\n' https://greache.com/comments/README.md
-curl -s -o /dev/null -w '%{http_code}\n' https://greache.com/comments/public/
-curl -s -o /dev/null -w '%{http_code}\n' https://greache.com/comments-private/bank.json
-curl -s -o /dev/null -w '%{http_code}\n' https://greache.com/comments-private/config.php
+curl -s -o /dev/null -w '%{http_code}\n' https://betterschools.com.au/comments
+curl -s -o /dev/null -w '%{http_code}\n' https://betterschools.com.au/comments/generate.php
+curl -s -o /dev/null -w '%{http_code}\n' https://betterschools.com.au/comments/app.js
+curl -s -o /dev/null -w '%{http_code}\n' https://betterschools.com.au/comments/private/bank.json
+curl -s -o /dev/null -w '%{http_code}\n' https://betterschools.com.au/comments/private/instructions.txt
+curl -s -o /dev/null -w '%{http_code}\n' https://betterschools.com.au/comments/private/config.php
+curl -s -o /dev/null -w '%{http_code}\n' https://betterschools.com.au/comments/README.md
+curl -s -o /dev/null -w '%{http_code}\n' https://betterschools.com.au/comments/public/
+curl -s -o /dev/null -w '%{http_code}\n' https://betterschools.com.au/comments-private/bank.json
+curl -s -o /dev/null -w '%{http_code}\n' https://betterschools.com.au/comments-private/config.php
 ```
 
-Then sign in with the Directory Privacy user, open `https://greache.com/comments`, and generate a comment with a made-up student. That confirms PHP is reading the moved key.
+Then sign in with the Directory Privacy user, open `https://betterschools.com.au/comments`, and generate a comment with a made-up student. That confirms PHP is reading the moved key.
 
 ### Later changes
 
-Merge the change into GitHub `main`. In cPanel, open **Git Version Control → Manage → Pull or Deploy**, click **Update from Remote**, then **Deploy HEAD Commit**. Do not move `config.php` again. In a private window, `https://greache.com/comments` must still return **401**.
+Merge the change into GitHub `main`. In cPanel, open **Git Version Control → Manage → Pull or Deploy**, click **Update from Remote**, then **Deploy HEAD Commit**. Do not move `config.php` again. In a private window, `https://betterschools.com.au/comments` must still return **401**.
 
 ## Private Gemini configuration
 
@@ -235,9 +235,9 @@ The server follows Google’s [generateContent REST reference](https://ai.google
 
 CSRF tokens and same-origin checks **are not authentication**. Do not deploy an anonymously accessible paid-generation endpoint.
 
-For this site, Directory Privacy on `greache.com/comments` is step 1 of the setup above. It covers the page, `generate.php`, static files, and any subdirectory still left from the old upload. The password file stays in `.htpasswds`. Redeploys keep the `cp:ppd` block. Do not replace that `.htaccess` with a raw copy from Git. If `Options -Indexes` causes a 500 error, ask the provider to turn directory listing off, remove that one line from `public/.htaccess` in Git, and deploy again. Do not remove the `cp:ppd` block.
+For this site, Directory Privacy on `betterschools.com.au/comments` is step 1 of the setup above. It covers the page, `generate.php`, static files, and any subdirectory still left from the old upload. The password file stays in `.htpasswds`. Redeploys keep the `cp:ppd` block. Do not replace that `.htaccess` with a raw copy from Git. If `Options -Indexes` causes a 500 error, ask the provider to turn directory listing off, remove that one line from `public/.htaccess` in Git, and deploy again. Do not remove the `cp:ppd` block.
 
-Without the Directory Privacy password, `https://greache.com/comments` and `https://greache.com/comments/generate.php` must return **401**, including a direct POST, before PHP runs. Use HTTPS. HTTP Basic authentication needs TLS. Then complete the manual checks in `VERIFICATION.md`.
+Without the Directory Privacy password, `https://betterschools.com.au/comments` and `https://betterschools.com.au/comments/generate.php` must return **401**, including a direct POST, before PHP runs. Use HTTPS. HTTP Basic authentication needs TLS. Then complete the manual checks in `VERIFICATION.md`.
 
 The app’s basic per-session throttle allows at most 10 validated attempts per 10 minutes, at least five seconds apart. A new session can reset it; it is not an abuse-proof account/IP quota. Use hosting/WAF rate limits and Google project quotas for stronger cost control. PHP sessions contain only CSRF and throttle metadata, never student records.
 
@@ -286,4 +286,4 @@ Old distribution ZIPs and pre-change backups are preserved under `.local/archive
 
 Use `git status` to review source changes and `git check-ignore private/config.php` to confirm the key file is excluded. Avoid force-adding ignored configuration files. Before any push, review the staged file list. Create the GitHub repository with **Private** visibility; local Git initialisation does not create a GitHub repository or set remote visibility.
 
-The interface supports Classic and Dark appearances without reloading or discarding the current draft. Classic is the default. Read [SKINS.md](SKINS.md) for styling and description controls. Deploy with the cPanel steps above. Do not upload `private/`, tests, or this README into `greache.com` or `public_html`.
+The interface supports Classic and Dark appearances without reloading or discarding the current draft. Classic is the default. Read [SKINS.md](SKINS.md) for styling and description controls. Deploy with the cPanel steps above. Do not upload `private/`, tests, or this README into `betterschools.com.au` or `public_html`.

@@ -76,3 +76,29 @@ html[data-skin="classic"] h1,html[data-skin="classic"] h2,html[data-skin="classi
 @media(max-width:740px){
   .traffic-columns{grid-template-columns:minmax(0,1fr)}
 }
+main{padding-bottom:96px}
+.actions{flex-wrap:wrap}
+.actions button{flex:1 1 140px;min-height:44px}
+.session-dock{position:fixed;z-index:40;right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:flex-end;gap:8px;width:auto;max-width:min(420px,calc(100vw - 24px))}
+.session-toggle{min-height:44px;min-width:44px;padding:10px 16px;background:#042e5e;color:#fff;border-color:#042e5e;box-shadow:0 8px 24px #042e5e40;white-space:nowrap}
+.session-toggle span{display:inline-block;min-width:1.4em;margin-left:6px;padding:0 6px;border-radius:99px;background:#fff;color:#042e5e;font-size:12px;line-height:1.6}
+.session-panel{width:min(420px,calc(100vw - 24px));max-height:min(70dvh,640px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 16px 40px #16263a33}
+.session-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.session-heading h2{margin:0;font-size:17px}
+.session-heading button,.session-panel button{min-height:44px}
+.session-privacy,.session-write{margin:0 0 12px;font-size:13px;line-height:1.5}
+.session-write{font-weight:650;color:#6b4d12}
+.session-primary{width:100%;background:#042e5e;color:#fff;border-color:#042e5e}
+.session-primary:hover{background:#021c3d}
+.session-code{font:700 clamp(16px,4.4vw,22px)/1.3 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.03em;text-align:center;margin:0 0 10px}
+.session-panel .help{margin:0 0 8px}
+#session-list{list-style:none;margin:8px 0 12px;padding:0}
+.session-item{border-top:1px solid var(--line);padding:10px 0}
+.session-name{margin:0 0 4px;font-weight:700}
+.session-text{margin:0 0 8px;white-space:pre-wrap;overflow-wrap:anywhere}
+.session-item-actions,.session-downloads,.session-manage{display:flex;flex-wrap:wrap;gap:8px}
+.session-item-actions button,.session-downloads button,.session-manage button{flex:1 1 30%;min-height:44px}
+.session-item input,.session-item textarea{margin-bottom:8px}
+.session-item textarea{min-height:72px}
+#session-expiry,#session-list-count{margin:8px 0}
+#session-message{min-height:1.2em}

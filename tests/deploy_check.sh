@@ -5,7 +5,11 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT="$(pwd)"
 WORK="$(mktemp -d)"
-trap 'rm -rf "$WORK"' EXIT
+remove_decoy() {
+  rm -f "$ROOT/private/sessions/decoy.json"
+  rmdir "$ROOT/private/sessions" 2>/dev/null || true
+}
+trap 'remove_decoy; rm -rf "$WORK"' EXIT
 
 fail() {
   printf 'FAIL: %s\n' "$1" >&2
@@ -51,6 +55,7 @@ if grep -E -q 'cp[[:space:]].*config\.php' "$ROOT/deploy/cpanel-deploy.sh"; then
 fi
 git check-ignore -q public/private-path.php || fail "public/private-path.php is not ignored"
 git check-ignore -q private/config.php || fail "private/config.php is not ignored"
+git check-ignore -q private/sessions/example.json || fail "private/sessions is not ignored"
 grep -q 'cp:ppd' "$ROOT/public/.htaccess" && fail "repository .htaccess contains a Directory Privacy marker"
 
 # Empty HOME must fail before any copy.
@@ -72,7 +77,7 @@ PUBLIC="$HOME_A/betterschools.com.au/comments"
 PRIVATE="$HOME_A/comments-private"
 [[ ! -e "$HOME_A/public_html" ]] || fail "deploy created public_html"
 [[ ! -e "$PUBLIC/studio.css" ]] || fail "deploy published studio.css"
-for name in index.php generate.php private_path.php app.css app.js dark.css skin.js .htaccess; do
+for name in index.php generate.php session.php private_path.php app.css app.js dark.css skin.js .htaccess; do
   assert_file "$PUBLIC/$name"
   if [[ "$name" != ".htaccess" ]]; then
     cmp -s "$ROOT/public/$name" "$PUBLIC/$name" || fail "public $name differs"
@@ -85,10 +90,13 @@ for name in logo-classic.webp logo-dark.webp; do
   [[ "$(stat -c '%s' "$PUBLIC/assets/$name")" -lt 100000 ]] || fail "asset $name is too large"
 done
 grep -q 'AddType image/webp .webp' "$PUBLIC/.htaccess" || fail "webp type was not deployed"
-for name in bootstrap.php bank.json instructions.txt config.example.php; do
+for name in bootstrap.php bank.json instructions.txt config.example.php sessions.php cleanup-sessions.php; do
   assert_file "$PRIVATE/$name"
   cmp -s "$ROOT/private/$name" "$PRIVATE/$name" || fail "private $name differs"
 done
+[[ ! -e "$PUBLIC/sessions.php" && ! -e "$PUBLIC/cleanup-sessions.php" ]] || fail "session library was published"
+[[ -d "$PRIVATE/sessions" && "$(stat -c '%a' "$PRIVATE/sessions")" == "700" ]] || fail "sessions directory was not created at mode 700"
+[[ -d "$PRIVATE/sessions/throttle" && "$(stat -c '%a' "$PRIVATE/sessions/throttle")" == "700" ]] || fail "session throttle directory was not created at mode 700"
 [[ ! -e "$PRIVATE/config.php" ]] || fail "deploy created config.php"
 [[ "$(stat -c '%a' "$PRIVATE")" == "700" ]] || fail "private directory mode is not 700"
 [[ "$(stat -c '%a' "$PRIVATE/bank.json")" == "600" ]] || fail "bank.json mode is not 600"
@@ -109,10 +117,19 @@ printf 'old readme\n' > "$PUBLIC/README.md"
 printf 'old studio\n' > "$PUBLIC/studio.css"
 printf 'old key\n' > "$PRIVATE/config.php"
 before_key="$(sha256sum "$PRIVATE/config.php")"
+mkdir -p "$ROOT/private/sessions" "$PRIVATE/sessions"
+printf 'do-not-copy\n' > "$ROOT/private/sessions/decoy.json"
+printf 'keep-me\n' > "$PRIVATE/sessions/sentinel.json"
+chmod 700 "$PRIVATE/sessions"
 auth_block=$'#----------------------------------------------------------------cp:ppd\n# Section managed by cPanel: Password Protected Directories     -cp:ppd\n# - Do not edit this section of the htaccess file!              -cp:ppd\n#----------------------------------------------------------------cp:ppd\nAuthType Basic\nAuthName "Comments"\nAuthUserFile "/home/example/.htpasswds/betterschools.com.au/comments/passwd"\nRequire valid-user\n#----------------------------------------------------------------cp:ppd\n# End section managed by cPanel: Password Protected Directories -cp:ppd\n#----------------------------------------------------------------cp:ppd'
 printf '%s\nHAND_EDIT keep-me-not\n' "$auth_block" > "$PUBLIC/.htaccess"
 code="$(run_deploy "$HOME_A")"
 [[ "$code" == "0" ]] || fail "second deploy failed: $(cat "$WORK/deploy.err")"
+[[ "$(cat "$PRIVATE/sessions/sentinel.json")" == "keep-me" ]] || fail "deploy removed or changed a session file"
+[[ ! -e "$PRIVATE/sessions/decoy.json" ]] || fail "deploy copied a repository session file"
+[[ "$(stat -c '%a' "$PRIVATE/sessions")" == "700" ]] || fail "sessions directory mode changed"
+[[ "$(stat -c '%a' "$PRIVATE/sessions/sentinel.json")" == "600" ]] || fail "existing session file was not kept at mode 600"
+grep -q 'Existing session files were kept.' "$WORK/deploy.out" || fail "session directory was not reported"
 [[ "$(sha256sum "$PRIVATE/config.php")" == "$before_key" ]] || fail "config.php contents changed"
 [[ "$(stat -c '%a' "$PRIVATE/config.php")" == "600" ]] || fail "existing config.php was not kept at mode 600"
 grep -q 'Left existing config.php in place.' "$WORK/deploy.out" || fail "existing config.php was not reported"
@@ -222,7 +239,7 @@ cleanup_server() {
   kill "$hint_pid" >/dev/null 2>&1 || true
   wait "$hint_pid" 2>/dev/null || true
 }
-trap 'cleanup_server; rm -rf "$WORK"' EXIT
+trap 'cleanup_server; remove_decoy; rm -rf "$WORK"' EXIT
 ready=0
 for _ in 1 2 3 4 5 6 7 8 9 10; do
   if php -r 'exit(@fsockopen("127.0.0.1", 8766) ? 0 : 1);'; then
@@ -237,6 +254,6 @@ headers="$(php -r '$h=get_headers("http://127.0.0.1:8766/private-path.php"); ech
 printf '%s\n' "$headers" | head -n 1 | grep -q '404' || fail "private-path.php was not 404: $headers"
 [[ "$body" != *comments-private* && "$body" != *"$PRIVATE"* ]] || fail "private-path.php revealed its path: $body"
 cleanup_server
-trap 'rm -rf "$WORK"' EXIT
+trap 'remove_decoy; rm -rf "$WORK"' EXIT
 
 printf 'PASS: cPanel deploy paths, config.php preservation, and Directory Privacy merge.\n'

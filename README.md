@@ -1,6 +1,6 @@
 # Comment Drafter
 
-Report Comment Builder is a complete single-page teacher workspace built with PHP, HTML, CSS and vanilla JavaScript. No build step, framework, database, analytics or browser storage. The selectable points live in one private JSON bank, grouped into five categories. Strengths, areas for growth, and challenges sit in three columns under each category, except Specific Adjustments / Supports, which stays one list. PHP renders the bank and resolves submitted IDs against it before calling Gemini. A tweak sends the current comment and a short change request through the same endpoint.
+Report Comment Builder is a complete single-page teacher workspace built with PHP, HTML, CSS and vanilla JavaScript. No build step, framework, database or analytics. The only browser storage is the active session code. The selectable points live in one private JSON bank, grouped into five categories. Strengths, areas for growth, and challenges sit in three columns under each category, except Specific Adjustments / Supports, which stays one list. PHP renders the bank and resolves submitted IDs against it before calling Gemini. A tweak sends the current comment and a short change request through the same endpoint.
 
 ## Project files
 
@@ -12,6 +12,7 @@ Comment Drafter/
 ├── public/                       ← Deployed to $HOME/betterschools.com.au/comments
 │   ├── index.php                 # Page, bank rendering, CSRF token
 │   ├── generate.php              # Validated server-side Gemini endpoint
+│   ├── session.php               # Session create, resume, save, email and download
 │   ├── private_path.php          # Finds the private bootstrap outside the document root
 │   ├── assets/
 │   │   ├── logo-classic.webp     # Better Schools logo for Classic
@@ -25,9 +26,12 @@ Comment Drafter/
 │   ├── bootstrap.php             # Session, headers, validation
 │   ├── bank.json                 # Single source of truth, stable IDs
 │   ├── instructions.txt          # Server-owned generation rules
+│   ├── sessions.php              # Encrypted session files, outside the website
+│   ├── cleanup-sessions.php      # Monthly removal of expired sessions
 │   └── config.example.php        # Placeholders; the real config.php stays server-only
 ├── tests/
 │   ├── validate.php
+│   ├── session.php
 │   ├── private_path.php
 │   ├── deploy_check.sh
 │   ├── http_check.py
@@ -42,7 +46,7 @@ Comment Drafter/
 
 ## Requirements
 
-- PHP 8.2 or newer, with sessions, JSON and **cURL** enabled.
+- PHP 8.2 or newer, with sessions, JSON, OpenSSL and **cURL** enabled.
 - A working system CA certificate bundle and outbound HTTPS access to `generativelanguage.googleapis.com:443`. On Windows, the app uses the operating system’s trusted certificate store when supported by cURL. On other hosts, configure PHP’s CA bundle. Never disable certificate verification to fix a CA error.
 - HTTPS and hosting-level authentication covering the entire public directory.
 - An API key with access and quota for the configured Gemini model.
@@ -153,6 +157,7 @@ Deployment must succeed, and **Last Deployed SHA** must match `main` on GitHub. 
 ```text
 /home/<account>/betterschools.com.au/comments/     site files only
 /home/<account>/comments-private/         bootstrap, bank, instructions, example config
+/home/<account>/comments-private/sessions/  encrypted session files, mode 0700
 ```
 
 `comments-private/config.php` is not created yet. In **cPanel → Software → Select PHP Version** (or MultiPHP), use PHP 8.2 or newer and enable cURL for this domain.
@@ -239,7 +244,27 @@ For this site, Directory Privacy on `betterschools.com.au/comments` is step 1 of
 
 Without the Directory Privacy password, `https://betterschools.com.au/comments` and `https://betterschools.com.au/comments/generate.php` must return **401**, including a direct POST, before PHP runs. Use HTTPS. HTTP Basic authentication needs TLS. Then complete the manual checks in `VERIFICATION.md`.
 
-The app’s basic per-session throttle allows at most 10 validated attempts per 10 minutes, at least five seconds apart. A new session can reset it; it is not an abuse-proof account/IP quota. Use hosting/WAF rate limits and Google project quotas for stronger cost control. PHP sessions contain only CSRF and throttle metadata, never student records.
+The app’s basic per-session throttle allows at most 10 validated attempts per 10 minutes, at least five seconds apart. A new PHP session can reset it; it is not an abuse-proof account/IP quota. Use hosting/WAF rate limits and Google project quotas for stronger cost control. PHP session cookies contain only CSRF and throttle metadata, never student records. Comment sessions are separate encrypted files.
+
+## Session documents
+
+A teacher can keep a set of comments under a random code, without an account. The code looks like four letters, four digits and two more words, for example `BARE-4827-CAME-DEFT`. It avoids easily confused characters. The page asks for a first name only and asks the teacher not to include a school, campus, class or other identifying details.
+
+The code is the only key. Each session is one file in `$HOME/comments-private/sessions/`. That folder is mode `0700`, outside the website. Deploy creates it and does not delete files already there. The file name is the SHA-256 of the code, not the code itself. The comments are encrypted with AES-256-GCM. The key is derived from the code, so a copy of the file cannot be read without it. The created month is stored beside the ciphertext so expired files can be removed without the code.
+
+A session lasts until the end of the month after the month it was created, using Australia/Sydney time (UTC if that timezone is unavailable). A session created in February is removed on 1 April. The app also clears expired files about once an hour when someone uses it.
+
+The optional “Email me this code” field sends one message with PHP `mail()`. The From address is `noreply@betterschools.com.au`. The address the teacher types is used for that message only and is not stored. Copying the code still works if the message cannot be sent. Failed code lookups are limited per IP, and emailing a code is limited as well.
+
+### Monthly cleanup cron
+
+Deploy places `cleanup-sessions.php` in `/home/ACCOUNT/comments-private/`. In **cPanel → Advanced → Cron Jobs**, add one job. If the PHP shown below is not the version selected for the site, use the path from **cPanel → Software → MultiPHP Manager** or from Terminal (`which php`). A common EasyApache path is `/opt/cpanel/ea-php83/root/usr/bin/php`. Replace `ACCOUNT` with the cPanel username. Do not put this command inside the website folder.
+
+```cron
+15 3 1 * * /usr/local/bin/php -f /home/ACCOUNT/comments-private/cleanup-sessions.php
+```
+
+Minute `15`, hour `3`, day `1`, every month. The script deletes only expired sessions. It prints a count and does not print a session code. Run it once in **cPanel → Terminal** after the first deploy to confirm the PHP path. The hourly cleanup inside the app covers the days between cron runs; the cron is the sweep for a month when nobody opens the page.
 
 ## Running locally
 
@@ -253,7 +278,7 @@ Visit `http://127.0.0.1:8765`. The development server uses the sibling `private/
 
 ## Data handling and behaviour
 
-- Student details and drafts exist in the page’s memory only. There is no database, localStorage, sessionStorage, autosave, analytics or third-party frontend resource. The page warns before leaving with entered data and reloads if restored from the back/forward cache.
+- The current draft exists in the page’s memory. There is no database, autosave, analytics or third-party frontend resource. The active session code can be kept in localStorage on this device; the comments themselves are not. Leave session forgets that code and leaves the stored comments in place. Clear session deletes them after confirmation. The page warns before leaving with entered data and reloads if restored from the back/forward cache.
 - When Generate is clicked, the name, pronouns, selected descriptions, observations, any negative behaviours to reframe, any other specific adjustments, and any optional activities go through the PHP server to Google. Tweak comment sends those same details plus the current editor text, including manual edits, and the change request. Google’s policies and your school’s agreement determine retention; this app makes no no-retention claim. Use only school-approved information and follow your school’s AI/data policy.
 - Server code does not log names, observations, drafts, tweak requests, keys or upstream bodies. Keep hosting/PHP debug modes and request-body capture disabled; check any host-level logging or monitoring independently. Normal URL access logs contain no form data because generation uses POST JSON, never query parameters.
 - Requests/pages use `Cache-Control: no-store`; shared caches should bypass this application. Copy and download use the editor’s current value without another request. Downloads use a UTF-8 Blob and the teacher’s local time.
@@ -266,6 +291,7 @@ Visit `http://127.0.0.1:8765`. The development server uses the sibling `private/
 
 ```powershell
 php tests/validate.php
+php tests/session.php
 php tests/private_path.php
 bash tests/deploy_check.sh
 # Start the local PHP server in another terminal first. No key/config should be set for this test:

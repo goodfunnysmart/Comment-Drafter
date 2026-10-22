@@ -74,3 +74,11 @@ html[data-skin="dark"] .descriptor-dialog{background:#122033;border-color:#3d5f8
 html[data-skin="dark"] .descriptor-dialog::backdrop{background:#050910cc}
 html[data-skin="dark"] .descriptor-close{background:#0d1a2c;color:#c5d7ef;border-color:#3d5f8a}
 html[data-skin="dark"] :focus-visible{outline-color:#c5d7ef}
+html[data-skin="dark"] .session-toggle,html[data-skin="dark"] .session-primary{background:#042e5e;color:#fff;border-color:#8eafd4}
+html[data-skin="dark"] .session-primary:hover,html[data-skin="dark"] .session-toggle:hover{background:#0a3d78}
+html[data-skin="dark"] .session-toggle span{background:#e7eef6;color:#042e5e}
+html[data-skin="dark"] .session-panel{background:#122033;color:#e7eef6;border-color:#3d5f8a;box-shadow:0 16px 40px #0008}
+html[data-skin="dark"] .session-panel button{background:#15283d;color:#e7eef6;border-color:#3d5f8a}
+html[data-skin="dark"] .session-panel .session-primary{background:#042e5e;color:#fff;border-color:#8eafd4}
+html[data-skin="dark"] .session-write{color:#f3dba2}
+html[data-skin="dark"] .session-code{background:#0d1a2c;color:#fff;border-color:#3d5f8a}

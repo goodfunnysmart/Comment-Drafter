@@ -1,12 +1,12 @@
 'use strict';
 const $ = id => document.getElementById(id);
 const form = $('builder'), editor = $('comment'), generate = $('generate');
-const chosen = {strengths: new Set(), nextSteps: new Set(), supports: new Set()};
+const chosen = {strengths: new Set(), nextSteps: new Set(), supports: new Set(), challenges: new Set()};
 let controller = null, requestVersion = 0, generatedSnapshot = null, lastGenerated = '', busy = false, busyKind = '', tweakUndo = null;
-const fields = ['name', 'pronouns', 'observations', 'reframe', 'activities', 'length'];
+const fields = ['name', 'pronouns', 'observations', 'reframe', 'activities', 'adjustments', 'length'];
 function inputs() {
   return {...Object.fromEntries(fields.map(id => [id, $(id).value.trim()])),
-    strengths: [...chosen.strengths].sort(), nextSteps: [...chosen.nextSteps].sort(), supports: [...chosen.supports].sort()};
+    strengths: [...chosen.strengths].sort(), nextSteps: [...chosen.nextSteps].sort(), supports: [...chosen.supports].sort(), challenges: [...chosen.challenges].sort()};
 }
 function updateCounts() {
   document.querySelectorAll('[data-category]').forEach(group => {
@@ -127,8 +127,8 @@ window.addEventListener('blur', hidePreview);
 editor.addEventListener('input', () => { updateEditor(); $('action-status').textContent = ''; });
 function readyForModel(data) {
   if (!data.name) { setStatus('Enter the student’s full first name.', true); $('name').focus(); return false; }
-  if (!data.strengths.length && !data.nextSteps.length && !data.supports.length) {
-    setStatus('Choose at least one strength, next step or support.', true); document.querySelector('.chip').focus(); return false;
+  if (!data.strengths.length && !data.nextSteps.length && !data.supports.length && !data.challenges.length && !data.adjustments) {
+    setStatus('Choose at least one strength, next step, challenge or support, or describe another adjustment.', true); document.querySelector('.chip').focus(); return false;
   }
   return true;
 }
@@ -223,7 +223,7 @@ $('save').addEventListener('click', () => {
   $('action-status').textContent = 'Text file download started.';
 });
 function hasStudentData() {
-  return !!($('name').value.trim() || $('observations').value.trim() || $('reframe').value.trim() || $('activities').value.trim() || $('tweak').value.trim() || editor.value.trim() || chosen.strengths.size || chosen.nextSteps.size || chosen.supports.size);
+  return !!($('name').value.trim() || $('observations').value.trim() || $('reframe').value.trim() || $('activities').value.trim() || $('adjustments').value.trim() || $('tweak').value.trim() || editor.value.trim() || chosen.strengths.size || chosen.nextSteps.size || chosen.supports.size || chosen.challenges.size);
 }
 $('new-student').addEventListener('click', () => {
   if (hasStudentData() && !window.confirm('Clear all entered student details and the current comment?')) return;

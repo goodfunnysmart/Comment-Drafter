@@ -11,10 +11,15 @@ $token = $_SESSION['csrf'];
 session_write_close();
 function e(string $value): string { return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
 function chipControl(string $id, array $item): void {
-    $kinds = ['strength' => 'strengths', 'next' => 'nextSteps', 'support' => 'supports'];
+    $kinds = ['strength' => 'strengths', 'next' => 'nextSteps', 'support' => 'supports', 'challenge' => 'challenges'];
     $bankKey = $kinds[$item['kind']];
     $tip = $bankKey . '-' . $id;
-    $tone = $item['kind'] === 'next' ? 'growth' : ($item['kind'] === 'support' ? 'support' : 'positive');
+    $tone = match ($item['kind']) {
+        'next' => 'growth',
+        'challenge' => 'challenge',
+        'support' => 'support',
+        default => 'positive',
+    };
     ?>
           <div class="chip-wrap <?= e($tone) ?>">
             <button type="button" class="chip" data-id="<?= e($id) ?>" data-bank="<?= e($bankKey) ?>" aria-pressed="false" aria-describedby="<?= e($tip) ?>"><span class="tick" aria-hidden="true">✓</span><?= e($item['label']) ?></button>
@@ -30,10 +35,10 @@ function chipControl(string $id, array $item): void {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="<?= e($token) ?>">
   <title>Report Comment Builder</title>
-  <link rel="stylesheet" href="app.css?v=9">
-  <link rel="stylesheet" href="dark.css?v=6">
+  <link rel="stylesheet" href="app.css?v=10">
+  <link rel="stylesheet" href="dark.css?v=7">
   <script src="skin.js?v=3" defer></script>
-  <script src="app.js?v=8" defer></script>
+  <script src="app.js?v=9" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to builder</a>
@@ -53,29 +58,33 @@ function chipControl(string $id, array $item): void {
     </section>
     <section class="panel selection" aria-labelledby="descriptors-heading">
       <div class="section-heading"><span class="step">02</span><h2 id="descriptors-heading">What to include</h2></div>
-      <p class="help">Choose any that apply. Strengths are on the left and areas for growth on the right. Growth items have a blue edge. Supports stay in one list. There’s no fixed limit.</p>
+      <p class="help">Choose any that apply. Strengths are on the left, areas for growth in the middle, and challenges on the right. Supports stay in one list. There’s no fixed limit.</p>
       <?php foreach ($bank['categories'] as $category):
-        $grouped = ['strength' => [], 'next' => [], 'support' => []];
-        foreach ($category['items'] as $id => $item) $grouped[$item['kind']][$id] = $item;
-        $split = $grouped['strength'] && $grouped['next'];
+        $grouped = ['strength' => [], 'next' => [], 'challenge' => [], 'support' => []];
+        foreach ($category['items'] as $id => $item) if (isset($grouped[$item['kind']])) $grouped[$item['kind']][$id] = $item;
       ?>
       <div class="descriptor-group" data-category="<?= e($category['id']) ?>" role="group" aria-labelledby="<?= e($category['id']) ?>-heading">
         <div class="group-heading"><h3 id="<?= e($category['id']) ?>-heading"><?= e($category['title']) ?></h3><span class="count" aria-live="polite">0 selected</span></div>
         <p class="help"><?= e($category['hint']) ?></p>
-        <?php if ($split): ?>
-        <div class="pair-columns">
-          <?php foreach (['strength' => 'Strengths', 'next' => 'Areas for growth'] as $kind => $columnLabel): $labelId = $category['id'] . '-' . $kind . '-label'; ?>
-          <div class="pair-column <?= $kind === 'next' ? 'growth-column' : 'strengths-column' ?>" role="group" aria-labelledby="<?= e($labelId) ?>">
+        <?php if ($category['id'] === 'supports'): ?>
+        <div class="chips">
+        <?php foreach ($category['items'] as $id => $item) chipControl($id, $item); ?>
+        </div>
+        <div class="other-adjustments">
+          <label for="adjustments">Other specific adjustments <span class="optional">Optional</span></label>
+          <p id="adjustments-help" class="help">Type any other adjustment already in place. It is included with the selected items, in your words.</p>
+          <textarea id="adjustments" name="adjustments" rows="2" maxlength="200" aria-describedby="adjustments-help" placeholder="Optional. For example, a quiet space for independent work."></textarea>
+        </div>
+        <?php else: ?>
+        <div class="traffic-columns">
+          <?php foreach (['strength' => ['Strengths', 'strengths-column'], 'next' => ['Areas for Growth', 'growth-column'], 'challenge' => ['Challenges and Obstacles', 'challenge-column']] as $kind => [$columnLabel, $columnClass]): $labelId = $category['id'] . '-' . $kind . '-label'; ?>
+          <div class="traffic-column <?= e($columnClass) ?>" role="group" aria-labelledby="<?= e($labelId) ?>">
             <p class="column-label" id="<?= e($labelId) ?>"><?= e($columnLabel) ?></p>
             <div class="chips">
             <?php foreach ($grouped[$kind] as $id => $item) chipControl($id, $item); ?>
             </div>
           </div>
           <?php endforeach; ?>
-        </div>
-        <?php else: ?>
-        <div class="chips">
-        <?php foreach ($category['items'] as $id => $item) chipControl($id, $item); ?>
         </div>
         <?php endif; ?>
       </div>

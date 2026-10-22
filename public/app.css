@@ -17,13 +17,19 @@
 
 @media(max-width:740px),(pointer:coarse){#builder .info{min-width:44px;min-height:44px}}
 
-.masthead-tools{display:flex;align-items:center;gap:25px}
+:root{--page:1440px}
+.masthead{display:block;padding:12px 0}
+.masthead-bar{box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;max-width:var(--page);margin:0 auto;padding:0 5vw}
+main{max-width:var(--page)}
+@media(min-width:1400px){.masthead-bar{padding-left:45px;padding-right:45px}}
+@media(max-width:740px){.masthead{padding:10px 0}.masthead-bar{padding-left:18px;padding-right:18px}}
+.brand{min-width:0;flex:1 1 auto}
+.masthead-tools{display:flex;align-items:center;gap:16px;flex:0 0 auto}
 .skin-switch{display:flex;align-items:center;gap:3px;padding:4px;border:1px solid #cbd6ce;border-radius:30px;background:#f7f9f5}
-.skin-switch button{border:0;border-radius:24px;background:transparent;color:#4f6156;padding:7px 14px;font-size:12px;line-height:1.4}
+.skin-switch button{border:0;border-radius:24px;background:transparent;color:#4f6156;padding:0 14px;font-size:12px;line-height:1.2;min-height:44px;min-width:44px}
 .skin-switch button:hover{background:transparent}
 .skin-switch button[aria-pressed="true"],.skin-switch button[aria-pressed="true"]:hover{background:var(--teal);color:#fff;box-shadow:0 2px 5px #193a2220}
-@media(max-width:450px){.skin-switch button{padding:7px 9px;font-size:11px}}
-.logo{display:block;width:min(280px,64vw);height:auto}
+.logo{display:block;width:auto;max-width:min(240px,100%);height:auto;max-height:52px}
 .logo-dark{display:none}
 html[data-skin="dark"] .logo-classic{display:none}
 html[data-skin="dark"] .logo-dark{display:block}
@@ -31,4 +37,8 @@ html[data-skin="classic"] h1,html[data-skin="classic"] h2,html[data-skin="classi
 .primary:hover{background:#021c3d}
 .chip[aria-pressed="true"]{background:#e7eef6;color:#042e5e}
 .chip-wrap:has(.chip[aria-pressed="true"]){border-color:#042e5e;background:#e7eef6}
-@media(max-width:720px){.masthead{flex-wrap:wrap;row-gap:8px}.logo{width:min(220px,68vw)}}
+@media(max-width:480px){
+  .masthead-bar{flex-wrap:wrap;row-gap:8px}
+  .masthead-tools{margin-left:auto}
+  .logo{max-width:min(168px,46vw);max-height:44px}
+}

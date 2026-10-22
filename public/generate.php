@@ -12,13 +12,18 @@ $scheme = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : '
 if ($origin !== '' && $origin !== $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? '')) fail(403, 'Use the app from its own page.');
 if (!hash_equals($_SESSION['csrf'], $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '')) fail(403, 'Your security token has expired. Copy any draft, then reload the page.');
 if (strtolower(trim(explode(';', $_SERVER['CONTENT_TYPE'] ?? '')[0])) !== 'application/json') fail(415, 'Send JSON data.');
-if ((int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 24000) fail(413, 'The request is too large. Shorten the observations.');
+if ((int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 24000) fail(413, 'The request is too large. Shorten the text and try again.');
 $raw = file_get_contents('php://input', false, null, 0, 24001);
-if (strlen($raw) > 24000) fail(413, 'The request is too large.');
+if (strlen($raw) > 24000) fail(413, 'The request is too large. Shorten the text and try again.');
+$mode = 'generate';
+$tweak = null;
 try {
     $input = json_decode($raw, true, 32, JSON_THROW_ON_ERROR);
     if (!is_array($input) || array_is_list($input)) throw new InvalidArgumentException('Invalid request.');
     $data = validateInput($input, bank());
+    $mode = $input['mode'] ?? 'generate';
+    if (!is_string($mode) || !in_array($mode, ['generate', 'tweak'], true)) throw new InvalidArgumentException('Please check the request.');
+    if ($mode === 'tweak') $tweak = validateTweak($input);
 } catch (JsonException | InvalidArgumentException $e) { fail(422, $e instanceof JsonException ? 'Invalid JSON request.' : $e->getMessage()); }
 // Security metadata only. The session lock serialises the throttle check.
 $now = time();
@@ -49,7 +54,7 @@ try {
     $data['length'] = $ranges[$data['length']] . '; the whole comment must be 5–7 sentences';
     $payload = [
         'systemInstruction' => ['parts' => [['text' => $instructions]]],
-        'contents' => [['role' => 'user', 'parts' => [['text' => commentRequestText($data)]]]],
+        'contents' => [['role' => 'user', 'parts' => [['text' => $mode === 'tweak' ? commentTweakText($data, $tweak['comment'], $tweak['instruction']) : commentRequestText($data)]]]],
         'generationConfig' => ['maxOutputTokens' => 2048],
     ];
     $stage = 'CURL_SETUP';

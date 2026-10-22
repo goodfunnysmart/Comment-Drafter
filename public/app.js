@@ -2,7 +2,7 @@
 const $ = id => document.getElementById(id);
 const form = $('builder'), editor = $('comment'), generate = $('generate');
 const chosen = {strengths: new Set(), nextSteps: new Set(), supports: new Set()};
-let controller = null, requestVersion = 0, generatedSnapshot = null, lastGenerated = '', busy = false;
+let controller = null, requestVersion = 0, generatedSnapshot = null, lastGenerated = '', busy = false, busyKind = '', tweakUndo = null;
 const fields = ['name', 'pronouns', 'subject', 'observations', 'reframe', 'activities', 'length'];
 function inputs() {
   return {...Object.fromEntries(fields.map(id => [id, $(id).value.trim()])),
@@ -27,7 +27,11 @@ function updateEditor() {
     : (text.match(/\S+/gu) || []).length;
   $('word-count').textContent = `${count} ${count === 1 ? 'word' : 'words'}`;
   $('copy').disabled = $('save').disabled = !text;
-  generate.textContent = busy ? 'Generating…' : generatedSnapshot !== null ? 'Generate another version' : 'Generate comment';
+  $('tweak-panel').hidden = !text;
+  $('tweak-comment').disabled = busy || !text;
+  $('tweak-comment').textContent = busy && busyKind === 'tweak' ? 'Tweaking…' : 'Tweak comment';
+  $('undo-tweak').hidden = tweakUndo === null;
+  generate.textContent = busy && busyKind === 'generate' ? 'Generating…' : generatedSnapshot !== null ? 'Generate another version' : 'Generate comment';
 }
 function inputChanged() {
   $('stale').hidden = generatedSnapshot === null || generatedSnapshot === snapshot();
@@ -121,22 +125,24 @@ window.addEventListener('scroll', hidePreview, {passive: true, capture: true});
 window.addEventListener('resize', hidePreview);
 window.addEventListener('blur', hidePreview);
 editor.addEventListener('input', () => { updateEditor(); $('action-status').textContent = ''; });
-form.addEventListener('submit', async event => {
-  event.preventDefault();
-  if (busy || !form.reportValidity()) return;
-  const data = inputs();
-  if (!data.name) { setStatus('Enter the student’s full first name.', true); $('name').focus(); return; }
+function readyForModel(data) {
+  if (!data.name) { setStatus('Enter the student’s full first name.', true); $('name').focus(); return false; }
   if (!data.strengths.length && !data.nextSteps.length && !data.supports.length) {
-    setStatus('Choose at least one strength, next step or support.', true); document.querySelector('.chip').focus(); return;
+    setStatus('Choose at least one strength, next step or support.', true); document.querySelector('.chip').focus(); return false;
   }
-  if (editor.value.trim() && editor.value !== lastGenerated && !window.confirm('Generating another version will replace your edited comment. Continue?')) return;
-  const sentSnapshot = JSON.stringify(data), version = ++requestVersion;
+  return true;
+}
+async function runModelRequest(kind, data, statusText, onSuccess) {
+  const sentSnapshot = JSON.stringify(inputs()), version = ++requestVersion;
   controller?.abort(); controller = new AbortController();
   const activeController = controller;
-  busy = true; generate.disabled = true; generate.setAttribute('aria-busy', 'true'); updateEditor();
-  setStatus('Writing a thoughtful first draft…');
+  busy = true; busyKind = kind; generate.disabled = true; $('tweak-comment').disabled = true;
+  if (kind === 'generate') generate.setAttribute('aria-busy', 'true');
+  if (kind === 'tweak') $('tweak-comment').setAttribute('aria-busy', 'true');
+  updateEditor();
+  setStatus(statusText);
   // Editing is paused while a request runs, so a response cannot replace fresh manual edits.
-  editor.readOnly = true;
+  editor.readOnly = true; $('tweak').readOnly = true;
   const timer = setTimeout(() => activeController.abort(), 55000);
   try {
     const response = await fetch('generate.php', {
@@ -147,17 +153,49 @@ form.addEventListener('submit', async event => {
     const result = await response.json();
     if (version !== requestVersion) return;
     if (!response.ok || !result.ok || typeof result.comment !== 'string' || !result.comment.trim()) throw new Error(result.error || 'No usable comment was returned. Please try again.');
-    editor.value = result.comment; lastGenerated = result.comment; generatedSnapshot = sentSnapshot;
-    inputChanged(); setStatus('Your draft is ready. Review and personalise it before use.');
+    onSuccess(result, sentSnapshot);
   } catch (error) {
     if (version !== requestVersion) return;
     setStatus(error.name === 'AbortError' ? 'The request timed out. Your existing comment is unchanged. Please try again.' : error instanceof SyntaxError || error instanceof TypeError ? 'The server could not be reached or returned an invalid response. Your existing comment is unchanged.' : error.message, true);
   } finally {
     clearTimeout(timer);
     if (version === requestVersion) {
-      busy = false; controller = null; generate.disabled = false; generate.removeAttribute('aria-busy'); editor.readOnly = false; updateEditor();
+      busy = false; busyKind = ''; controller = null; generate.disabled = false; generate.removeAttribute('aria-busy');
+      $('tweak-comment').removeAttribute('aria-busy'); editor.readOnly = false; $('tweak').readOnly = false; updateEditor();
     }
   }
+}
+form.addEventListener('submit', async event => {
+  event.preventDefault();
+  if (busy || !form.reportValidity()) return;
+  const data = inputs();
+  if (!readyForModel(data)) return;
+  if (editor.value.trim() && editor.value !== lastGenerated && !window.confirm('Generating another version will replace your edited comment. Continue?')) return;
+  data.mode = 'generate';
+  await runModelRequest('generate', data, 'Writing a thoughtful first draft…', (result, sentSnapshot) => {
+    editor.value = result.comment; lastGenerated = result.comment; generatedSnapshot = sentSnapshot; tweakUndo = null;
+    inputChanged(); setStatus('Your draft is ready. Review and personalise it before use.');
+  });
+});
+$('tweak-comment').addEventListener('click', async () => {
+  if (busy) return;
+  const instruction = $('tweak').value.trim();
+  if (!editor.value.trim()) { setStatus('Generate or write a comment before tweaking it.', true); return; }
+  if (!instruction) { setStatus('Describe what you would like changed.', true); $('tweak').focus(); return; }
+  const data = inputs();
+  if (!readyForModel(data)) return;
+  const previous = editor.value, previousBaseline = lastGenerated;
+  data.mode = 'tweak'; data.comment = editor.value; data.tweak = instruction;
+  await runModelRequest('tweak', data, 'Applying that change…', result => {
+    tweakUndo = {text: previous, baseline: previousBaseline};
+    editor.value = result.comment; lastGenerated = result.comment; $('tweak').value = '';
+    inputChanged(); setStatus('The tweak is ready. Review it before use. Undo restores the previous wording.');
+  });
+});
+$('undo-tweak').addEventListener('click', () => {
+  if (busy || !tweakUndo) return;
+  editor.value = tweakUndo.text; lastGenerated = tweakUndo.baseline; tweakUndo = null;
+  updateEditor(); setStatus('Restored the comment from before the tweak.');
 });
 $('copy').addEventListener('click', async () => {
   const text = editor.value;
@@ -185,16 +223,19 @@ $('save').addEventListener('click', () => {
   $('action-status').textContent = 'Text file download started.';
 });
 function hasStudentData() {
-  return !!($('name').value.trim() || $('subject').value.trim() || $('observations').value.trim() || $('reframe').value.trim() || $('activities').value.trim() || editor.value.trim() || chosen.strengths.size || chosen.nextSteps.size || chosen.supports.size);
+  return !!($('name').value.trim() || $('subject').value.trim() || $('observations').value.trim() || $('reframe').value.trim() || $('activities').value.trim() || $('tweak').value.trim() || editor.value.trim() || chosen.strengths.size || chosen.nextSteps.size || chosen.supports.size);
 }
 $('new-student').addEventListener('click', () => {
   if (hasStudentData() && !window.confirm('Clear all entered student details and the current comment?')) return;
-  ++requestVersion; controller?.abort(); controller = null; busy = false;
+  ++requestVersion; controller?.abort(); controller = null; busy = false; busyKind = ''; tweakUndo = null;
   form.reset(); editor.value = ''; editor.readOnly = false; lastGenerated = ''; generatedSnapshot = null;
+  $('tweak').value = ''; $('tweak').readOnly = false;
   Object.values(chosen).forEach(set => set.clear());
   document.querySelectorAll('.chip').forEach(button => button.setAttribute('aria-pressed', 'false'));
   updateCounts();
-  generate.disabled = false; generate.removeAttribute('aria-busy'); setStatus(''); $('action-status').textContent = '';
+  generate.disabled = false; generate.removeAttribute('aria-busy');
+  $('tweak-comment').disabled = false; $('tweak-comment').removeAttribute('aria-busy');
+  setStatus(''); $('action-status').textContent = '';
   closeInfo(); inputChanged(); updateEditor(); $('name').focus();
 });
 window.addEventListener('beforeunload', event => { if (hasStudentData()) { event.preventDefault(); event.returnValue = ''; } });

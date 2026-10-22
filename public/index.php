@@ -10,6 +10,19 @@ $bank = bank();
 $token = $_SESSION['csrf'];
 session_write_close();
 function e(string $value): string { return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
+function chipControl(string $id, array $item): void {
+    $kinds = ['strength' => 'strengths', 'next' => 'nextSteps', 'support' => 'supports'];
+    $bankKey = $kinds[$item['kind']];
+    $tip = $bankKey . '-' . $id;
+    $tone = $item['kind'] === 'next' ? 'growth' : ($item['kind'] === 'support' ? 'support' : 'positive');
+    ?>
+          <div class="chip-wrap <?= e($tone) ?>">
+            <button type="button" class="chip" data-id="<?= e($id) ?>" data-bank="<?= e($bankKey) ?>" aria-pressed="false" aria-describedby="<?= e($tip) ?>"><span class="tick" aria-hidden="true">✓</span><?= e($item['label']) ?></button>
+            <button type="button" class="info" aria-label="About <?= e($item['label']) ?>" aria-expanded="false" aria-controls="descriptor-dialog" aria-haspopup="dialog" aria-describedby="<?= e($tip) ?>">i</button>
+            <div class="description" id="<?= e($tip) ?>" role="tooltip"><?= e($item['description']) ?></div>
+          </div>
+    <?php
+}
 ?><!doctype html>
 <html lang="en-AU" data-skin="<?= e($skin) ?>">
 <head>
@@ -17,10 +30,10 @@ function e(string $value): string { return htmlspecialchars($value, ENT_QUOTES |
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="<?= e($token) ?>">
   <title>Report Comment Builder</title>
-  <link rel="stylesheet" href="app.css?v=8">
-  <link rel="stylesheet" href="dark.css?v=5">
+  <link rel="stylesheet" href="app.css?v=9">
+  <link rel="stylesheet" href="dark.css?v=6">
   <script src="skin.js?v=3" defer></script>
-  <script src="app.js?v=6" defer></script>
+  <script src="app.js?v=7" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to builder</a>
@@ -41,21 +54,31 @@ function e(string $value): string { return htmlspecialchars($value, ENT_QUOTES |
     </section>
     <section class="panel selection" aria-labelledby="descriptors-heading">
       <div class="section-heading"><span class="step">02</span><h2 id="descriptors-heading">What to include</h2></div>
-      <p class="help">Choose any that apply. Growth items have a blue edge. There’s no fixed limit.</p>
-      <?php $kinds = ['strength' => 'strengths', 'next' => 'nextSteps', 'support' => 'supports']; ?>
-      <?php foreach ($bank['categories'] as $category): ?>
+      <p class="help">Choose any that apply. Strengths are on the left and areas for growth on the right. Growth items have a blue edge. Supports stay in one list. There’s no fixed limit.</p>
+      <?php foreach ($bank['categories'] as $category):
+        $grouped = ['strength' => [], 'next' => [], 'support' => []];
+        foreach ($category['items'] as $id => $item) $grouped[$item['kind']][$id] = $item;
+        $split = $grouped['strength'] && $grouped['next'];
+      ?>
       <div class="descriptor-group" data-category="<?= e($category['id']) ?>" role="group" aria-labelledby="<?= e($category['id']) ?>-heading">
         <div class="group-heading"><h3 id="<?= e($category['id']) ?>-heading"><?= e($category['title']) ?></h3><span class="count" aria-live="polite">0 selected</span></div>
         <p class="help"><?= e($category['hint']) ?></p>
-        <div class="chips">
-        <?php foreach ($category['items'] as $id => $item): $bankKey = $kinds[$item['kind']]; $tip = $bankKey . '-' . $id; $tone = $item['kind'] === 'next' ? 'growth' : ($item['kind'] === 'support' ? 'support' : 'positive'); ?>
-          <div class="chip-wrap <?= e($tone) ?>">
-            <button type="button" class="chip" data-id="<?= e($id) ?>" data-bank="<?= e($bankKey) ?>" aria-pressed="false" aria-describedby="<?= e($tip) ?>"><span class="tick" aria-hidden="true">✓</span><?= e($item['label']) ?></button>
-            <button type="button" class="info" aria-label="About <?= e($item['label']) ?>" aria-expanded="false" aria-controls="descriptor-dialog" aria-haspopup="dialog" aria-describedby="<?= e($tip) ?>">i</button>
-            <div class="description" id="<?= e($tip) ?>" role="tooltip"><?= e($item['description']) ?></div>
+        <?php if ($split): ?>
+        <div class="pair-columns">
+          <?php foreach (['strength' => 'Strengths', 'next' => 'Areas for growth'] as $kind => $columnLabel): $labelId = $category['id'] . '-' . $kind . '-label'; ?>
+          <div class="pair-column <?= $kind === 'next' ? 'growth-column' : 'strengths-column' ?>" role="group" aria-labelledby="<?= e($labelId) ?>">
+            <p class="column-label" id="<?= e($labelId) ?>"><?= e($columnLabel) ?></p>
+            <div class="chips">
+            <?php foreach ($grouped[$kind] as $id => $item) chipControl($id, $item); ?>
+            </div>
           </div>
-        <?php endforeach; ?>
+          <?php endforeach; ?>
         </div>
+        <?php else: ?>
+        <div class="chips">
+        <?php foreach ($category['items'] as $id => $item) chipControl($id, $item); ?>
+        </div>
+        <?php endif; ?>
       </div>
       <?php endforeach; ?>
     </section>
@@ -83,12 +106,21 @@ function e(string $value): string { return htmlspecialchars($value, ENT_QUOTES |
       <p id="stale" class="notice" hidden>Inputs have changed. This comment was generated from earlier details.</p>
       <label class="sr-only" for="comment">Editable report comment</label>
       <textarea id="comment" rows="14" placeholder="Your generated comment will appear here. You can also write or edit directly in this space." spellcheck="true"></textarea>
+      <div id="tweak-panel" class="tweak-panel" hidden>
+        <label for="tweak">What would you like changed?</label>
+        <p id="tweak-help" class="help">Changes only what you ask for. The comment stays 5–7 sentences and still uses the first name three times.</p>
+        <textarea id="tweak" rows="2" maxlength="500" aria-describedby="tweak-help" placeholder="Make it a little friendlier, lower the reading level, add their effort in science..."></textarea>
+        <div class="tweak-actions">
+          <button id="tweak-comment" type="button">Tweak comment</button>
+          <button id="undo-tweak" type="button" hidden>Undo</button>
+        </div>
+      </div>
       <p class="review">Review and personalise before using in a student report.</p>
       <div class="actions"><button id="copy" type="button" disabled>Copy comment</button><button id="save" type="button" disabled>Save text file</button></div>
       <p id="action-status" class="help" role="status" aria-live="polite"></p>
       <div class="editor-footer"><span>Ready for a fresh start?</span><button id="new-student" type="button" class="text-button">New student <span aria-hidden="true">↻</span></button></div>
     </section>
-    <p class="privacy"><span aria-hidden="true">◇</span> Student details stay in this page until you clear or close it. When you generate, the supplied details are sent to the configured AI provider. Provider retention policies apply. Use only information your school permits you to share.</p>
+    <p class="privacy"><span aria-hidden="true">◇</span> Student details stay in this page until you clear or close it. When you generate or tweak, the supplied details are sent to the configured AI provider. A tweak also sends the current comment and the change you asked for. Provider retention policies apply. Use only information your school permits you to share.</p>
   </aside>
   </div>
   <footer>Thoughtful comments start with what you know about your student.</footer>

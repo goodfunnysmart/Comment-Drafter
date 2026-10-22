@@ -138,6 +138,11 @@
           "label": "Personal Progress",
           "description": "Has made meaningful progress towards individual learning goals, building skills and confidence from their own starting point."
         },
+        "using-feedback": {
+          "kind": "strength",
+          "label": "Using Feedback",
+          "description": "Uses comments, examples or a checklist to adjust the next piece of work and can point to what has improved."
+        },
         "setting-small-goals": {
           "kind": "next",
           "label": "Setting Small Goals",

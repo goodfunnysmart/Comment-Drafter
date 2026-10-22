@@ -15,7 +15,7 @@ class Element {
   remove() {}
   click() { this.clicked = true; }
 }
-const ids = ['builder','comment','generate','name','pronouns','subject','observations','reframe','activities','length','word-count','copy','save','generation-status','stale','contradictions','action-status','new-student'];
+const ids = ['builder','comment','generate','name','pronouns','subject','observations','reframe','activities','length','word-count','copy','save','generation-status','stale','contradictions','action-status','new-student','tweak','tweak-comment','undo-tweak','tweak-panel'];
 const elements = Object.fromEntries(ids.map(id => [id, new Element()]));
 elements.builder.reset = () => { for (const id of ['name','subject','observations','reframe','activities']) elements[id].value = ''; elements.pronouns.value = 'they'; elements.length.value = 'standard'; };
 elements.builder.reportValidity = () => true;
@@ -56,6 +56,37 @@ await elements.copy.emit('click'); assert.equal(copied, elements.comment.value);
 await elements.save.emit('click'); assert.equal(savedBlob, elements.comment.value); assert.match(anchor.download, /^Élodie O’Neil-Smith_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.txt$/);
 assert.match(run("downloadFilename('CON', new Date(2026,9,22,14,35,9))"), /^Student_CON_2026-10-22_14-35-09.txt$/);
 assert.equal(run("downloadFilename('../a:bc*', new Date(2026,9,22,14,35,9))"), 'abc_2026-10-22_14-35-09.txt');
+assert.equal(elements['tweak-panel'].hidden, false);
+const beforeTweak = lastRequest;
+elements.tweak.value = '   ';
+await elements['tweak-comment'].emit('click');
+assert.equal(lastRequest, beforeTweak);
+assert.match(elements['generation-status'].textContent, /changed/);
+elements.tweak.value = ' Make it warmer ';
+const tweaking = elements['tweak-comment'].emit('click');
+assert.equal(elements['tweak-comment'].disabled, true);
+assert.equal(elements.comment.readOnly, true);
+const tweakSent = JSON.parse(lastRequest.body);
+assert.equal(tweakSent.mode, 'tweak');
+assert.equal(tweakSent.comment, 'My latest edited comment.');
+assert.equal(tweakSent.tweak, 'Make it warmer');
+assert.equal(tweakSent.name, 'Élodie O’Neil-Smith');
+assert.deepEqual(tweakSent.supports, []);
+fetchResolve({ok:true,json:async()=>({ok:true,comment:'Tweaked synthetic draft.'})});
+await tweaking;
+assert.equal(elements.comment.value, 'Tweaked synthetic draft.');
+assert.equal(elements.tweak.value, '');
+assert.equal(elements['undo-tweak'].hidden, false);
+await elements['undo-tweak'].emit('click');
+assert.equal(elements.comment.value, 'My latest edited comment.');
+assert.equal(elements['undo-tweak'].hidden, true);
+elements.tweak.value = 'Shorter please';
+const failedTweak = elements['tweak-comment'].emit('click');
+fetchResolve({ok:false,json:async()=>({ok:false,error:'The draft did not use the student’s first name exactly three times, so it was not kept. Your existing comment is unchanged. Please try again.'})});
+await failedTweak;
+assert.equal(elements.comment.value, 'My latest edited comment.');
+assert.equal(elements.tweak.value, 'Shorter please');
+assert.match(elements['generation-status'].textContent, /exactly three times/);
 confirmResult = false;
 await elements.builder.emit('submit'); assert.equal(elements.generate.disabled, false); assert.equal(elements.comment.value,'My latest edited comment.');
 confirmResult = true;
@@ -65,7 +96,8 @@ elements.subject.value = 'English'; await elements.builder.emit('input'); assert
 await chips[1].emit('click'); await chips[2].emit('click'); assert.equal(elements.contradictions.hidden, false);
 const old = elements.builder.emit('submit'); const oldResolve = fetchResolve;
 elements.reframe.value = 'Calls out';
-await elements['new-student'].emit('click'); assert.equal(elements.comment.value, ''); assert.equal(elements.name.value, ''); assert.equal(elements.reframe.value, ''); assert.equal(elements.name.focused, true);
+elements.tweak.value = 'leftover';
+await elements['new-student'].emit('click'); assert.equal(elements.comment.value, ''); assert.equal(elements.name.value, ''); assert.equal(elements.reframe.value, ''); assert.equal(elements.tweak.value, ''); assert.equal(elements['undo-tweak'].hidden, true); assert.equal(elements.name.focused, true);
 oldResolve({ok:true,json:async()=>({ok:true,comment:'Old response must not appear'})}); await old;
 assert.equal(elements.comment.value,''); assert.equal(elements.generate.disabled,false);
-console.log('PASS: selection toggles, validation, synthetic success/error, manual edit confirmation, copy/save edited text, safe local filenames, stale/conflict notices, clear/late-response protection. No live AI call.');
+console.log('PASS: selection toggles, validation, synthetic success/error, manual edit confirmation, copy/save edited text, tweak of the current comment, undo, safe local filenames, stale/conflict notices, clear/late-response protection. No live AI call.');

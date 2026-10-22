@@ -24,6 +24,9 @@ html[data-skin="dark"] .nextSteps .step,html[data-skin="dark"] .nextSteps .count
 html[data-skin="dark"] .group-heading h3{color:#e7eef6}
 html[data-skin="dark"] .chip-wrap{background:#15283d;border-color:#3d5f8a}
 html[data-skin="dark"] .chip-wrap.growth{border-color:#8eafd4;background:#15283d}
+html[data-skin="dark"] .strengths-column{background:#122033;border-color:#3d5f8a}
+html[data-skin="dark"] .growth-column{background:#1a3354;border-color:#8eafd4}
+html[data-skin="dark"] .column-label{color:#b7cbe6}
 html[data-skin="dark"] .chip,html[data-skin="dark"] .info{color:#e7eef6}
 html[data-skin="dark"] .chip:hover,html[data-skin="dark"] .info:hover{background:#1c3558}
 html[data-skin="dark"] .chip-wrap:has(.chip[aria-pressed="true"]){background:#042e5e;border-color:#8eafd4;box-shadow:none}
@@ -45,8 +48,8 @@ html[data-skin="dark"] #generation-status.error{color:#ffb4aa}
 html[data-skin="dark"] #comment{background:#0d1a2c;border-color:#3d5f8a;color:#e7eef6}
 html[data-skin="dark"] #comment::placeholder{color:#9bb6dc}
 html[data-skin="dark"] .review{border-left-color:#8eafd4}
-html[data-skin="dark"] .actions button{background:#15283d;border-color:#3d5f8a;color:#e7eef6}
-html[data-skin="dark"] .actions button:not(:disabled):hover{background:#1c3558;border-color:#8eafd4}
+html[data-skin="dark"] .actions button,html[data-skin="dark"] .tweak-actions button{background:#15283d;border-color:#3d5f8a;color:#e7eef6}
+html[data-skin="dark"] .actions button:not(:disabled):hover,html[data-skin="dark"] .tweak-actions button:not(:disabled):hover{background:#1c3558;border-color:#8eafd4}
 html[data-skin="dark"] .editor-footer{border-color:#2c4a70}
 html[data-skin="dark"] .text-button,html[data-skin="dark"] .privacy>span{color:#c5d7ef}
 html[data-skin="dark"] footer{border-color:#2c4a70;color:#b7cbe6}

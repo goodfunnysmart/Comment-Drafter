@@ -41,5 +41,10 @@ check(commentSentenceCount($withAbbreviation) === 5, 'Abbreviations are not extr
 check(commentSentenceCount('') === 0 && normaliseComment("  \"Kept as one. Still one.\" ") === 'Kept as one. Still one.', 'Empty text and wrapped comments');
 $instructions = file_get_contents(dirname(__DIR__) . '/private/instructions.txt');
 check(is_string($instructions) && str_contains($instructions, '5–7 sentences') && str_contains($instructions, 'full first name'), 'Private instructions carry the comment priorities');
+check(str_contains($instructions, 'between positive statements') && str_contains($instructions, 'short or thin comment'), 'Private instructions require a sandwiched, substantial comment');
+check(str_contains($instructions, 'name it specifically') && str_contains($instructions, 'skills they built') && str_contains($instructions, 'supplied input'), 'Private instructions name supplied clubs and skills only');
 check(!str_contains($instructions, '.docx') && !str_contains($instructions, 'uploads/'), 'Private instructions do not point at source documents');
+$page = file_get_contents(dirname(__DIR__) . '/public/index.php');
+check(str_contains($page, 'id="name-help"') && str_contains($page, 'aria-describedby="name-help"') && str_contains($page, 'never a nickname'), 'Name field has the full-name reminder');
+check(str_contains($page, 'id="activities-help"') && str_contains($page, 'aria-describedby="activities-help"') && str_contains($page, 'skills they built') && str_contains($page, 'personal development activities'), 'Activities field has the participation reminder');
 echo "PASS: bank counts, Unicode names, both single-category cases, all selections, 17 invalid inputs, optional notes, sentence counts.\n";

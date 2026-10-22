@@ -34,10 +34,10 @@ function e(string $value): string { return htmlspecialchars($value, ENT_QUOTES |
     <section class="panel student" aria-labelledby="student-heading">
       <div class="section-heading"><span class="step">01</span><h2 id="student-heading">Start with the student</h2></div>
       <div class="fields">
-        <div><label for="name">Full first name <span class="required">*</span></label><input id="name" name="name" required maxlength="100" autocomplete="off" placeholder="e.g. Alex"></div>
-        <div><label for="pronouns">Pronouns</label><select id="pronouns" name="pronouns"><option value="they">They/them</option><option value="she">She/her</option><option value="he">He/him</option><option value="name">Prefer name only</option></select></div>
+        <div><label for="name">Full first name <span class="required">*</span></label><input id="name" name="name" required maxlength="100" autocomplete="off" placeholder="e.g. Alex" aria-describedby="name-help"></div>
+        <div><label for="pronouns">Pronouns</label><select id="pronouns" name="pronouns" aria-describedby="name-help"><option value="they">They/them</option><option value="she">She/her</option><option value="he">He/him</option><option value="name">Prefer name only</option></select></div>
       </div>
-      <p class="help">Use the full first name that should appear in the comment. Use a shorter name only when an approved reporting arrangement says so.</p>
+      <p id="name-help" class="help">Use the full first name, never a nickname (e.g. Joseph-Thomas, not "JT"). Use a preferred name or pronouns only where parents/carers know and support it; published reports use the legal name unless a preferred name is approved.</p>
       <label for="subject">Subject or learning area <span class="optional">Optional</span></label><input id="subject" name="subject" maxlength="160" autocomplete="off" placeholder="e.g. English, Mathematics, learning across the curriculum">
     </section>
     <?php foreach (['strengths' => ['02', 'Strengths', 'Choose two or three things worth recognising.'], 'nextSteps' => ['03', 'Next steps', 'Choose one or two opportunities for growth.']] as $kind => [$step, $title, $hint]): ?>
@@ -61,7 +61,7 @@ function e(string $value): string { return htmlspecialchars($value, ENT_QUOTES |
       <p id="observation-help" class="help">Specific examples help personalise the comment. Avoid sensitive personal or medical information.</p>
       <textarea id="observations" name="observations" rows="4" maxlength="4000" aria-describedby="observation-help" placeholder="A moment of progress, an achievement, or something you’ve noticed…"></textarea>
       <label for="activities">Clubs, activities or other experiences <span class="optional">Optional</span></label>
-      <p id="activities-help" class="help">Add something you want mentioned, such as a club, activity or personal development opportunity.</p>
+      <p id="activities-help" class="help">Name the specific club or activity, describe how the student took part, and the skills they built. Treat personal development activities the same way.</p>
       <textarea id="activities" name="activities" rows="2" maxlength="500" aria-describedby="activities-help" placeholder="Optional. Leave blank if it should not appear."></textarea>
       <label for="arrangements">Reporting arrangements <span class="optional">Optional</span></label>
       <p id="arrangements-help" class="help">Use this only when an approved arrangement changes the name to use or what may be included.</p>

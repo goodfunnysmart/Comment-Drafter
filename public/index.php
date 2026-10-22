@@ -35,10 +35,10 @@ function chipControl(string $id, array $item): void {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="<?= e($token) ?>">
   <title>Report Comment Builder</title>
-  <link rel="stylesheet" href="app.css?v=10">
-  <link rel="stylesheet" href="dark.css?v=7">
+  <link rel="stylesheet" href="app.css?v=11">
+  <link rel="stylesheet" href="dark.css?v=8">
   <script src="skin.js?v=3" defer></script>
-  <script src="app.js?v=10" defer></script>
+  <script src="app.js?v=12" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to builder</a>
@@ -124,7 +124,7 @@ function chipControl(string $id, array $item): void {
         </div>
       </div>
       <p class="review">Review and personalise before using in a student report.</p>
-      <div class="actions"><button id="copy" type="button" disabled>Copy comment</button><button id="save" type="button" disabled>Save text file</button></div>
+      <div class="actions"><button id="copy" type="button" disabled>Copy comment</button><button id="commit-session" type="button" disabled>Commit to session</button><button id="save" type="button" disabled>Save text file</button></div>
       <p id="action-status" class="help" role="status" aria-live="polite"></p>
       <div class="editor-footer"><span>Ready for a fresh start?</span><button id="new-student" type="button" class="text-button">New student <span aria-hidden="true">↻</span></button></div>
     </section>
@@ -137,6 +137,41 @@ function chipControl(string $id, array $item): void {
   <div class="descriptor-heading"><h2 id="descriptor-title">Descriptor information</h2><button id="descriptor-close" class="descriptor-close" type="button" autofocus>Close</button></div>
   <p id="descriptor-text"></p>
 </dialog>
+<div class="session-dock">
+  <section id="session-panel" class="session-panel" hidden aria-labelledby="session-heading">
+    <div class="session-heading"><h2 id="session-heading">Session</h2><button id="session-close" type="button">Close</button></div>
+    <p class="session-privacy">Use a first name only. Do not include a school, campus, class, or other identifying details.</p>
+    <div id="session-start">
+      <button id="session-new" type="button" class="session-primary">Start new session</button>
+      <label for="session-code">Resume with a code</label>
+      <input id="session-code" autocomplete="off" spellcheck="false" maxlength="64" autocapitalize="characters" placeholder="Paste the code">
+      <button id="session-resume" type="button">Resume</button>
+    </div>
+    <div id="session-active" hidden>
+      <p class="session-write">Write this down. Without this code the comments cannot be opened.</p>
+      <label class="sr-only" for="session-code-display">Session code</label>
+      <input id="session-code-display" class="session-code" readonly spellcheck="false">
+      <button id="session-copy-code" type="button">Copy code</button>
+      <p id="session-expiry"></p>
+      <label for="session-email">Email me this code <span class="optional">Optional</span></label>
+      <p id="session-email-help" class="help">Used only to send the code. It is not stored.</p>
+      <input id="session-email" type="email" maxlength="254" autocomplete="email" aria-describedby="session-email-help">
+      <button id="session-send" type="button">Email me this code</button>
+      <p id="session-list-count">0 comments</p>
+      <ul id="session-list"></ul>
+      <div class="session-downloads">
+        <button id="session-txt" type="button">Download .txt</button>
+        <button id="session-docx" type="button">Download .docx</button>
+      </div>
+      <div class="session-manage">
+        <button id="session-leave" type="button">Leave session</button>
+        <button id="session-clear" type="button">Clear session</button>
+      </div>
+    </div>
+    <p id="session-message" class="help" role="status"></p>
+  </section>
+  <button id="session-toggle" class="session-toggle" type="button" aria-expanded="false" aria-controls="session-panel">Session <span id="session-count">0</span></button>
+</div>
 <noscript><p class="notice">JavaScript is required for selections and comment generation.</p></noscript>
 </body>
 </html>

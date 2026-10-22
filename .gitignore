@@ -2,6 +2,9 @@
 /private/config*.php
 !/private/config.example.php
 
+# Runtime session files. The directory is created on the server, never deployed from Git.
+/private/sessions/
+
 # Written on the server at deploy time. It only stores a directory path.
 /public/private-path.php
 

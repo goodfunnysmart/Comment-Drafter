@@ -249,6 +249,11 @@ fi
 
 for path in "$REPO"/private/*; do
   name="$(basename "$path")"
+  if [[ -d "$path" ]]; then
+    # sessions/ is runtime data created below. Never copy or replace it.
+    [[ "$name" == "sessions" ]] && continue
+    die "Refusing to deploy unexpected private directory $name."
+  fi
   case "$name" in
     config.example.php)
       ;;
@@ -258,6 +263,16 @@ for path in "$REPO"/private/*; do
   esac
   copy_file "$path" "$PRIVATE/$name" 600
 done
+
+# Session files stay here, outside the website. Create the folder without emptying it.
+"$MKDIR" -p -- "$PRIVATE/sessions" "$PRIVATE/sessions/throttle"
+"$CHMOD" 700 -- "$PRIVATE/sessions" "$PRIVATE/sessions/throttle"
+for existing in "$PRIVATE/sessions"/*.json "$PRIVATE/sessions"/throttle/*.json; do
+  if [[ -f "$existing" && ! -L "$existing" ]]; then
+    "$CHMOD" 600 -- "$existing"
+  fi
+done
+printf '%s\n' "Session directory is $PRIVATE/sessions (mode 700). Existing session files were kept."
 
 [[ -f "$PUBLIC/index.php" && -f "$PUBLIC/generate.php" && -f "$PUBLIC/private_path.php" ]] || die "Site files were not deployed."
 [[ -f "$PUBLIC/assets/logo-classic.webp" && -f "$PUBLIC/assets/logo-dark.webp" ]] || die "Logo files were not deployed."

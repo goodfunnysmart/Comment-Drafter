@@ -2,7 +2,7 @@
 const $ = id => document.getElementById(id);
 const form = $('builder'), editor = $('comment'), generate = $('generate');
 const chosen = {strengths: new Set(), nextSteps: new Set(), supports: new Set(), challenges: new Set()};
-let controller = null, requestVersion = 0, generatedSnapshot = null, lastGenerated = '', busy = false, busyKind = '', tweakUndo = null;
+let controller = null, requestVersion = 0, generatedSnapshot = null, lastGenerated = '', busy = false, busyKind = '', tweakUndo = null, sessionBusy = false;
 const fields = ['name', 'pronouns', 'observations', 'reframe', 'activities', 'adjustments', 'length'];
 function inputs() {
   return {...Object.fromEntries(fields.map(id => [id, $(id).value.trim()])),
@@ -27,6 +27,8 @@ function updateEditor() {
     : (text.match(/\S+/gu) || []).length;
   $('word-count').textContent = `${count} ${count === 1 ? 'word' : 'words'}`;
   $('copy').disabled = $('save').disabled = !text;
+  const commitButton = $('commit-session');
+  if (commitButton) commitButton.disabled = !text || sessionBusy;
   $('tweak-panel').hidden = !text;
   $('tweak-comment').disabled = busy || !text;
   $('tweak-comment').textContent = busy && busyKind === 'tweak' ? 'Tweaking…' : 'Tweak comment';
@@ -234,7 +236,7 @@ $('save').addEventListener('click', () => {
   $('action-status').textContent = 'Text file download started.';
 });
 function hasStudentData() {
-  return !!($('name').value.trim() || $('observations').value.trim() || $('reframe').value.trim() || $('activities').value.trim() || $('adjustments').value.trim() || $('tweak').value.trim() || editor.value.trim() || chosen.strengths.size || chosen.nextSteps.size || chosen.supports.size || chosen.challenges.size);
+  return !!($('name').value.trim() || $('observations').value.trim() || $('reframe').value.trim() || $('activities').value.trim() || $('adjustments').value.trim() || $('tweak').value.trim() || editor.value.trim() || chosen.strengths.size || chosen.nextSteps.size || chosen.supports.size || chosen.challenges.size || $('session-email')?.value.trim());
 }
 $('new-student').addEventListener('click', () => {
   if (hasStudentData() && !window.confirm('Clear all entered student details and the current comment?')) return;
@@ -253,3 +255,226 @@ window.addEventListener('beforeunload', event => { if (hasStudentData()) { event
 // Do not allow a browser back/forward cache to restore an earlier student's details.
 window.addEventListener('pageshow', event => { if (event.persisted) window.location.reload(); });
 form.reset(); editor.value = ''; updateEditor();
+
+if ($('session-toggle')) {
+  const SESSION_KEY = 'commentDrafterSession';
+  let sessionCode = '', sessionComments = [], sessionExpires = '', editingId = null;
+  const sessionMessage = text => { $('session-message').textContent = text || ''; };
+  const openPanel = () => { $('session-panel').hidden = false; $('session-toggle').setAttribute('aria-expanded', 'true'); };
+  const closePanel = () => { $('session-panel').hidden = true; $('session-toggle').setAttribute('aria-expanded', 'false'); };
+  function remember() {
+    try {
+      if (sessionCode) localStorage.setItem(SESSION_KEY, sessionCode);
+      else localStorage.removeItem(SESSION_KEY);
+    } catch {}
+  }
+  function applySession(data) {
+    sessionCode = data.code || '';
+    sessionComments = Array.isArray(data.comments) ? data.comments : [];
+    sessionExpires = data.expiresLabel || '';
+    editingId = null;
+    remember();
+    renderSession();
+  }
+  function forgetSession(message) {
+    sessionCode = ''; sessionComments = []; sessionExpires = ''; editingId = null;
+    remember();
+    renderSession();
+    sessionMessage(message);
+  }
+  async function sessionRequest(body, download = false) {
+    const response = await fetch('session.php', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content},
+      body: JSON.stringify(body)
+    });
+    if (download) {
+      if (!response.ok) {
+        let message = 'The download could not be started.';
+        try { const data = await response.json(); if (data && data.error) message = data.error; } catch {}
+        throw new Error(message);
+      }
+      return response.blob();
+    }
+    let data = {};
+    try { data = await response.json(); } catch {}
+    if (!response.ok || !data.ok) throw new Error(data.error || 'The session could not be updated.');
+    return data;
+  }
+  async function persist() {
+    sessionBusy = true; updateEditor();
+    try {
+      applySession(await sessionRequest({action: 'save', code: sessionCode, comments: sessionComments}));
+      return true;
+    } catch (error) {
+      sessionMessage(error.message);
+      return false;
+    } finally {
+      sessionBusy = false; updateEditor();
+    }
+  }
+  async function replaceComments(next) {
+    const copy = sessionComments.map(item => ({...item}));
+    sessionComments = next;
+    if (await persist()) return true;
+    sessionComments = copy;
+    renderSession();
+    return false;
+  }
+  function renderSession() {
+    const count = sessionComments.length;
+    $('session-count').textContent = String(count);
+    $('session-list-count').textContent = `${count} ${count === 1 ? 'comment' : 'comments'}`;
+    $('session-start').hidden = !!sessionCode;
+    $('session-active').hidden = !sessionCode;
+    $('session-code-display').value = sessionCode;
+    if (sessionCode) $('session-expiry').textContent = sessionExpires ? `This session is removed on ${sessionExpires}.` : '';
+    const list = $('session-list');
+    list.replaceChildren();
+    sessionComments.forEach((item, index) => {
+      const row = document.createElement('li');
+      row.className = 'session-item';
+      if (editingId === item.id) {
+        const name = document.createElement('input');
+        name.value = item.name; name.maxLength = 100; name.setAttribute('aria-label', 'First name');
+        const text = document.createElement('textarea');
+        text.value = item.text; text.maxLength = 8000; text.setAttribute('aria-label', 'Comment');
+        const save = document.createElement('button');
+        save.type = 'button'; save.textContent = 'Save';
+        save.addEventListener('click', async () => {
+          const next = sessionComments.map(entry => entry.id === item.id ? {...entry, name: name.value, text: text.value} : entry);
+          if (await replaceComments(next)) sessionMessage('Comment updated.');
+        });
+        const cancel = document.createElement('button');
+        cancel.type = 'button'; cancel.textContent = 'Cancel';
+        cancel.addEventListener('click', () => { editingId = null; renderSession(); });
+        row.append(name, text, save, cancel);
+      } else {
+        const name = document.createElement('p');
+        name.className = 'session-name'; name.textContent = item.name;
+        const text = document.createElement('p');
+        text.className = 'session-text'; text.textContent = item.text;
+        const actions = document.createElement('div');
+        actions.className = 'session-item-actions';
+        const edit = document.createElement('button');
+        edit.type = 'button'; edit.textContent = 'Edit';
+        edit.addEventListener('click', () => { editingId = item.id; renderSession(); });
+        const remove = document.createElement('button');
+        remove.type = 'button'; remove.textContent = 'Delete';
+        remove.addEventListener('click', async () => {
+          if (!window.confirm('Remove this comment from the session?')) return;
+          await replaceComments(sessionComments.filter(entry => entry.id !== item.id));
+        });
+        const up = document.createElement('button');
+        up.type = 'button'; up.textContent = 'Up'; up.disabled = index === 0;
+        up.setAttribute('aria-label', `Move ${item.name} up`);
+        up.addEventListener('click', () => moveComment(index, -1));
+        const down = document.createElement('button');
+        down.type = 'button'; down.textContent = 'Down'; down.disabled = index === count - 1;
+        down.setAttribute('aria-label', `Move ${item.name} down`);
+        down.addEventListener('click', () => moveComment(index, 1));
+        actions.append(edit, remove, up, down);
+        row.append(name, text, actions);
+      }
+      list.append(row);
+    });
+  }
+  async function moveComment(index, delta) {
+    const target = index + delta;
+    if (sessionBusy || target < 0 || target >= sessionComments.length) return;
+    const next = sessionComments.map(item => ({...item}));
+    const [item] = next.splice(index, 1);
+    next.splice(target, 0, item);
+    await replaceComments(next);
+  }
+  function sessionItemId() {
+    const bytes = new Uint8Array(8);
+    if (window.crypto?.getRandomValues) window.crypto.getRandomValues(bytes);
+    else for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+    return [...bytes].map(byte => byte.toString(16).padStart(2, '0')).join('');
+  }
+  async function copyCode() {
+    const text = $('session-code-display').value;
+    let copied = false;
+    if (navigator.clipboard?.writeText) { try { await navigator.clipboard.writeText(text); copied = true; } catch {} }
+    if (!copied) { $('session-code-display').focus(); $('session-code-display').select(); try { copied = document.execCommand('copy'); } catch {} }
+    sessionMessage(copied ? 'Code copied.' : 'Copy was unavailable. Select the code and copy it from the field.');
+  }
+  $('session-toggle').addEventListener('click', () => { if ($('session-panel').hidden) openPanel(); else closePanel(); });
+  $('session-close').addEventListener('click', () => { closePanel(); $('session-toggle').focus(); });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !$('session-panel').hidden && !descriptionDialog?.open) { closePanel(); $('session-toggle').focus(); }
+  });
+  $('session-new').addEventListener('click', async () => {
+    if (sessionBusy) return;
+    sessionMessage('Starting a session…');
+    try { applySession(await sessionRequest({action: 'create'})); sessionMessage('Write this code down. It is the only way to open these comments.'); $('session-copy-code').focus(); }
+    catch (error) { sessionMessage(error.message); }
+  });
+  $('session-resume').addEventListener('click', async () => {
+    const typed = $('session-code').value.trim();
+    if (!typed) { sessionMessage('Enter a session code.'); $('session-code').focus(); return; }
+    try { applySession(await sessionRequest({action: 'resume', code: typed})); $('session-code').value = ''; sessionMessage('Session opened.'); }
+    catch (error) { sessionMessage(error.message); }
+  });
+  $('session-copy-code').addEventListener('click', copyCode);
+  $('session-code-display').addEventListener('focus', () => $('session-code-display').select());
+  $('session-send').addEventListener('click', async () => {
+    const email = $('session-email').value.trim();
+    if (!email) { sessionMessage('Enter an email address, or copy the code instead.'); $('session-email').focus(); return; }
+    try {
+      await sessionRequest({action: 'email', code: sessionCode, email});
+      $('session-email').value = '';
+      sessionMessage('The code was emailed. The address was not stored.');
+    } catch (error) {
+      if (!/valid email/i.test(error.message)) $('session-email').value = '';
+      sessionMessage(error.message);
+    }
+  });
+  async function downloadSession(format) {
+    try {
+      const blob = await sessionRequest({action: 'download', code: sessionCode, format}, true);
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url; anchor.download = format === 'docx' ? 'session-comments.docx' : 'session-comments.txt';
+      document.body.append(anchor); anchor.click(); anchor.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      sessionMessage(format === 'docx' ? 'Word download started.' : 'Text download started.');
+    } catch (error) { sessionMessage(error.message); }
+  }
+  $('session-txt').addEventListener('click', () => downloadSession('txt'));
+  $('session-docx').addEventListener('click', () => downloadSession('docx'));
+  $('session-leave').addEventListener('click', () => {
+    forgetSession('This device has left the session. The comments stay stored until you clear them with the code, or the session expires.');
+  });
+  $('session-clear').addEventListener('click', async () => {
+    if (!window.confirm('Delete every comment in this session? This cannot be undone.')) return;
+    try { await sessionRequest({action: 'clear', code: sessionCode}); forgetSession('The session has been deleted.'); }
+    catch (error) { sessionMessage(error.message); }
+  });
+  $('commit-session').addEventListener('click', async () => {
+    const text = editor.value.trim();
+    const name = $('name').value.trim();
+    if (!text || sessionBusy) return;
+    openPanel();
+    if (!name) { sessionMessage('Enter the student’s first name before committing.'); $('name').focus(); return; }
+    if (!sessionCode) { sessionMessage('Start or resume a session before committing this comment.'); $('session-new').focus(); return; }
+    if (sessionComments.length >= 60) { sessionMessage('This session already has 60 comments.'); return; }
+    if (await replaceComments([...sessionComments, {id: sessionItemId(), name, text}])) $('action-status').textContent = 'Saved to the session.';
+  });
+  renderSession();
+  try {
+    const saved = localStorage.getItem(SESSION_KEY) || '';
+    if (saved) {
+      sessionRequest({action: 'resume', code: saved}).then(applySession).catch(error => {
+        if (/not found|expired|session code|security token/i.test(error.message)) {
+          try { localStorage.removeItem(SESSION_KEY); } catch {}
+        } else {
+          $('session-code').value = saved;
+        }
+        openPanel();
+        sessionMessage(error.message);
+      });
+    }
+  } catch {}
+}

@@ -1,0 +1,34 @@
+"""Run against local PHP server: python tests/http_check.py [base-url]. No AI call."""
+import http.cookiejar, json, re, sys, urllib.request, urllib.error
+base = (sys.argv[1] if len(sys.argv) > 1 else 'http://127.0.0.1:8765').rstrip('/')
+jar = http.cookiejar.CookieJar()
+client = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
+def request(path, payload=None, headers=None, raw=None):
+    body = raw if raw is not None else json.dumps(payload).encode() if payload is not None else None
+    req = urllib.request.Request(base+path, data=body, headers=headers or {})
+    try: response = client.open(req)
+    except urllib.error.HTTPError as error: response = error
+    return response.code, response.headers, response.read().decode()
+status, headers, page = request('/')
+assert status == 200 and 'no-store' in headers['Cache-Control']
+assert page.count('class="chip"') == 54
+assert 'HttpOnly' in headers['Set-Cookie'] and 'SameSite=Strict' in headers['Set-Cookie']
+token = re.search(r'name="csrf-token" content="([a-f0-9]+)"', page)[1]
+valid = dict(name='Alex', pronouns='they', subject='', observations='', length='standard', strengths=['natural-curiosity'], nextSteps=[])
+good_headers = {'Content-Type':'application/json', 'X-CSRF-Token':token, 'Origin':base}
+assert request('/generate.php')[0] == 405
+assert request('/generate.php', valid, {'Content-Type':'application/json'})[0] == 403
+assert request('/generate.php', valid, dict(good_headers, Origin='https://another.example'))[0] == 403
+assert request('/generate.php', valid, dict(good_headers, **{'Sec-Fetch-Site':'cross-site'}))[0] == 403
+assert request('/generate.php', dict(valid, name=' '), good_headers)[0] == 422
+assert request('/generate.php', dict(valid, strengths=[]), good_headers)[0] == 422
+assert request('/generate.php', dict(valid, strengths=['invented']), good_headers)[0] == 422
+assert request('/generate.php', headers=good_headers, raw=b'{broken')[0] == 422
+assert request('/generate.php', headers=good_headers, raw=b' ' * 24001)[0] == 413
+assert request('/private/config.php')[0] == 404
+assert request('/bank.json')[0] == 404
+status, headers, body = request('/generate.php', valid, good_headers)
+assert status == 503 and json.loads(body)['ok'] is False, (status, body)
+assert 'no-store' in headers['Cache-Control']
+assert request('/generate.php', valid, good_headers)[0] == 429
+print('PASS: rendering, 54 chips, security headers/cookie, POST/CSRF/origin, invalid data, size cap, private paths, unconfigured error, throttle. No live AI call.')

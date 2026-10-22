@@ -1,0 +1,222 @@
+{
+  "strengths": {
+    "natural-curiosity": {
+      "label": "Natural Curiosity",
+      "description": "Shows interest in new ideas and asks questions that help deepen their understanding of the world around them."
+    },
+    "thoughtful-questions": {
+      "label": "Thoughtful Questions",
+      "description": "Asks relevant questions to clarify instructions, explore ideas or develop a better understanding of their learning."
+    },
+    "attentive-listening": {
+      "label": "Attentive Listening",
+      "description": "Listens carefully to staff and classmates and uses what they hear to guide their work and contributions."
+    },
+    "willing-participation": {
+      "label": "Willing Participation",
+      "description": "Contributes to learning activities and discussions, showing a willingness to become involved and share ideas."
+    },
+    "growing-engagement": {
+      "label": "Growing Engagement",
+      "description": "Is becoming more involved in learning and showing increasing interest in classroom activities."
+    },
+    "consistent-attendance": {
+      "label": "Consistent Attendance",
+      "description": "Attends regularly, helping them maintain learning routines, build relationships and develop their skills over time."
+    },
+    "positive-reconnection": {
+      "label": "Positive Reconnection",
+      "description": "Has made encouraging progress in returning to learning and reconnecting with staff, classmates and classroom routines."
+    },
+    "ready-to-learn": {
+      "label": "Ready to Learn",
+      "description": "Arrives prepared and settles into learning activities with increasing independence."
+    },
+    "persistent-effort": {
+      "label": "Persistent Effort",
+      "description": "Keeps working when tasks become challenging and shows determination to make progress."
+    },
+    "trying-new-things": {
+      "label": "Trying New Things",
+      "description": "Shows a willingness to attempt unfamiliar activities and explore learning beyond their existing interests or strengths."
+    },
+    "using-feedback": {
+      "label": "Using Feedback",
+      "description": "Responds constructively to feedback and uses suggestions to improve their work or approach."
+    },
+    "seeking-support": {
+      "label": "Seeking Support",
+      "description": "Recognises when help is needed and approaches staff or trusted peers for clarification or assistance."
+    },
+    "growing-independence": {
+      "label": "Growing Independence",
+      "description": "Takes increasing responsibility for starting tasks, making decisions and completing work with less prompting."
+    },
+    "creative-thinking": {
+      "label": "Creative Thinking",
+      "description": "Offers original ideas and explores different ways to express their understanding or solve a problem."
+    },
+    "practical-strengths": {
+      "label": "Practical Strengths",
+      "description": "Demonstrates ability and engagement in practical activities, using hands-on learning to build and show understanding."
+    },
+    "thoughtful-problem-solving": {
+      "label": "Thoughtful Problem-Solving",
+      "description": "Considers possible solutions, draws on what they already know and adjusts their approach when needed."
+    },
+    "working-together": {
+      "label": "Working Together",
+      "description": "Works cooperatively with others, shares responsibilities and contributes to a common goal."
+    },
+    "encouraging-others": {
+      "label": "Encouraging Others",
+      "description": "Offers encouragement and recognises the efforts of classmates, helping others feel more confident about participating."
+    },
+    "respectful-communication": {
+      "label": "Respectful Communication",
+      "description": "Expresses ideas and responds to others in ways that support positive relationships and productive learning."
+    },
+    "including-others": {
+      "label": "Including Others",
+      "description": "Helps classmates feel welcome and makes an effort to include others in conversations and activities."
+    },
+    "positive-leadership": {
+      "label": "Positive Leadership",
+      "description": "Sets a constructive example and helps others participate, stay organised or work towards a shared goal."
+    },
+    "managing-challenges": {
+      "label": "Managing Challenges",
+      "description": "Is developing effective ways to manage frustration, use support and return to learning after difficulties."
+    },
+    "knowing-their-needs": {
+      "label": "Knowing Their Needs",
+      "description": "Shows awareness of the conditions and support that help them learn, and communicates these needs appropriately."
+    },
+    "recognising-progress": {
+      "label": "Recognising Progress",
+      "description": "Reflects on their learning, recognises improvements and is developing confidence in what they can achieve."
+    },
+    "taking-responsibility": {
+      "label": "Taking Responsibility",
+      "description": "Acknowledges the impact of their actions and takes constructive steps to address difficulties or repair relationships."
+    },
+    "personal-progress": {
+      "label": "Personal Progress",
+      "description": "Has made meaningful progress towards individual learning goals, building skills and confidence from their own starting point."
+    }
+  },
+  "nextSteps": {
+    "regular-engagement": {
+      "label": "Regular Engagement",
+      "description": "Would benefit from participating more consistently in learning activities, using manageable tasks and agreed support to build momentum."
+    },
+    "sustained-effort": {
+      "label": "Sustained Effort",
+      "description": "Could strengthen their learning by staying with tasks beyond the initial attempt and using support when the work becomes challenging."
+    },
+    "attendance-routines": {
+      "label": "Attendance Routines",
+      "description": "Would benefit from working with staff and family or carers to address attendance barriers and establish a more consistent connection with school."
+    },
+    "settling-in": {
+      "label": "Settling In",
+      "description": "Could make better use of learning time by following an agreed arrival routine and beginning with a clear, achievable first task."
+    },
+    "listening-first": {
+      "label": "Listening First",
+      "description": "Would benefit from listening to the full explanation before beginning and checking any instructions they are unsure about."
+    },
+    "clarifying-instructions": {
+      "label": "Clarifying Instructions",
+      "description": "Could work with greater confidence by asking questions or explaining the task back to staff before proceeding."
+    },
+    "checking-in": {
+      "label": "Checking In",
+      "description": "Would benefit from checking in with staff at agreed points to confirm understanding, review progress and identify the next step."
+    },
+    "getting-started": {
+      "label": "Getting Started",
+      "description": "Could build independence by identifying the first step of a task and beginning it with the agreed level of support."
+    },
+    "maintaining-focus": {
+      "label": "Maintaining Focus",
+      "description": "Would benefit from identifying distractions and using strategies such as shorter work periods, a suitable workspace or planned breaks."
+    },
+    "following-through": {
+      "label": "Following Through",
+      "description": "Could demonstrate more of their learning by completing agreed tasks and returning to unfinished work with staff support."
+    },
+    "planning-ahead": {
+      "label": "Planning Ahead",
+      "description": "Would benefit from breaking larger tasks into smaller steps and deciding what needs to happen first, next and last."
+    },
+    "managing-time": {
+      "label": "Managing Time",
+      "description": "Could improve task completion by setting manageable work targets and reviewing progress at agreed times."
+    },
+    "organising-materials": {
+      "label": "Organising Materials",
+      "description": "Would benefit from a consistent system for keeping track of equipment, learning materials and completed work."
+    },
+    "checking-work": {
+      "label": "Checking Work",
+      "description": "Could improve the accuracy and clarity of their work by reviewing it against instructions, examples or a simple checklist."
+    },
+    "adding-detail": {
+      "label": "Adding Detail",
+      "description": "Could show their understanding more fully by explaining their thinking and including relevant examples or supporting detail."
+    },
+    "applying-feedback": {
+      "label": "Applying Feedback",
+      "description": "Would benefit from choosing one or two pieces of feedback and making specific changes before moving on to the next task."
+    },
+    "asking-for-help": {
+      "label": "Asking for Help",
+      "description": "Could avoid becoming stuck by seeking clarification or assistance earlier, using an agreed way to request support."
+    },
+    "trying-another-approach": {
+      "label": "Trying Another Approach",
+      "description": "Would benefit from exploring a different strategy when an initial attempt is unsuccessful, with guidance where needed."
+    },
+    "building-confidence": {
+      "label": "Building Confidence",
+      "description": "Could develop greater confidence by attempting manageable challenges and recognising progress, even when the result is not yet perfect."
+    },
+    "sharing-ideas": {
+      "label": "Sharing Ideas",
+      "description": "Would benefit from contributing their thinking more often through a format that suits them, such as conversation, writing or a small-group discussion."
+    },
+    "sharing-responsibility": {
+      "label": "Sharing Responsibility",
+      "description": "Could contribute more effectively to group activities by agreeing on a role, completing their part and checking in with the group."
+    },
+    "making-space": {
+      "label": "Making Space",
+      "description": "Would benefit from allowing others time to speak, listening to different perspectives and sharing opportunities to contribute."
+    },
+    "expressing-needs": {
+      "label": "Expressing Needs",
+      "description": "Could access support more effectively by communicating when they need clarification, a break, a different approach or additional assistance."
+    },
+    "managing-frustration": {
+      "label": "Managing Frustration",
+      "description": "Would benefit from recognising early signs of frustration and practising agreed strategies before difficulties interrupt their learning."
+    },
+    "returning-to-learning": {
+      "label": "Returning to Learning",
+      "description": "Could maintain progress by following a supported plan for rejoining learning after a break, absence or difficult moment."
+    },
+    "repairing-relationships": {
+      "label": "Repairing Relationships",
+      "description": "Would benefit from support to reflect on disagreements, understand their impact and take practical steps to restore positive relationships."
+    },
+    "using-support": {
+      "label": "Using Support",
+      "description": "Could make greater progress by identifying which available supports are helpful and practising how to use them consistently."
+    },
+    "setting-small-goals": {
+      "label": "Setting Small Goals",
+      "description": "Would benefit from choosing a specific, achievable learning goal and regularly reviewing progress with staff."
+    }
+  }
+}

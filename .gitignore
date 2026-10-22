@@ -1,0 +1,28 @@
+# Private local configuration (only the placeholder example is versioned)
+/private/config*.php
+!/private/config.example.php
+.env
+.env.*
+!.env.example
+
+# Local archives, backups and distribution packages
+/.local/
+/backups/
+*.zip
+*.bak
+*.old
+*.tmp
+
+# Logs, editor state and OS metadata
+*.log
+/.vscode/
+/.idea/
+desktop.ini
+Thumbs.db
+.DS_Store
+
+# Test/runtime artifacts
+__pycache__/
+*.py[cod]
+/coverage/
+.phpunit.cache/

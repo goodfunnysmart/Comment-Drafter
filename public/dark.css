@@ -1,0 +1,56 @@
+/* Dark uses Studio's layout with a complete dark colour palette. */
+:root[data-skin="dark"]{color-scheme:dark;--ink:#e0ebe3;--muted:#a8b8ae;--teal:#a3d5ad;--line:#384a40;--paper:#1b2822;--bg:#111b16;--soft:#293e30}
+html[data-skin="dark"] body{background:radial-gradient(ellipse at 95% 10%,#253b2750,transparent 45%),var(--bg)}
+html[data-skin="dark"] body{background-color:var(--bg);color:var(--ink)}
+html[data-skin="dark"] .masthead{background:#17231c;border-color:#344638}
+html[data-skin="dark"] .brand-icon{background:#91c69d;color:#14271a}
+html[data-skin="dark"] .tag,html[data-skin="dark"] .intro>p:last-child,html[data-skin="dark"] .help,html[data-skin="dark"] .optional,html[data-skin="dark"] .privacy,html[data-skin="dark"] .review,html[data-skin="dark"] .editor-footer{color:#a8b8ae}
+html[data-skin="dark"] .skin-switch{background:#111d16;border-color:#415644}
+html[data-skin="dark"] .skin-switch button{color:#b9cbbb}
+html[data-skin="dark"] .skin-switch button[aria-pressed="true"]{background:#a3d5ad;color:#12251a;box-shadow:none}
+html[data-skin="dark"] .intro{border-color:#344638}
+html[data-skin="dark"] .eyebrow{color:#b1cf9a}
+html[data-skin="dark"] .eyebrow::before{background:#a3c885;box-shadow:0 0 0 4px #293d29}
+html[data-skin="dark"] h1{color:#e4efdd}
+html[data-skin="dark"] .panel{background:#1b2822;border-color:#384a40;box-shadow:0 10px 30px #00000012}
+html[data-skin="dark"] .step,html[data-skin="dark"] .count{background:#293d2e;border-color:#42583b;color:#c1d6af}
+html[data-skin="dark"] label{color:#d6e4d5}
+html[data-skin="dark"] input,html[data-skin="dark"] select,html[data-skin="dark"] textarea{background:#142018;color:#e0ebe3;border-color:#455b48;box-shadow:none}
+html[data-skin="dark"] input:focus,html[data-skin="dark"] select:focus,html[data-skin="dark"] textarea:focus{border-color:#9bc88f}
+html[data-skin="dark"] ::placeholder{color:#9baf9d;opacity:1}
+html[data-skin="dark"] .strengths{background:linear-gradient(135deg,#203026,#1b2822 65%);border-color:#3a4f39}
+html[data-skin="dark"] .nextSteps{background:linear-gradient(135deg,#302a21,#1b2822 65%);border-color:#514637}
+html[data-skin="dark"] .nextSteps .step,html[data-skin="dark"] .nextSteps .count{background:#3b3022;border-color:#655035;color:#e1c397}
+html[data-skin="dark"] .chip-wrap{background:#1a291e;border-color:#45583c}
+html[data-skin="dark"] .chip,html[data-skin="dark"] .info{color:#cadcbd}
+html[data-skin="dark"] .chip:hover,html[data-skin="dark"] .info:hover{background:#2e432a}
+html[data-skin="dark"] .chip-wrap:has(.chip[aria-pressed="true"]){background:#355431;border-color:#a2cc86;box-shadow:none}
+html[data-skin="dark"] .chip[aria-pressed="true"]{background:#355431;color:#efffe2}
+html[data-skin="dark"] .nextSteps .chip-wrap{background:#2b261e;border-color:#625039}
+html[data-skin="dark"] .nextSteps .chip,html[data-skin="dark"] .nextSteps .info{color:#e0c59e}
+html[data-skin="dark"] .nextSteps .chip:hover,html[data-skin="dark"] .nextSteps .info:hover{background:#443621}
+html[data-skin="dark"] .nextSteps .chip-wrap:has(.chip[aria-pressed="true"]){background:#554025;border-color:#d9ad70;box-shadow:none}
+html[data-skin="dark"] .nextSteps .chip[aria-pressed="true"]{background:#554025;color:#ffedcf}
+html[data-skin="dark"] .description{background:#dce9d4;color:#1d3021;box-shadow:0 8px 24px #0005}
+html[data-skin="dark"] .editor-panel{background:#1b2822;border-color:#4b6249;box-shadow:0 12px 40px #0003}
+html[data-skin="dark"] .editor-panel>.section-heading{background:#294431;color:#eef5e8}
+html[data-skin="dark"] .editor-mark{color:#c4dfa6}
+html[data-skin="dark"] .editor-panel .count{background:#36583d;border-color:#678460;color:#e8f6dc}
+html[data-skin="dark"] .primary{background:#a3d5ad;border-color:#a3d5ad;color:#132c1a;box-shadow:none}
+html[data-skin="dark"] .primary:hover{background:#b9e6c1}
+html[data-skin="dark"] #generation-status{color:#b2dfba}
+html[data-skin="dark"] #generation-status.error{color:#ffb4aa}
+html[data-skin="dark"] #comment{background:#152119;border-color:#455b43;color:#e1ebdb}
+html[data-skin="dark"] #comment::placeholder{color:#a0b29e}
+html[data-skin="dark"] .review{border-left-color:#799762}
+html[data-skin="dark"] .actions button{background:#293c2b;border-color:#52694a;color:#d5e9c7}
+html[data-skin="dark"] .actions button:not(:disabled):hover{background:#395132;border-color:#a2bb8d}
+html[data-skin="dark"] .editor-footer{border-color:#3a4d3c}
+html[data-skin="dark"] .text-button,html[data-skin="dark"] .privacy>span{color:#b1d6a3}
+html[data-skin="dark"] footer{border-color:#344638;color:#a8b8ae}
+html[data-skin="dark"] .notice{background:#3a2f1b;border-color:#a98a48;color:#f3dba2}
+html[data-skin="dark"] .descriptor-dialog{background:#1b2822;border-color:#506747;color:#e0ebe3}
+html[data-skin="dark"] .descriptor-dialog::backdrop{background:#050c09b8}
+html[data-skin="dark"] .descriptor-close{background:#293e30;color:#c6e7bb;border-color:#52684a}
+html[data-skin="dark"] :focus-visible{outline-color:#e8bb69}
+@media(max-width:380px){.masthead{flex-wrap:wrap;gap:10px}.masthead-tools{margin-left:auto}}

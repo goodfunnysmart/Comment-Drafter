@@ -58,7 +58,9 @@ foreach (['logo-classic.webp', 'logo-dark.webp'] as $logo) {
     check(is_file($logoPath) && filesize($logoPath) < 100000, $logo . ' is an optimised asset');
 }
 $styles = file_get_contents(dirname(__DIR__) . '/public/app.css');
-check(is_string($styles) && str_contains($styles, '#042e5e'), 'Classic accent uses the measured logo navy');
+check(is_string($styles) && str_contains($styles, '#042e5e') && str_contains($styles, 'masthead-bar') && str_contains($styles, '--page:1440px'), 'Classic accent and header share the page width');
+$dark = file_get_contents(dirname(__DIR__) . '/public/dark.css');
+check(is_string($dark) && str_contains($dark, '#042e5e') && str_contains($dark, '#c5d7ef'), 'Dark uses the brand navy and a lighter tint for text');
 $htaccess = file_get_contents(dirname(__DIR__) . '/public/.htaccess');
 $bootstrap = file_get_contents(dirname(__DIR__) . '/private/bootstrap.php');
 check(str_contains($htaccess, 'AddType image/webp .webp') && str_contains($htaccess, 'no-store'), 'Static responses keep no-store and a webp type');

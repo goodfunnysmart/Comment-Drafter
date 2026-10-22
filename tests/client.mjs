@@ -15,21 +15,21 @@ class Element {
   remove() {}
   click() { this.clicked = true; }
 }
-const ids = ['builder','comment','generate','name','pronouns','subject','observations','activities','arrangements','length','word-count','copy','save','generation-status','stale','contradictions','strengths-count','nextSteps-count','action-status','new-student'];
+const ids = ['builder','comment','generate','name','pronouns','subject','observations','reframe','activities','arrangements','length','word-count','copy','save','generation-status','stale','contradictions','strengths-count','nextSteps-count','action-status','new-student'];
 const elements = Object.fromEntries(ids.map(id => [id, new Element()]));
-elements.builder.reset = () => { for (const id of ['name','subject','observations','activities','arrangements']) elements[id].value = ''; elements.pronouns.value = 'they'; elements.length.value = 'standard'; };
+elements.builder.reset = () => { for (const id of ['name','subject','observations','reframe','activities','arrangements']) elements[id].value = ''; elements.pronouns.value = 'they'; elements.length.value = 'standard'; };
 elements.builder.reportValidity = () => true;
 const chips = ['natural-curiosity','consistent-attendance','attendance-routines'].map(id => {
   const el = new Element(); el.dataset = {id}; el.closest = () => ({dataset:{bank:id === 'attendance-routines' ? 'nextSteps' : 'strengths'}}); return el;
 });
-let fetchResolve, copied, savedBlob, anchor, confirmResult = true;
+let fetchResolve, lastRequest, copied, savedBlob, anchor, confirmResult = true;
 const context = vm.createContext({
   console, Intl, Date, Set, Object, String, JSON, Error, SyntaxError, TypeError, AbortController,
   setTimeout, clearTimeout,
   Blob: class { constructor(parts) { savedBlob = parts.join(''); } },
   URL: {createObjectURL:()=> 'blob:test', revokeObjectURL(){}},
   navigator:{clipboard:{writeText: async text => { copied = text; }}},
-  fetch: () => new Promise(resolve => {fetchResolve = resolve;}),
+  fetch: (_url, options) => new Promise(resolve => { lastRequest = options; fetchResolve = resolve; }),
   document:{getElementById: id => elements[id], querySelectorAll: selector => selector === '.chip' ? chips : [], querySelector: selector => selector.startsWith('meta') ? {content:'test-csrf'} : chips[0], addEventListener(){}, createElement: () => (anchor = new Element()), body:new Element(), execCommand:() => true},
   window:{confirm:() => confirmResult, addEventListener(){}, location:{reload(){}}, innerWidth:1200}
 });
@@ -42,10 +42,12 @@ await elements.builder.emit('submit'); assert.match(elements['generation-status'
 await chips[0].emit('click'); assert.equal(chips[0].attrs['aria-pressed'], 'true');
 await chips[0].emit('click'); assert.equal(chips[0].attrs['aria-pressed'], 'false');
 await chips[0].emit('click');
+elements.reframe.value = ' Rushes work ';
 const pending = elements.builder.emit('submit');
 assert.equal(elements.generate.disabled, true);
 fetchResolve({ok:true,json:async()=>({ok:true,comment:'Synthetic test draft only.'})}); await pending;
 assert.equal(elements.comment.value,'Synthetic test draft only.');
+assert.equal(JSON.parse(lastRequest.body).reframe, 'Rushes work');
 elements.comment.value = 'My latest edited comment.'; await elements.comment.emit('input');
 await elements.copy.emit('click'); assert.equal(copied, elements.comment.value);
 await elements.save.emit('click'); assert.equal(savedBlob, elements.comment.value); assert.match(anchor.download, /^Élodie O’Neil-Smith_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.txt$/);
@@ -59,7 +61,8 @@ assert.equal(elements.comment.value,'My latest edited comment.'); assert.match(e
 elements.subject.value = 'English'; await elements.builder.emit('input'); assert.equal(elements.stale.hidden, false);
 await chips[1].emit('click'); await chips[2].emit('click'); assert.equal(elements.contradictions.hidden, false);
 const old = elements.builder.emit('submit'); const oldResolve = fetchResolve;
-await elements['new-student'].emit('click'); assert.equal(elements.comment.value, ''); assert.equal(elements.name.value, ''); assert.equal(elements.name.focused, true);
+elements.reframe.value = 'Calls out';
+await elements['new-student'].emit('click'); assert.equal(elements.comment.value, ''); assert.equal(elements.name.value, ''); assert.equal(elements.reframe.value, ''); assert.equal(elements.name.focused, true);
 oldResolve({ok:true,json:async()=>({ok:true,comment:'Old response must not appear'})}); await old;
 assert.equal(elements.comment.value,''); assert.equal(elements.generate.disabled,false);
 console.log('PASS: selection toggles, validation, synthetic success/error, manual edit confirmation, copy/save edited text, safe local filenames, stale/conflict notices, clear/late-response protection. No live AI call.');

@@ -3,7 +3,7 @@ const $ = id => document.getElementById(id);
 const form = $('builder'), editor = $('comment'), generate = $('generate');
 const chosen = {strengths: new Set(), nextSteps: new Set()};
 let controller = null, requestVersion = 0, generatedSnapshot = null, lastGenerated = '', busy = false;
-const fields = ['name', 'pronouns', 'subject', 'observations', 'activities', 'arrangements', 'length'];
+const fields = ['name', 'pronouns', 'subject', 'observations', 'reframe', 'activities', 'arrangements', 'length'];
 function inputs() {
   return {...Object.fromEntries(fields.map(id => [id, $(id).value.trim()])),
     strengths: [...chosen.strengths].sort(), nextSteps: [...chosen.nextSteps].sort()};
@@ -184,7 +184,7 @@ $('save').addEventListener('click', () => {
   $('action-status').textContent = 'Text file download started.';
 });
 function hasStudentData() {
-  return !!($('name').value.trim() || $('subject').value.trim() || $('observations').value.trim() || $('activities').value.trim() || $('arrangements').value.trim() || editor.value.trim() || chosen.strengths.size || chosen.nextSteps.size);
+  return !!($('name').value.trim() || $('subject').value.trim() || $('observations').value.trim() || $('reframe').value.trim() || $('activities').value.trim() || $('arrangements').value.trim() || editor.value.trim() || chosen.strengths.size || chosen.nextSteps.size);
 }
 $('new-student').addEventListener('click', () => {
   if (hasStudentData() && !window.confirm('Clear all entered student details and the current comment?')) return;

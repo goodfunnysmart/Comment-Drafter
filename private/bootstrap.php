@@ -38,7 +38,7 @@ function validateInput(array $input, array $bank): array {
         }
     }
     if ($out['name'] === '') throw new InvalidArgumentException('Enter the student’s full first name.');
-    foreach (['activities' => 500, 'arrangements' => 500] as $key => $limit) {
+    foreach (['activities' => 500, 'arrangements' => 500, 'reframe' => 500] as $key => $limit) {
         if (!array_key_exists($key, $input) || $input[$key] === null) {
             $out[$key] = '';
             continue;
@@ -72,6 +72,23 @@ function validateInput(array $input, array $bank): array {
     }
     if (!$out['strengths'] && !$out['nextSteps']) throw new InvalidArgumentException('Choose at least one strength or next step.');
     return $out;
+}
+function commentRequestText(array $data): string {
+    $reframe = trim((string) ($data['reframe'] ?? ''));
+    unset($data['reframe']);
+    $reframe = str_replace(
+        ['<<<NEGATIVE BEHAVIOURS TO REFRAME>>>', '<<<END NEGATIVE BEHAVIOURS TO REFRAME>>>'],
+        '',
+        $reframe
+    );
+    $evidence = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+    $block = $reframe === '' ? '(none)' : $reframe;
+    return "Teacher observations in the evidence below are handled in the normal way, including honestly naming a real difficulty.\n"
+        . $evidence . "\n\n"
+        . "<<<NEGATIVE BEHAVIOURS TO REFRAME>>>\n"
+        . $block . "\n"
+        . "<<<END NEGATIVE BEHAVIOURS TO REFRAME>>>\n"
+        . "Apply the reframing rule only to the text between these markers. Do not apply it to teacher observations.";
 }
 function normaliseComment(string $text): string {
     $text = trim(preg_replace('/\s+/u', ' ', $text) ?? '');

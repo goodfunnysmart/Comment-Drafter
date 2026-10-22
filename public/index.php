@@ -20,7 +20,7 @@ function e(string $value): string { return htmlspecialchars($value, ENT_QUOTES |
   <link rel="stylesheet" href="app.css?v=7">
   <link rel="stylesheet" href="dark.css?v=4">
   <script src="skin.js?v=3" defer></script>
-  <script src="app.js?v=4" defer></script>
+  <script src="app.js?v=5" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to builder</a>
@@ -59,6 +59,9 @@ function e(string $value): string { return htmlspecialchars($value, ENT_QUOTES |
       <label for="observations">Teacher observations <span class="optional">Optional</span></label>
       <p id="observation-help" class="help">Specific examples help personalise the comment. Avoid sensitive personal or medical information.</p>
       <textarea id="observations" name="observations" rows="4" maxlength="4000" aria-describedby="observation-help" placeholder="A moment of progress, an achievement, or something you’ve noticed…"></textarea>
+      <label for="reframe">Negative behaviours to reframe <span class="optional">Optional</span></label>
+      <p id="reframe-help" class="help">These are never named in the comment; they are turned into positive next steps.</p>
+      <textarea id="reframe" name="reframe" rows="2" maxlength="500" aria-describedby="reframe-help" placeholder="Optional. Leave blank if there is nothing to reframe."></textarea>
       <label for="activities">Clubs, activities or other experiences <span class="optional">Optional</span></label>
       <p id="activities-help" class="help">Name the specific club or activity, describe how the student took part, and the skills they built. Treat personal development activities the same way.</p>
       <textarea id="activities" name="activities" rows="2" maxlength="500" aria-describedby="activities-help" placeholder="Optional. Leave blank if it should not appear."></textarea>

@@ -52,7 +52,8 @@ document.querySelectorAll('.chip').forEach(button => button.addEventListener('cl
   updateCounts();
   inputChanged();
 }));
-// Explicit tooltip state avoids sticky CSS hover/focus after a mouse click.
+// The floating hint opens only from the information icon, on hover or keyboard focus.
+// Tapping that icon opens the same text in the description dialog. Chips, labels and sections do not.
 let activePreview = null, previewTimer = null, infoTrigger = null;
 const descriptionDialog = $('descriptor-dialog');
 function hidePreview() {
@@ -64,51 +65,61 @@ function closeInfo() {
   hidePreview();
   if (descriptionDialog?.open) descriptionDialog.close();
 }
-function placeInfo(wrap) {
+function placeInfo(anchor) {
+  const wrap = anchor.closest('.chip-wrap');
   const description = wrap.querySelector('.description');
-  const rect = wrap.getBoundingClientRect();
+  const rect = anchor.getBoundingClientRect();
   const left = Math.max(12, Math.min(rect.left, window.innerWidth - description.offsetWidth - 12));
   const above = rect.top - description.offsetHeight - 8;
   const top = above >= 12 ? above : Math.max(12, Math.min(rect.bottom + 8, window.innerHeight - description.offsetHeight - 12));
   description.style.left = `${left}px`;
   description.style.top = `${top}px`;
+  return wrap;
 }
-function showPreview(wrap) {
+function showPreview(anchor) {
   if (descriptionDialog?.open) return;
+  const wrap = anchor.closest('.chip-wrap');
   hidePreview(); activePreview = wrap;
-  wrap.classList.add('show-preview'); placeInfo(wrap);
+  wrap.classList.add('show-preview'); placeInfo(anchor);
 }
-document.querySelectorAll('.chip-wrap').forEach(wrap => {
-  wrap.addEventListener('pointerenter', event => {
-    if (event.pointerType === 'mouse') showPreview(wrap);
+document.querySelectorAll('.info').forEach(button => {
+  const wrap = button.closest('.chip-wrap');
+  const description = wrap.querySelector('.description');
+  button.addEventListener('pointerenter', event => {
+    if (event.pointerType === 'mouse') showPreview(button);
   });
-  wrap.addEventListener('pointerleave', () => {
+  button.addEventListener('pointerleave', () => {
     // Brief bridge gives the pointer time to cross the gap into the tooltip.
     clearTimeout(previewTimer);
     previewTimer = setTimeout(() => { if (activePreview === wrap) hidePreview(); }, 120);
   });
-  const description = wrap.querySelector('.description');
   description.addEventListener('pointerenter', () => clearTimeout(previewTimer));
   description.addEventListener('pointerleave', () => { if (activePreview === wrap) hidePreview(); });
-  wrap.addEventListener('focusin', event => {
-    if (event.target.matches(':focus-visible')) showPreview(wrap);
+  button.addEventListener('focus', () => {
+    // Dialog close restores focus here. That return must not pop the hint open again.
+    if (button.dataset.suppressHint === 'true') { delete button.dataset.suppressHint; return; }
+    if (button.matches(':focus-visible')) showPreview(button);
   });
-  wrap.addEventListener('focusout', event => { if (!wrap.contains(event.relatedTarget) && activePreview === wrap) hidePreview(); });
+  button.addEventListener('blur', () => { if (activePreview === wrap) hidePreview(); });
   wrap.querySelector('.chip').addEventListener('click', hidePreview);
+  button.addEventListener('click', () => {
+    closeInfo(); infoTrigger = button;
+    $('descriptor-title').textContent = wrap.querySelector('.chip').textContent.replace(/\u2713/g, '').trim();
+    $('descriptor-text').textContent = wrap.querySelector('.description').textContent;
+    button.setAttribute('aria-expanded', 'true');
+    descriptionDialog.showModal();
+  });
 });
-document.querySelectorAll('.info').forEach(button => button.addEventListener('click', () => {
-  closeInfo(); infoTrigger = button;
-  const wrap = button.closest('.chip-wrap');
-  $('descriptor-title').textContent = wrap.querySelector('.chip').textContent.replace(/\u2713/g, '').trim();
-  $('descriptor-text').textContent = wrap.querySelector('.description').textContent;
-  button.setAttribute('aria-expanded', 'true');
-  descriptionDialog.showModal();
-}));
 $('descriptor-close')?.addEventListener('click', closeInfo);
 if (descriptionDialog) {
   descriptionDialog.addEventListener('close', () => {
     infoTrigger?.setAttribute('aria-expanded', 'false');
     // Native dialog restores focus to the information button. Do not reopen its preview.
+    if (infoTrigger) {
+      const trigger = infoTrigger;
+      trigger.dataset.suppressHint = 'true';
+      setTimeout(() => { delete trigger.dataset.suppressHint; }, 0);
+    }
     hidePreview(); infoTrigger = null;
   });
   descriptionDialog.addEventListener('click', event => {

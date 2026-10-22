@@ -20,8 +20,13 @@ assert page.count('>Strengths<') == 4 and page.count('>Areas for Growth<') == 4 
 assert page.count('traffic-columns') == 4 and page.count('growth-column') == 4 and page.count('challenge-column') == 4
 assert 'Engagement in Learning' in page and 'Next Term Focus' in page and 'Using Feedback' in page and 'Learning support' in page and 'Movement breaks' in page
 assert 'Other specific adjustments' in page and 'id="adjustments"' in page and 'maxlength="200"' in page
-supports = re.search(r'data-category="supports".*?data-category="next-term"', page, re.S).group(0)
-assert 'traffic-columns' not in supports and supports.count('class="chip"') == 11
+order = ['data-category="engagement"', 'data-category="social"', 'data-category="attendance"', 'data-category="next-term"', 'data-category="supports"']
+assert [page.index(marker) for marker in order] == sorted(page.index(marker) for marker in order)
+supports = re.search(r'data-category="supports".*?(?=</section>\s*<section)', page, re.S).group(0)
+assert 'traffic-columns' not in supports and supports.count('class="chip"') == 11 and 'id="adjustments"' in supports
+assert len(re.findall(r'class="chip"[^>]*\baria-describedby=', page)) == 0
+assert len(re.findall(r'class="info"[^>]*\baria-describedby="[^"]+"', page)) == 40
+assert not re.search(r'<(?:button|label)\b[^>]*\btitle=', page)
 engagement = re.search(r'data-category="engagement".*?data-category="social"', page, re.S).group(0)
 assert engagement.index('>Strengths<') < engagement.index('>Areas for Growth<') < engagement.index('>Challenges and Obstacles<')
 assert 'id="tweak"' in page and 'What would you like changed?' in page and 'Tweak comment' in page and 'id="undo-tweak"' in page

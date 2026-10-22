@@ -22,7 +22,7 @@ function chipControl(string $id, array $item): void {
     };
     ?>
           <div class="chip-wrap <?= e($tone) ?>">
-            <button type="button" class="chip" data-id="<?= e($id) ?>" data-bank="<?= e($bankKey) ?>" aria-pressed="false" aria-describedby="<?= e($tip) ?>"><span class="tick" aria-hidden="true">✓</span><?= e($item['label']) ?></button>
+            <button type="button" class="chip" data-id="<?= e($id) ?>" data-bank="<?= e($bankKey) ?>" aria-pressed="false"><span class="tick" aria-hidden="true">✓</span><?= e($item['label']) ?></button>
             <button type="button" class="info" aria-label="About <?= e($item['label']) ?>" aria-expanded="false" aria-controls="descriptor-dialog" aria-haspopup="dialog" aria-describedby="<?= e($tip) ?>">i</button>
             <div class="description" id="<?= e($tip) ?>" role="tooltip"><?= e($item['description']) ?></div>
           </div>
@@ -38,7 +38,7 @@ function chipControl(string $id, array $item): void {
   <link rel="stylesheet" href="app.css?v=10">
   <link rel="stylesheet" href="dark.css?v=7">
   <script src="skin.js?v=3" defer></script>
-  <script src="app.js?v=9" defer></script>
+  <script src="app.js?v=10" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to builder</a>

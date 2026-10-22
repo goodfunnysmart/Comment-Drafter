@@ -132,6 +132,48 @@
       }
     },
     {
+      "id": "next-term",
+      "title": "Next Term Focus",
+      "hint": "These shape the closing goal.",
+      "items": {
+        "personal-progress": {
+          "kind": "strength",
+          "label": "Personal Progress",
+          "description": "Has made meaningful progress towards individual learning goals, building skills and confidence from their own starting point."
+        },
+        "using-feedback": {
+          "kind": "strength",
+          "label": "Using Feedback",
+          "description": "Uses comments, examples or a checklist to adjust the next piece of work and can point to what has improved."
+        },
+        "setting-small-goals": {
+          "kind": "next",
+          "label": "Setting Small Goals",
+          "description": "Would benefit from choosing a specific, achievable learning goal and regularly reviewing progress with staff."
+        },
+        "checking-work": {
+          "kind": "next",
+          "label": "Checking Work",
+          "description": "Could improve the accuracy and clarity of their work by reviewing it against instructions, examples or a simple checklist."
+        },
+        "following-through": {
+          "kind": "next",
+          "label": "Following Through",
+          "description": "Could demonstrate more of their learning by completing agreed tasks and returning to unfinished work with staff support."
+        },
+        "unfinished-tasks": {
+          "kind": "challenge",
+          "label": "Unfinished Tasks",
+          "description": "Some agreed tasks are still unfinished, and completing them with support is the current focus."
+        },
+        "trying-when-unsure": {
+          "kind": "challenge",
+          "label": "Trying When Unsure",
+          "description": "Starting work when the answer is not yet clear is being practised, with permission to attempt a first step."
+        }
+      }
+    },
+    {
       "id": "supports",
       "title": "Specific Adjustments / Supports",
       "hint": "Adjustments already in place. Selected items, and anything typed below, are named in one sentence.",
@@ -192,48 +234,7 @@
           "description": "Planned pauses for movement are part of the routine."
         }
       }
-    },
-    {
-      "id": "next-term",
-      "title": "Next Term Focus",
-      "hint": "These shape the closing goal.",
-      "items": {
-        "personal-progress": {
-          "kind": "strength",
-          "label": "Personal Progress",
-          "description": "Has made meaningful progress towards individual learning goals, building skills and confidence from their own starting point."
-        },
-        "using-feedback": {
-          "kind": "strength",
-          "label": "Using Feedback",
-          "description": "Uses comments, examples or a checklist to adjust the next piece of work and can point to what has improved."
-        },
-        "setting-small-goals": {
-          "kind": "next",
-          "label": "Setting Small Goals",
-          "description": "Would benefit from choosing a specific, achievable learning goal and regularly reviewing progress with staff."
-        },
-        "checking-work": {
-          "kind": "next",
-          "label": "Checking Work",
-          "description": "Could improve the accuracy and clarity of their work by reviewing it against instructions, examples or a simple checklist."
-        },
-        "following-through": {
-          "kind": "next",
-          "label": "Following Through",
-          "description": "Could demonstrate more of their learning by completing agreed tasks and returning to unfinished work with staff support."
-        },
-        "unfinished-tasks": {
-          "kind": "challenge",
-          "label": "Unfinished Tasks",
-          "description": "Some agreed tasks are still unfinished, and completing them with support is the current focus."
-        },
-        "trying-when-unsure": {
-          "kind": "challenge",
-          "label": "Trying When Unsure",
-          "description": "Starting work when the answer is not yet clear is being practised, with permission to attempt a first step."
-        }
-      }
     }
+
   ]
 }

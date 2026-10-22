@@ -1,6 +1,13 @@
 # Private local configuration (only the placeholder example is versioned)
 /private/config*.php
 !/private/config.example.php
+
+# Written on the server at deploy time. It only stores a directory path.
+/public/private-path.php
+
+# Source documents supplied for local drafting. Never commit them.
+/uploads/
+*.docx
 .env
 .env.*
 !.env.example

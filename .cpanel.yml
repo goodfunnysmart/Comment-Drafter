@@ -1,0 +1,10 @@
+---
+# Deploy HEAD Commit runs this from the Git clone, which must stay outside public_html.
+# deploy/cpanel-deploy.sh uses $HOME. It does not contain the cPanel username.
+# It copies public/ into $HOME/public_html/comments and private application files
+# into $HOME/comments-private. It does not copy or delete config.php.
+# It rewrites .htaccess only by joining public/.htaccess with the existing
+# cPanel Directory Privacy block (the lines marked cp:ppd).
+deployment:
+  tasks:
+    - /bin/bash deploy/cpanel-deploy.sh

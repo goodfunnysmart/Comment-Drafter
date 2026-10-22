@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
-require dirname(__DIR__) . '/private/bootstrap.php';
+ini_set('display_errors', '0');
+require __DIR__ . '/private_path.php';
+comment_drafter_require_private(__DIR__);
 if (!empty($_SERVER['PATH_INFO'])) { http_response_code(404); exit('Page not found.'); }
 $requestedSkin = $_GET['skin'] ?? '';
 $skin = in_array($requestedSkin, ['studio', 'classic', 'dark'], true) ? $requestedSkin : 'studio';
@@ -19,7 +21,7 @@ function e(string $value): string { return htmlspecialchars($value, ENT_QUOTES |
   <link rel="stylesheet" href="studio.css?v=2">
   <link rel="stylesheet" href="dark.css?v=1">
   <script src="skin.js?v=2" defer></script>
-  <script src="app.js?v=3" defer></script>
+  <script src="app.js?v=4" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to builder</a>
@@ -32,9 +34,10 @@ function e(string $value): string { return htmlspecialchars($value, ENT_QUOTES |
     <section class="panel student" aria-labelledby="student-heading">
       <div class="section-heading"><span class="step">01</span><h2 id="student-heading">Start with the student</h2></div>
       <div class="fields">
-        <div><label for="name">Student first name <span class="required">*</span></label><input id="name" name="name" required maxlength="100" autocomplete="off" placeholder="e.g. Alex"></div>
+        <div><label for="name">Full first name <span class="required">*</span></label><input id="name" name="name" required maxlength="100" autocomplete="off" placeholder="e.g. Alex"></div>
         <div><label for="pronouns">Pronouns</label><select id="pronouns" name="pronouns"><option value="they">They/them</option><option value="she">She/her</option><option value="he">He/him</option><option value="name">Prefer name only</option></select></div>
       </div>
+      <p class="help">Use the full first name that should appear in the comment. Use a shorter name only when an approved reporting arrangement says so.</p>
       <label for="subject">Subject or learning area <span class="optional">Optional</span></label><input id="subject" name="subject" maxlength="160" autocomplete="off" placeholder="e.g. English, Mathematics, learning across the curriculum">
     </section>
     <?php foreach (['strengths' => ['02', 'Strengths', 'Choose two or three things worth recognising.'], 'nextSteps' => ['03', 'Next steps', 'Choose one or two opportunities for growth.']] as $kind => [$step, $title, $hint]): ?>
@@ -57,7 +60,13 @@ function e(string $value): string { return htmlspecialchars($value, ENT_QUOTES |
       <label for="observations">Teacher observations <span class="optional">Optional</span></label>
       <p id="observation-help" class="help">Specific examples help personalise the comment. Avoid sensitive personal or medical information.</p>
       <textarea id="observations" name="observations" rows="4" maxlength="4000" aria-describedby="observation-help" placeholder="A moment of progress, an achievement, or something you’ve noticed…"></textarea>
-      <label for="length">Comment length</label><select id="length" name="length"><option value="short">Short · approximately 60–90 words</option><option value="standard" selected>Standard · approximately 100–140 words</option><option value="detailed">Detailed · approximately 150–200 words</option></select>
+      <label for="activities">Clubs, activities or other experiences <span class="optional">Optional</span></label>
+      <p id="activities-help" class="help">Add something you want mentioned, such as a club, activity or personal development opportunity.</p>
+      <textarea id="activities" name="activities" rows="2" maxlength="500" aria-describedby="activities-help" placeholder="Optional. Leave blank if it should not appear."></textarea>
+      <label for="arrangements">Reporting arrangements <span class="optional">Optional</span></label>
+      <p id="arrangements-help" class="help">Use this only when an approved arrangement changes the name to use or what may be included.</p>
+      <textarea id="arrangements" name="arrangements" rows="2" maxlength="500" aria-describedby="arrangements-help" placeholder="Optional. For example, an approved shorter name."></textarea>
+      <label for="length">Comment length</label><select id="length" name="length"><option value="short">Shorter · 5 sentences</option><option value="standard" selected>Balanced · 6 sentences</option><option value="detailed">Fuller · 7 sentences</option></select>
     </section>
   </form>
   <aside class="editor-column" aria-labelledby="editor-heading">

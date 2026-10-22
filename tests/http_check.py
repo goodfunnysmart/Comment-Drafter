@@ -42,9 +42,10 @@ assert 'Download .txt' in page and 'Download .docx' in page
 assert 'Negative behaviours to reframe' in page and 'id="reframe"' in page and 'never named in the comment' in page
 assert 'Dictation sends the recording to the same provider and this app does not store the audio.' in page
 mic_buttons = re.findall(r'<button type="button" class="dictate-mic" hidden[^>]*>', page)
-assert len(mic_buttons) == 6, len(mic_buttons)
-for label in ('Dictate teacher observations', 'Dictate negative behaviours to reframe', 'Dictate other specific adjustments', 'Dictate clubs or activities', 'Dictate the comment', 'Dictate the change you want'):
+assert len(mic_buttons) == 5, len(mic_buttons)
+for label in ('Dictate teacher observations', 'Dictate negative behaviours to reframe', 'Dictate other specific adjustments', 'Dictate clubs or activities', 'Dictate the change you want'):
     assert f'aria-label="{label}"' in page, label
+assert 'Dictate the comment' not in page and 'comment-dictate-status' not in page
 assert 'id="arrangements"' not in page and 'Reporting arrangements' not in page
 assert 'id="subject"' not in page and 'Subject or learning area' not in page
 assert 'Short · approximately 60–90 words' in page and 'value="standard" selected>Standard · approximately 90–120 words' in page

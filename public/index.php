@@ -41,7 +41,7 @@ function dictateControl(string $id, string $label): void {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="<?= e($token) ?>">
   <title>Report Comment Builder</title>
-  <link rel="stylesheet" href="app.css?v=14">
+  <link rel="stylesheet" href="app.css?v=15">
   <link rel="stylesheet" href="dark.css?v=9">
   <script src="skin.js?v=3" defer></script>
   <script src="app.js?v=14" defer></script>
@@ -123,8 +123,7 @@ function dictateControl(string $id, string $label): void {
       <p id="generation-status" role="status" aria-live="polite"></p>
       <p id="stale" class="notice" hidden>Inputs have changed. This comment was generated from earlier details.</p>
       <label class="sr-only" for="comment">Editable report comment</label>
-      <div class="dictate"><textarea id="comment" rows="14" placeholder="Your generated comment will appear here. You can also write or edit directly in this space." spellcheck="true" aria-describedby="comment-dictate-status"></textarea><?php dictateControl('comment', 'Dictate the comment'); ?></div>
-      <p id="comment-dictate-status" class="dictate-error help" role="status"></p>
+      <textarea id="comment" rows="14" placeholder="Your generated comment will appear here. You can also write or edit directly in this space." spellcheck="true"></textarea>
       <div id="tweak-panel" class="tweak-panel" hidden>
         <label for="tweak">What would you like changed?</label>
         <p id="tweak-help" class="help">Changes only what you ask for. The comment still uses the first name three times and follows the selected length.</p>

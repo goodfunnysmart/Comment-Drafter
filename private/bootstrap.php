@@ -254,6 +254,33 @@ function commentRestoreStudentName(string $text, string $name): string {
     $replaced = preg_replace('/[\[{]\s*name\s*[\]}]/ui', $name, $text);
     return is_string($replaced) ? $replaced : $text;
 }
+function commentFuturePeriodPhrase(?DateTimeInterface $moment = null): string {
+    $zone = new DateTimeZone('Australia/Brisbane');
+    $moment = $moment === null
+        ? new DateTimeImmutable('now', $zone)
+        : DateTimeImmutable::createFromInterface($moment)->setTimezone($zone);
+    return (int) $moment->format('n') <= 7 ? 'next semester' : 'next year';
+}
+function commentReplaceNextTerm(string $text, string $phrase): string {
+    $replaced = preg_replace('/\bnext term\b/ui', $phrase, $text);
+    return is_string($replaced) ? $replaced : $text;
+}
+function commentPreparePeriodInstructions(string $instructions, string $phrase): string {
+    $instructions = rtrim(commentReplaceNextTerm($instructions, $phrase));
+    return $instructions . "\n\nThe exact phrase for the coming period is \"" . $phrase . "\". Use that exact phrase. Do not write \"next term\".\n";
+}
+function commentApplyPeriodToEvidence(array $data, string $phrase): array {
+    foreach (['strengths', 'nextSteps', 'challenges', 'supports'] as $kind) {
+        if (!isset($data[$kind]) || !is_array($data[$kind])) continue;
+        foreach ($data[$kind] as $id => $item) {
+            if (!is_array($item)) continue;
+            foreach (['label', 'description', 'category'] as $field) {
+                if (isset($item[$field]) && is_string($item[$field])) $data[$kind][$id][$field] = commentReplaceNextTerm($item[$field], $phrase);
+            }
+        }
+    }
+    return $data;
+}
 function commentProviderPayload(string $instructions, string $userText, string $name): array {
     return [
         'systemInstruction' => ['parts' => [['text' => commentRedactStudentName($instructions, $name)]]],

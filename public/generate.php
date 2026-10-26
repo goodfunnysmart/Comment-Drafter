@@ -49,6 +49,8 @@ try {
     if (!is_readable($instructionsPath)) fail(503, 'The private instructions.txt file is missing or unreadable. Check its upload location and permissions. [PROMPT_FILE]');
     $instructions = file_get_contents($instructionsPath);
     if ($instructions === false || trim($instructions) === '') fail(503, 'The private instructions.txt file is empty or unreadable. [PROMPT_FILE]');
+    $periodPhrase = commentFuturePeriodPhrase();
+    $instructions = commentPreparePeriodInstructions($instructions, $periodPhrase);
     $pronounLabels = ['they' => 'they/them/their; use plural verb agreement', 'she' => 'she/her/her', 'he' => 'he/him/his', 'name' => 'Use the supplied name only; do not use personal pronouns'];
     $pronounChoice = $data['pronouns'];
     $data['pronouns'] = $pronounLabels[$pronounChoice];
@@ -56,7 +58,8 @@ try {
     $supportLabels = commentSelectedSupportLabels($data['supports'], $bank);
     $adjustments = (string) ($data['adjustments'] ?? '');
     $supportSentence = commentSupportSentence($supportLabels, $data['name'], $adjustments) !== '';
-    $userText = commentNameRule($data['name'], $pronounChoice, $supportSentence) . "\n\n" . commentSupportRule($supportLabels, $data['name'], $pronounChoice, $adjustments) . "\n\n" . ($mode === 'tweak' ? commentTweakText($data, $tweak['comment'], $tweak['instruction']) : commentRequestText($data));
+    $promptData = commentApplyPeriodToEvidence($data, $periodPhrase);
+    $userText = commentNameRule($data['name'], $pronounChoice, $supportSentence) . "\n\n" . commentSupportRule($supportLabels, $data['name'], $pronounChoice, $adjustments) . "\n\n" . ($mode === 'tweak' ? commentTweakText($promptData, $tweak['comment'], $tweak['instruction']) : commentRequestText($promptData));
     // One provider call is already recorded in the throttle. A single repair retry stays inside that same slot and must finish before the browser aborts at 55 seconds.
     $stage = 'CURL_REQUEST';
     $started = microtime(true);
@@ -74,6 +77,7 @@ try {
     // Name repair runs inside commentRepairSupports, before the exact supports sentence is inserted.
     $text = commentRepairSupports($text, $supportLabels, $data['name'], $pronounChoice, $adjustments);
     $text = commentCanonicalName($text, $data['name']);
+    $text = commentReplaceNextTerm($text, $periodPhrase);
     reply(200, ['ok' => true, 'comment' => $text]);
 } catch (Throwable $e) {
     // Never log upstream bodies, credentials or student data.
